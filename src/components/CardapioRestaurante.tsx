@@ -19,7 +19,11 @@ interface CardapioRestauranteProps {
   onVoltar: () => void;
 }
 
-const CardapioRestaurante: React.FC<CardapioRestauranteProps> = ({ restauranteId, nomeRestaurante, onVoltar }) => {
+const CardapioRestaurante: React.FC<CardapioRestauranteProps> = ({
+  restauranteId,
+  nomeRestaurante,
+  onVoltar
+}) => {
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
@@ -29,7 +33,7 @@ const CardapioRestaurante: React.FC<CardapioRestauranteProps> = ({ restauranteId
   const [totalPedido, setTotalPedido] = useState<number>(0);
   const [pagamento, setPagamento] = useState<string>('DINHEIRO');
 
-  const usuarioId = 1; // fixo por enquanto
+  const usuarioId = 1;
 
   useEffect(() => {
     api.get(`/produtos/por-restaurante/${restauranteId}`)
@@ -86,17 +90,17 @@ const CardapioRestaurante: React.FC<CardapioRestauranteProps> = ({ restauranteId
         }))
       };
 
-      console.log("➡️ Payload enviado:", JSON.stringify(pedido, null, 2));
-
-      const response = await api.post('/pedidos', pedido);
+      await api.post('/pedidos', pedido);
 
       setMensagem('✅ Pedido finalizado com sucesso!');
-      setStatusPedido(`ID: ${response.data.id} | Total: R$ ${total.toFixed(2)} | Pagamento: ${pagamento}`);
+      setStatusPedido(`Total: R$ ${total.toFixed(2)} | Pagamento: ${pagamento}`);
       setTotalPedido(total);
       setCarrinho([]);
+      setTimeout(() => setMensagem(null), 6000);
     } catch (error) {
       console.error('❌ Erro ao finalizar pedido:', error);
       setMensagem('❌ Erro ao finalizar pedido.');
+      setTimeout(() => setMensagem(null), 6000);
     }
   };
 
@@ -121,7 +125,12 @@ const CardapioRestaurante: React.FC<CardapioRestauranteProps> = ({ restauranteId
               <h4>{produto.nome}</h4>
               <p>{produto.descricao}</p>
               <p>R$ {produto.preco.toFixed(2)}</p>
-              <button onClick={() => adicionarAoCarrinho(produto)}>➕</button>
+              <button
+                onClick={() => adicionarAoCarrinho(produto)}
+                style={{ color: '#000', fontWeight: 'bold' }}
+              >
+                ➕
+              </button>
             </li>
           ))}
         </ul>
@@ -141,7 +150,12 @@ const CardapioRestaurante: React.FC<CardapioRestauranteProps> = ({ restauranteId
               <li key={item.produto.id} style={{ marginBottom: '10px' }}>
                 <strong>{item.produto.nome}</strong> — R$ {item.produto.preco.toFixed(2)} × {item.quantidade}
                 <div style={{ display: 'inline-block', marginLeft: '10px' }}>
-                  <button onClick={() => adicionarAoCarrinho(item.produto)}>➕</button>
+                  <button
+                    onClick={() => adicionarAoCarrinho(item.produto)}
+                    style={{ color: '#000', fontWeight: 'bold' }}
+                  >
+                    ➕
+                  </button>
                   <button onClick={() => removerDoCarrinho(item.produto)} style={{ marginLeft: '5px' }}>➖</button>
                 </div>
               </li>
@@ -151,19 +165,29 @@ const CardapioRestaurante: React.FC<CardapioRestauranteProps> = ({ restauranteId
 
           <label style={{ marginTop: '10px', display: 'block' }}>
             Forma de Pagamento:
-            <select value={pagamento} onChange={(e) => setPagamento(e.target.value)} style={{ marginLeft: '10px' }}>
+            <select
+              value={pagamento}
+              onChange={(e) => setPagamento(e.target.value)}
+              style={{ marginLeft: '10px' }}
+            >
               <option value="DINHEIRO">Dinheiro</option>
               <option value="PIX">Pix</option>
               <option value="CARTAO_ENTREGA">Cartão na Entrega</option>
             </select>
           </label>
 
-          <button onClick={finalizarPedido} style={{ marginTop: '10px' }}>Finalizar Pedido</button>
+          <button onClick={finalizarPedido} style={{ marginTop: '10px' }}>
+            Finalizar Pedido
+          </button>
         </div>
       )}
 
       {statusPedido && (
-        <div style={{ marginTop: '1rem', padding: '1rem', borderTop: '1px solid #aaa' }}>
+        <div style={{
+          marginTop: '1rem',
+          padding: '1rem',
+          borderTop: '1px solid #aaa'
+        }}>
           <p><strong>Status do Pedido:</strong> {statusPedido}</p>
         </div>
       )}
