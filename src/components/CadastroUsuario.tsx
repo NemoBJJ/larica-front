@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import axios from 'axios';
 
@@ -12,8 +11,9 @@ function CadastroUsuario({ onVoltar }: Props) {
     email: '',
     senha: '',
     telefone: '',
-    data_criacao: new Date().toISOString().split('T')[0]
+    dataCadastro: new Date().toISOString().split('T')[0]
   });
+
   const [erros, setErros] = useState<Record<string, string>>({});
   const [mensagemSucesso, setMensagemSucesso] = useState('');
 
@@ -31,10 +31,9 @@ function CadastroUsuario({ onVoltar }: Props) {
 
     if (name === 'telefone') {
       setFormData(prev => ({ ...prev, [name]: formatarTelefone(value) }));
-      return;
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
     }
-
-    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const validarFormulario = (): boolean => {
@@ -54,6 +53,7 @@ function CadastroUsuario({ onVoltar }: Props) {
   const cadastrar = async (e: React.FormEvent) => {
     e.preventDefault();
     setMensagemSucesso('');
+    setErros({});
 
     if (!validarFormulario()) return;
 
@@ -63,26 +63,27 @@ function CadastroUsuario({ onVoltar }: Props) {
         email: formData.email,
         senha: formData.senha,
         telefone: formData.telefone.replace(/\D/g, ''),
-        data_criacao: formData.data_criacao
+        dataCadastro: formData.dataCadastro
       };
 
-      await axios.post('http://localhost:8086/api/auth/register', dadosParaEnviar);
+      await axios.post('http://localhost:8086/api/auth/usuarios/register', dadosParaEnviar);
 
       setMensagemSucesso('Usuário cadastrado com sucesso!');
-
       setFormData({
         nome: '',
         email: '',
         senha: '',
         telefone: '',
-        data_criacao: new Date().toISOString().split('T')[0]
+        dataCadastro: new Date().toISOString().split('T')[0]
       });
     } catch (erro: any) {
       console.error('Erro no cadastro:', erro);
-      setErros({
-        ...erros,
-        servidor: erro.response?.data?.message || 'Erro ao cadastrar usuário'
-      });
+      const status = erro?.response?.status;
+      if (status === 409) {
+        setErros({ servidor: 'Este e-mail já está cadastrado.' });
+      } else {
+        setErros({ servidor: 'Erro ao cadastrar usuário. Tente novamente.' });
+      }
     }
   };
 
@@ -132,6 +133,7 @@ function CadastroUsuario({ onVoltar }: Props) {
             name="nome"
             value={formData.nome}
             onChange={handleChange}
+            placeholder="Digite seu nome completo"
             style={{
               width: '100%',
               padding: '10px',
@@ -139,7 +141,6 @@ function CadastroUsuario({ onVoltar }: Props) {
               border: erros.nome ? '1px solid #dc3545' : '1px solid #ced4da',
               fontSize: '16px'
             }}
-            placeholder="Digite seu nome completo"
           />
           {erros.nome && <span style={{ color: '#dc3545', fontSize: '14px' }}>{erros.nome}</span>}
         </div>
@@ -151,6 +152,7 @@ function CadastroUsuario({ onVoltar }: Props) {
             name="email"
             value={formData.email}
             onChange={handleChange}
+            placeholder="seu@email.com"
             style={{
               width: '100%',
               padding: '10px',
@@ -158,7 +160,6 @@ function CadastroUsuario({ onVoltar }: Props) {
               border: erros.email ? '1px solid #dc3545' : '1px solid #ced4da',
               fontSize: '16px'
             }}
-            placeholder="seu@email.com"
           />
           {erros.email && <span style={{ color: '#dc3545', fontSize: '14px' }}>{erros.email}</span>}
         </div>
@@ -170,6 +171,7 @@ function CadastroUsuario({ onVoltar }: Props) {
             name="senha"
             value={formData.senha}
             onChange={handleChange}
+            placeholder="Mínimo 6 caracteres"
             style={{
               width: '100%',
               padding: '10px',
@@ -177,7 +179,6 @@ function CadastroUsuario({ onVoltar }: Props) {
               border: erros.senha ? '1px solid #dc3545' : '1px solid #ced4da',
               fontSize: '16px'
             }}
-            placeholder="Mínimo 6 caracteres"
           />
           {erros.senha && <span style={{ color: '#dc3545', fontSize: '14px' }}>{erros.senha}</span>}
         </div>
@@ -189,6 +190,8 @@ function CadastroUsuario({ onVoltar }: Props) {
             name="telefone"
             value={formData.telefone}
             onChange={handleChange}
+            placeholder="(99) 99999-9999"
+            maxLength={15}
             style={{
               width: '100%',
               padding: '10px',
@@ -196,13 +199,11 @@ function CadastroUsuario({ onVoltar }: Props) {
               border: erros.telefone ? '1px solid #dc3545' : '1px solid #ced4da',
               fontSize: '16px'
             }}
-            placeholder="(99) 99999-9999"
-            maxLength={15}
           />
           {erros.telefone && <span style={{ color: '#dc3545', fontSize: '14px' }}>{erros.telefone}</span>}
         </div>
 
-        <input type="hidden" name="data_criacao" value={formData.data_criacao} />
+        <input type="hidden" name="dataCadastro" value={formData.dataCadastro} />
 
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '20px' }}>
           <button

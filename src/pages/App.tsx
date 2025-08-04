@@ -5,6 +5,7 @@ import Dashboard from '../components/Dashboard';
 import CadastroUsuario from '../components/CadastroUsuario';
 import PainelRestaurante from '../components/PainelRestaurante';
 import DonoLogin from '../components/DonoLogin';
+import CadastroDono from '../components/CadastroDono';
 import './App.css';
 
 const PainelWrapper: React.FC = () => {
@@ -23,6 +24,7 @@ const App: React.FC = () => {
         <Link to="/" className="nav-link">Home</Link>
         <Link to="/dashboard" className="nav-link">Dashboard</Link>
         <Link to="/cadastro" className="nav-link">Cadastro</Link>
+        <Link to="/cadastro-dono" className="nav-link">Cadastro Dono</Link>
         <Link to="/painel-restaurante" className="nav-link">Painel (teste ID fixo)</Link>
         <Link to="/login-dono" className="nav-link">Login Dono</Link>
       </nav>
@@ -31,14 +33,9 @@ const App: React.FC = () => {
         <Route path="/" element={<ListaRestaurantes />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/cadastro" element={<CadastroUsuario onVoltar={handleVoltar} />} />
-
-        {/* rota fixa de teste (opcional) */}
+        <Route path="/cadastro-dono" element={<CadastroDono />} />
         <Route path="/painel-restaurante" element={<PainelRestaurante restauranteId={4} onVoltar={handleVoltar} />} />
-
-        {/* rota dinâmica pós-login */}
         <Route path="/painel-restaurante/:restauranteId" element={<PainelWrapper />} />
-
-        {/* login do dono */}
         <Route path="/login-dono" element={<DonoLogin />} />
       </Routes>
     </Router>
