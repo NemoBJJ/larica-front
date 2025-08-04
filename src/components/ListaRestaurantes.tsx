@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import api from '../services/api';
 import CardapioRestaurante from './CardapioRestaurante';
 import HistoricoPedidos from './HistoricoPedidos';
+import CadastroUsuario from './CadastroUsuario';
+import { useNavigate } from 'react-router-dom';
 
 interface Restaurante {
   id: number;
@@ -16,6 +18,7 @@ const ListaRestaurantes: React.FC = () => {
   const [restauranteSelecionado, setRestauranteSelecionado] = useState<Restaurante | null>(null);
   const [mostrarHistorico, setMostrarHistorico] = useState(false);
   const usuarioId = 1;
+  const navigate = useNavigate();
 
   useEffect(() => {
     api.get('/restaurantes', { params: { pagina: 0, tamanho: 10 } })
@@ -31,21 +34,37 @@ const ListaRestaurantes: React.FC = () => {
 
   return (
     <div>
-      <button
-        onClick={() => setMostrarHistorico(true)}
-        style={{
-          padding: '8px 16px',
-          background: '#ff5e00',
-          color: 'white',
-          border: 'none',
-          borderRadius: '20px',
-          margin: '10px 0',
-          cursor: 'pointer',
-          fontWeight: 'bold'
-        }}
-      >
-        📜 VER MEU HISTÓRICO
-      </button>
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+        <button
+          onClick={() => setMostrarHistorico(true)}
+          style={{
+            padding: '8px 16px',
+            background: '#ff5e00',
+            color: 'white',
+            border: 'none',
+            borderRadius: '20px',
+            cursor: 'pointer',
+            fontWeight: 'bold'
+          }}
+        >
+          📜 VER MEU HISTÓRICO
+        </button>
+
+        <button
+          onClick={() => navigate('/cadastro')}
+          style={{
+            padding: '8px 16px',
+            background: '#000',
+            color: 'white',
+            border: 'none',
+            borderRadius: '20px',
+            cursor: 'pointer',
+            fontWeight: 'bold'
+          }}
+        >
+          ➕ CADASTRAR USUÁRIO
+        </button>
+      </div>
 
       {mostrarHistorico ? (
         <HistoricoPedidos

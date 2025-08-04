@@ -25,10 +25,15 @@ const HistoricoPedidos: React.FC<{ usuarioId: number; onVoltar: () => void }> = 
   const [erro, setErro] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(true);
 
-  // Ordena por data (mais recente primeiro)
+  // ORDENAÇÃO QUE FUNCIONA, PORRA
   const pedidosOrdenados = useMemo(() => {
+    const parseDate = (dateStr: string) => {
+      const [day, month, year] = dateStr.split('/');
+      return new Date(`${year}-${month}-${day}`).getTime();
+    };
+
     return [...pedidos].sort((a, b) =>
-      new Date(b.data).getTime() - new Date(a.data).getTime()
+      parseDate(b.data) - parseDate(a.data) || b.pedidoId - a.pedidoId
     );
   }, [pedidos]);
 
@@ -41,7 +46,11 @@ const HistoricoPedidos: React.FC<{ usuarioId: number; onVoltar: () => void }> = 
   };
 
   const formatarData = (data: string) => {
-    return new Date(data).toLocaleDateString('pt-BR') || 'Data inválida';
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(data)) {
+      return data;
+    }
+    const date = new Date(data);
+    return date.toLocaleDateString('pt-BR') || 'Data inválida';
   };
 
   const getStatusStyle = (status: string) => {
