@@ -1,3 +1,4 @@
+// src/components/HistoricoUsuario.tsx
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
 
@@ -16,7 +17,7 @@ interface HistoricoPedidoDTO {
   itens: ItemPedidoDTO[];
 }
 
-const HistoricoUsuario: React.FC<{ usuarioId: number }> = ({ usuarioId }) => {
+const HistoricoUsuario: React.FC<{ usuarioId: number; onVoltar: () => void }> = ({ usuarioId, onVoltar }) => {
   const [pedidos, setPedidos] = useState<HistoricoPedidoDTO[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
@@ -34,14 +35,13 @@ const HistoricoUsuario: React.FC<{ usuarioId: number }> = ({ usuarioId }) => {
         setCarregando(false);
       }
     };
-
     carregarHistorico();
   }, [usuarioId]);
 
   const calcularTotal = (itens: ItemPedidoDTO[]) =>
     itens.reduce((total, item) => {
       const preco = typeof item.precoUnitario === 'string' ? parseFloat(item.precoUnitario) : item.precoUnitario;
-      return total + preco * item.quantidade;
+      return total + (preco || 0) * item.quantidade;
     }, 0);
 
   const formatarData = (data: string) => {
@@ -51,11 +51,22 @@ const HistoricoUsuario: React.FC<{ usuarioId: number }> = ({ usuarioId }) => {
 
   if (carregando) return <p>Carregando histórico...</p>;
   if (erro) return <p style={{ color: 'red' }}>{erro}</p>;
-  if (!pedidos.length) return <p>Nenhum pedido encontrado.</p>;
+  if (!pedidos.length) {
+    return (
+      <div style={{ padding: 20 }}>
+        <button onClick={onVoltar} style={{ marginBottom: 12 }}>← Voltar</button>
+        <p>Nenhum pedido encontrado.</p>
+      </div>
+    );
+  }
 
   return (
     <div style={{ padding: 20 }}>
-      <h2>📜 Histórico de Pedidos do Usuário #{usuarioId}</h2>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+        <button onClick={onVoltar}>← Voltar</button>
+        <h2 style={{ margin: 0 }}>📜 Meu Histórico</h2>
+      </div>
+
       {pedidos.map((pedido) => (
         <div
           key={pedido.pedidoId}

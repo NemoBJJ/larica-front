@@ -1,7 +1,11 @@
+// src/components/PainelRestaurante.tsx
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import './PainelRestaurante.css';
+
+// 👇 importa o histórico só para uso aqui
+import HistoricoRestaurante from './HistoricoRestaurante';
 
 interface ItemPedido {
   id: number;
@@ -37,6 +41,12 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
   const [msgOk, setMsgOk] = useState<string | null>(null);
   const [msgErro, setMsgErro] = useState<string | null>(null);
 
+  // nome do restaurante
+  const [nomeRestaurante, setNomeRestaurante] = useState<string>('');
+
+  // 👇 controla a visualização do histórico LOCAL (apenas nesta página)
+  const [mostrarHistorico, setMostrarHistorico] = useState(false);
+
   const navigate = useNavigate();
 
   const carregarPedidos = async () => {
@@ -58,8 +68,27 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
     }
   };
 
+  // buscar nome do restaurante (tenta /api e depois sem /api)
+  const carregarNomeRestaurante = async () => {
+    try {
+      const r1 = await api.get(`/api/restaurantes/${restauranteId}`);
+      setNomeRestaurante(r1.data?.nome || '');
+      return;
+    } catch (_) {
+      try {
+        const r2 = await api.get(`/restaurantes/${restauranteId}`);
+        setNomeRestaurante(r2.data?.nome || '');
+        return;
+      } catch (err) {
+        console.error('Erro ao buscar restaurante:', err);
+        setNomeRestaurante(''); // fallback vazio
+      }
+    }
+  };
+
   useEffect(() => {
     carregarPedidos();
+    carregarNomeRestaurante();
   }, [restauranteId]);
 
   const atualizarStatus = async (pedidoId: number, novoStatus: string) => {
@@ -125,6 +154,18 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
     }
   };
 
+  // 👉 quando o histórico estiver aberto, a página mostra somente o histórico
+  if (mostrarHistorico) {
+    return (
+      <div className="painel-container">
+        <HistoricoRestaurante
+          restauranteId={restauranteId}
+          onVoltar={() => setMostrarHistorico(false)}
+        />
+      </div>
+    );
+  }
+
   if (carregando) {
     return (
       <div className="loading-container">
@@ -140,7 +181,22 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
         &larr; Voltar
       </button>
 
-      <h1 className="painel-titulo">Painel de Pedidos</h1>
+      {/* nome do restaurante em destaque */}
+      <h2 className="painel-nome-restaurante">
+        {nomeRestaurante || `Restaurante #${restauranteId}`}
+      </h2>
+
+      <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+        <h1 className="painel-titulo" style={{ margin: 0 }}>Painel de Pedidos</h1>
+        {/* 👇 botão para abrir o histórico local */}
+        <button
+          className="btn-historico"
+          onClick={() => setMostrarHistorico(true)}
+          title="Ver histórico por restaurante"
+        >
+          📜 Ver histórico
+        </button>
+      </div>
       <p className="painel-subtitulo">Usando ID: {restauranteId}</p>
 
       {msgOk && <div className="alert sucesso">{msgOk}</div>}

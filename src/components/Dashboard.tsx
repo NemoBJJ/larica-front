@@ -1,28 +1,12 @@
-import React, { useState } from 'react';
-import HistoricoPedidos from './HistoricoPedidos';
+import React from 'react';
+import ListaRestaurantes from './ListaRestaurantes';
 
-const DashboardCliente: React.FC = () => {
-  const [mostrarHistorico, setMostrarHistorico] = useState(false);
-  const usuarioId = 1; // ⚠️ Fixo por enquanto
-
+const Dashboard: React.FC = () => {
   return (
-    <div style={{ padding: '2rem' }}>
-      <h1>🎯 Área do Cliente</h1>
-
-      {!mostrarHistorico ? (
-        <>
-          <button onClick={() => setMostrarHistorico(true)}>
-            Ver Histórico de Pedidos
-          </button>
-        </>
-      ) : (
-        <HistoricoPedidos
-          usuarioId={usuarioId}
-          onVoltar={() => setMostrarHistorico(false)}
-        />
-      )}
+    <div style={{ padding: '20px' }}>
+      <ListaRestaurantes />
     </div>
   );
 };
 
-export default DashboardCliente;
+export default Dashboard;

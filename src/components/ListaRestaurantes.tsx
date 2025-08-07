@@ -1,8 +1,8 @@
+// src/components/ListaRestaurantes.tsx
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
 import CardapioRestaurante from './CardapioRestaurante';
-import HistoricoPedidos from './HistoricoPedidos';
-import CadastroUsuario from './CadastroUsuario';
+import HistoricoUsuario from './HistoricoUsuario'; // 👈 troca aqui
 import { useNavigate } from 'react-router-dom';
 
 interface Restaurante {
@@ -17,7 +17,10 @@ const ListaRestaurantes: React.FC = () => {
   const [carregando, setCarregando] = useState(true);
   const [restauranteSelecionado, setRestauranteSelecionado] = useState<Restaurante | null>(null);
   const [mostrarHistorico, setMostrarHistorico] = useState(false);
-  const usuarioId = 1;
+
+  // pega o id do cliente salvo no login
+  const usuarioId = Number(localStorage.getItem('usuarioId')) || 1;
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -31,6 +34,16 @@ const ListaRestaurantes: React.FC = () => {
   const handleVoltar = () => setRestauranteSelecionado(null);
 
   if (carregando) return <p>Carregando restaurantes...</p>;
+
+  // quando abrir o histórico, mostra só ele
+  if (mostrarHistorico) {
+    return (
+      <HistoricoUsuario
+        usuarioId={usuarioId}
+        onVoltar={() => setMostrarHistorico(false)}
+      />
+    );
+  }
 
   return (
     <div>
@@ -66,41 +79,34 @@ const ListaRestaurantes: React.FC = () => {
         </button>
       </div>
 
-      {mostrarHistorico ? (
-        <HistoricoPedidos
-          usuarioId={usuarioId}
-          onVoltar={() => setMostrarHistorico(false)}
-        />
+      {!restauranteSelecionado ? (
+        <ul style={{ listStyle: 'none', padding: 0 }}>
+          {restaurantes.map((r) => (
+            <li
+              key={r.id}
+              onClick={() => handleSelecionar(r)}
+              style={{
+                cursor: 'pointer',
+                padding: '15px',
+                margin: '10px 0',
+                border: '1px solid #ddd',
+                borderRadius: '10px',
+                transition: 'all 0.3s',
+                backgroundColor: '#fff'
+              }}
+            >
+              <h2 style={{ color: '#333', marginTop: 0 }}>{r.nome}</h2>
+              <p style={{ color: '#666', margin: '5px 0' }}>📍 {r.endereco}</p>
+              <p style={{ color: '#666', margin: '5px 0' }}>📞 {r.telefone}</p>
+            </li>
+          ))}
+        </ul>
       ) : (
-        !restauranteSelecionado ? (
-          <ul style={{ listStyle: 'none', padding: 0 }}>
-            {restaurantes.map((r) => (
-              <li
-                key={r.id}
-                onClick={() => handleSelecionar(r)}
-                style={{
-                  cursor: 'pointer',
-                  padding: '15px',
-                  margin: '10px 0',
-                  border: '1px solid #ddd',
-                  borderRadius: '10px',
-                  transition: 'all 0.3s',
-                  backgroundColor: '#fff'
-                }}
-              >
-                <h2 style={{ color: '#333', marginTop: 0 }}>{r.nome}</h2>
-                <p style={{ color: '#666', margin: '5px 0' }}>📍 {r.endereco}</p>
-                <p style={{ color: '#666', margin: '5px 0' }}>📞 {r.telefone}</p>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <CardapioRestaurante
-            restauranteId={restauranteSelecionado.id}
-            nomeRestaurante={restauranteSelecionado.nome}
-            onVoltar={handleVoltar}
-          />
-        )
+        <CardapioRestaurante
+          restauranteId={restauranteSelecionado.id}
+          nomeRestaurante={restauranteSelecionado.nome}
+          onVoltar={handleVoltar}
+        />
       )}
     </div>
   );
