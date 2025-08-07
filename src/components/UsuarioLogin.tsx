@@ -25,6 +25,9 @@ const UsuarioLogin: React.FC = () => {
         throw new Error('ID do usuário não encontrado na resposta');
       }
 
+      // ✅ Salva o ID no localStorage
+      localStorage.setItem("usuarioId", usuarioId.toString());
+
       // 3) Redirecionar para dashboard ou lista de restaurantes
       navigate('/dashboard'); // Ou `/usuario/${usuarioId}` se tiver perfil
 

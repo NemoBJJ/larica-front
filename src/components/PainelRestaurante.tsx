@@ -30,7 +30,6 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
 
-  // Novo Produto
   const [nomeProd, setNomeProd] = useState('');
   const [descProd, setDescProd] = useState('');
   const [precoProd, setPrecoProd] = useState('');
@@ -48,13 +47,12 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
       setPedidos(res.data?.content || []);
       setErro(null);
     } catch (err: any) {
-      console.error('Erro ao carregar pedidos:', err);
       const status = err?.response?.status;
-      if (status === 404) {
-        setErro('Restaurante não encontrado. Verifique o ID utilizado.');
-      } else {
-        setErro('Erro ao carregar pedidos. Tente novamente.');
-      }
+      setErro(
+        status === 404
+          ? 'Restaurante não encontrado. Verifique o ID utilizado.'
+          : 'Erro ao carregar pedidos. Tente novamente.'
+      );
     } finally {
       setCarregando(false);
     }
@@ -72,8 +70,7 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
         { params: { status: novoStatus } }
       );
       await carregarPedidos();
-    } catch (err: any) {
-      console.error('Erro ao atualizar status:', err);
+    } catch {
       setErro('Erro ao atualizar status do pedido.');
     }
   };
@@ -88,22 +85,10 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
     return '';
   };
 
-  const voltar = () => (onVoltar ? onVoltar() : navigate(-1));
-
-  const limparMensagens = () => {
-    setMsgOk(null);
-    setMsgErro(null);
-  };
-
-  const resetForm = () => {
-    setNomeProd('');
-    setDescProd('');
-    setPrecoProd('');
-  };
-
   const criarProduto = async (e: React.FormEvent) => {
     e.preventDefault();
-    limparMensagens();
+    setMsgOk(null);
+    setMsgErro(null);
 
     if (!nomeProd.trim() || !descProd.trim() || !precoProd.trim()) {
       setMsgErro('Preencha nome, descrição e preço.');
@@ -125,18 +110,17 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
       });
 
       setMsgOk('✅ Produto cadastrado com sucesso!');
-      resetForm();
+      setNomeProd('');
+      setDescProd('');
+      setPrecoProd('');
     } catch (err: any) {
-      console.error('Erro ao cadastrar produto:', err);
-      const msg =
-        err?.response?.data?.message ||
-        err?.response?.data ||
-        'Erro ao cadastrar produto.';
+      const msg = err?.response?.data?.message || 'Erro ao cadastrar produto.';
       setMsgErro(`❌ ${msg}`);
     } finally {
       setSalvando(false);
       setTimeout(() => {
-        limparMensagens();
+        setMsgErro(null);
+        setMsgOk(null);
       }, 4000);
     }
   };
@@ -152,7 +136,7 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
 
   return (
     <div className="painel-container">
-      <button onClick={voltar} className="btn-voltar">
+      <button onClick={() => (onVoltar ? onVoltar() : navigate(-1))} className="btn-voltar">
         &larr; Voltar
       </button>
 
@@ -166,29 +150,16 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
       {/* Novo Produto */}
       <div className="novo-produto-card">
         <h2>Novo produto</h2>
-
         <form onSubmit={criarProduto} className="novo-produto-form">
           <div>
             <label>Nome</label>
-            <input
-              value={nomeProd}
-              onChange={(e) => setNomeProd(e.target.value)}
-              placeholder="Ex.: X-Bacon"
-              required
-            />
+            <input value={nomeProd} onChange={(e) => setNomeProd(e.target.value)} required />
           </div>
-
           <div className="grid-2">
             <div>
               <label>Descrição</label>
-              <input
-                value={descProd}
-                onChange={(e) => setDescProd(e.target.value)}
-                placeholder="Ex.: Pão, carne, queijo e bacon"
-                required
-              />
+              <input value={descProd} onChange={(e) => setDescProd(e.target.value)} required />
             </div>
-
             <div>
               <label>Preço (R$)</label>
               <input
@@ -198,25 +169,25 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
                 step="0.01"
                 value={precoProd}
                 onChange={(e) => setPrecoProd(e.target.value)}
-                placeholder="Ex.: 28.90"
                 required
               />
             </div>
           </div>
-
           <div className="acoes">
             <button
               type="button"
               className="btn-secundario"
               onClick={() => {
-                resetForm();
-                limparMensagens();
+                setNomeProd('');
+                setDescProd('');
+                setPrecoProd('');
+                setMsgErro(null);
+                setMsgOk(null);
               }}
               disabled={salvando}
             >
               Cancelar
             </button>
-
             <button type="submit" className="btn-primario" disabled={salvando}>
               {salvando ? 'Salvando...' : 'Cadastrar'}
             </button>
@@ -227,9 +198,7 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
       {/* Lista de Pedidos */}
       <div className="pedidos-lista">
         {pedidos.length === 0 ? (
-          <div className="sem-pedidos">
-            <p>Nenhum pedido encontrado.</p>
-          </div>
+          <div className="sem-pedidos"><p>Nenhum pedido encontrado.</p></div>
         ) : (
           pedidos.map((pedido) => (
             <div key={pedido.id} className="pedido-card">
@@ -239,23 +208,12 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
                   {pedido.status}
                 </span>
               </div>
-
               <div className="pedido-info">
-                <p>
-                  <strong>Data:</strong>{' '}
-                  {new Date(pedido.data).toLocaleString()}
-                </p>
-                <p>
-                  <strong>Cliente:</strong> {pedido.nomeCliente}
-                </p>
-                <p>
-                  <strong>Telefone:</strong> {pedido.telefoneCliente}
-                </p>
-                <p>
-                  <strong>Total:</strong> R$ {pedido.total.toFixed(2)}
-                </p>
+                <p><strong>Data:</strong> {new Date(pedido.data).toLocaleString()}</p>
+                <p><strong>Cliente:</strong> {pedido.nomeCliente}</p>
+                <p><strong>Telefone:</strong> {pedido.telefoneCliente}</p>
+                <p><strong>Total:</strong> R$ {pedido.total.toFixed(2)}</p>
               </div>
-
               <div className="itens-container">
                 <h4>Itens:</h4>
                 <ul className="itens-lista">
@@ -270,31 +228,19 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
                   ))}
                 </ul>
               </div>
-
               <div className="acoes-pedido">
                 {pedido.status.toUpperCase() === 'AGUARDANDO' && (
                   <>
-                    <button
-                      onClick={() => atualizarStatus(pedido.id, 'EM_PREPARO')}
-                      className="btn-aceitar"
-                    >
+                    <button onClick={() => atualizarStatus(pedido.id, 'EM_PREPARO')} className="btn-aceitar">
                       Aceitar Pedido
                     </button>
-                    <button
-                      onClick={() => atualizarStatus(pedido.id, 'CANCELADO')}
-                      className="btn-recusar"
-                    >
+                    <button onClick={() => atualizarStatus(pedido.id, 'CANCELADO')} className="btn-recusar">
                       Recusar Pedido
                     </button>
                   </>
                 )}
-
-                {(pedido.status.toUpperCase() === 'EM_PREPARO' ||
-                  pedido.status.toUpperCase() === 'PRONTO') && (
-                  <button
-                    onClick={() => atualizarStatus(pedido.id, 'ENTREGUE')}
-                    className="btn-entregue"
-                  >
+                {(pedido.status.toUpperCase() === 'EM_PREPARO' || pedido.status.toUpperCase() === 'PRONTO') && (
+                  <button onClick={() => atualizarStatus(pedido.id, 'ENTREGUE')} className="btn-entregue">
                     Marcar como Entregue
                   </button>
                 )}

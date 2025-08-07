@@ -25,7 +25,6 @@ const HistoricoPedidos: React.FC<{ usuarioId: number; onVoltar: () => void }> = 
   const [erro, setErro] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(true);
 
-  // Ordena pedidos por data (mais recente primeiro) e ID
   const pedidosOrdenados = useMemo(() => {
     return [...pedidos].sort((a, b) => {
       const dateA = new Date(a.data).getTime();
@@ -34,7 +33,6 @@ const HistoricoPedidos: React.FC<{ usuarioId: number; onVoltar: () => void }> = 
     });
   }, [pedidos]);
 
-  // Calcula total do pedido
   const calcularTotal = (itens: ItemPedidoDTO[]) =>
     itens.reduce((total, item) => {
       const preco = typeof item.precoUnitario === 'string'
@@ -43,7 +41,6 @@ const HistoricoPedidos: React.FC<{ usuarioId: number; onVoltar: () => void }> = 
       return total + (preco || 0) * item.quantidade;
     }, 0);
 
-  // Formata data para "dd/MM/yyyy"
   const formatarData = (data: string) => {
     const date = new Date(data);
     return isNaN(date.getTime())
@@ -51,7 +48,6 @@ const HistoricoPedidos: React.FC<{ usuarioId: number; onVoltar: () => void }> = 
       : date.toLocaleDateString('pt-BR');
   };
 
-  // Estilo visual do status
   const getStatusStyle = (status: string) => {
     const statusUpper = status.toUpperCase();
     if (statusUpper.includes('AGUARDANDO')) return styles.statusAguardando;
@@ -62,7 +58,6 @@ const HistoricoPedidos: React.FC<{ usuarioId: number; onVoltar: () => void }> = 
     return '';
   };
 
-  // Ícone + texto do status
   const formatarStatus = (status: string) => {
     const statusUpper = status.toUpperCase();
     if (statusUpper.includes('AGUARDANDO')) return '🟡 Aguardando';
@@ -73,7 +68,6 @@ const HistoricoPedidos: React.FC<{ usuarioId: number; onVoltar: () => void }> = 
     return status;
   };
 
-  // Carrega pedidos do backend
   useEffect(() => {
     const loadPedidos = async () => {
       try {
@@ -109,20 +103,17 @@ const HistoricoPedidos: React.FC<{ usuarioId: number; onVoltar: () => void }> = 
               <span>#{pedido.pedidoId}</span>
             </div>
 
-            {/* SEÇÃO DE STATUS (AGORA SEPARADA DA DATA) */}
             <div className={styles.statusContainer}>
               <span className={`${styles.status} ${getStatusStyle(pedido.status)}`}>
                 {formatarStatus(pedido.status)}
               </span>
             </div>
 
-            {/* SEÇÃO DE DATA E TOTAL */}
             <div className={styles.infoContainer}>
               <span className={styles.data}>{formatarData(pedido.data)}</span>
               <span className={styles.total}>Total: R$ {calcularTotal(pedido.itens).toFixed(2)}</span>
             </div>
 
-            {/* LISTA DE ITENS */}
             <ul className={styles.itens}>
               {pedido.itens.map((item) => {
                 const preco = typeof item.precoUnitario === 'string'

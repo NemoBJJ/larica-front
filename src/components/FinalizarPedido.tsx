@@ -33,7 +33,6 @@ const FinalizarPedido: React.FC<FinalizarPedidoProps> = ({
       return;
     }
 
-    // garante que todos os itens são do mesmo restaurante
     const restauranteId = carrinho[0].produto.restauranteId;
     const restauranteDiferente = carrinho.some(
       (i) => i.produto.restauranteId !== restauranteId
@@ -46,7 +45,6 @@ const FinalizarPedido: React.FC<FinalizarPedidoProps> = ({
     setCarregando(true);
     setMensagem('');
 
-    // payload exatamente como o backend espera
     const payload = {
       usuarioId,
       restauranteId,
@@ -57,39 +55,17 @@ const FinalizarPedido: React.FC<FinalizarPedidoProps> = ({
     };
 
     try {
-      // tenta /pedidos
-      const res1 = await api.post('/pedidos', payload);
-      setMensagem(`Pedido #${res1.data.id} realizado com sucesso!`);
+      const res = await api.post('/pedidos', payload);
+      setMensagem(`Pedido #${res.data.id} realizado com sucesso!`);
       onFinalizado();
-    } catch (err1: any) {
-      if (err1?.response?.status === 404) {
-        // fallback /api/pedidos
-        try {
-          const res2 = await api.post('/api/pedidos', payload);
-          setMensagem(`Pedido #${res2.data.id} realizado com sucesso!`);
-          onFinalizado();
-        } catch (err2: any) {
-          const errorMsg =
-            err2?.response?.data?.message ||
-            err2?.response?.data ||
-            err2?.message ||
-            'Erro ao finalizar pedido';
-          setMensagem(errorMsg);
-          console.error('❌ Erro detalhado (fallback):', err2.response || err2);
-        } finally {
-          setCarregando(false);
-        }
-        return;
-      }
-
+    } catch (err: any) {
       const errorMsg =
-        err1?.response?.data?.message ||
-        err1?.response?.data ||
-        err1?.message ||
+        err?.response?.data?.message ||
+        err?.response?.data ||
+        err?.message ||
         'Erro ao finalizar pedido';
       setMensagem(errorMsg);
-      console.error('❌ Erro detalhado:', err1.response || err1);
-      setCarregando(false);
+      console.error('❌ Erro detalhado:', err.response || err);
     } finally {
       setCarregando(false);
     }

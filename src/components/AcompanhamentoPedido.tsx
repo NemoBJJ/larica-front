@@ -3,7 +3,7 @@ import api from '../services/api';
 
 interface Pedido {
   id: number;
-  data: string;   // LocalDateTime do backend
+  data: string;
   status: string;
 }
 
@@ -28,8 +28,8 @@ const AcompanhamentoPedido: React.FC<AcompanhamentoPedidoProps> = ({ usuarioId }
       try {
         setCarregando(true);
 
-        // 1) último pedido: /pedidos/ultimo/{usuarioId} (fallback para /api/..)
         let pedidoData: Pedido;
+
         try {
           const pedidoRes = await api.get(`/pedidos/ultimo/${usuarioId}`);
           pedidoData = pedidoRes.data;
@@ -41,9 +41,9 @@ const AcompanhamentoPedido: React.FC<AcompanhamentoPedidoProps> = ({ usuarioId }
             throw err1;
           }
         }
+
         setPedido(pedidoData);
 
-        // 2) itens do pedido: /pedidos/{id}/itens (fallback para /api/pedidos/{id}/itens)
         try {
           const itensRes = await api.get<ItemPedidoDTO[]>(`/pedidos/${pedidoData.id}/itens`);
           setItens(itensRes.data || []);
