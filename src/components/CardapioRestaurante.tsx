@@ -18,6 +18,8 @@ interface Produto {
 interface PedidoRequest {
   usuarioId: number;
   restauranteId: number;
+  valorTotal: number;
+  linkPagamento: string;
   itens: {
     produtoId: number;
     quantidade: number;
@@ -57,11 +59,36 @@ const CardapioRestaurante: React.FC<Props> = ({ restauranteId, nomeRestaurante, 
     });
   };
 
+  const removerDoCarrinho = (produtoId: number) => {
+    setCarrinho((prev) => prev.filter((item) => item.id !== produtoId));
+  };
+
+  const atualizarQuantidade = (produtoId: number, novaQuantidade: number) => {
+    if (novaQuantidade < 1) return;
+    setCarrinho((prev) =>
+      prev.map((item) =>
+        item.id === produtoId ? { ...item, quantidade: novaQuantidade } : item
+      )
+    );
+  };
+
+  const calcularTotal = () => {
+    return carrinho.reduce((total, item) => {
+      const produto = cardapio.find((p) => p.id === item.id);
+      return total + (produto?.preco || 0) * item.quantidade;
+    }, 0);
+  };
+
   const fazerPedido = async () => {
     const usuarioId = parseInt(localStorage.getItem('usuarioId') || '1');
+    const totalPedido = calcularTotal();
+    const linkPagamento = `https://mpago.la/1kiC4gC?amount=${(totalPedido * 100).toFixed(0)}`;
+
     const pedido: PedidoRequest = {
       usuarioId,
       restauranteId,
+      valorTotal: totalPedido,
+      linkPagamento,
       itens: carrinho.map((item) => ({
         produtoId: item.id,
         quantidade: item.quantidade,
@@ -69,51 +96,87 @@ const CardapioRestaurante: React.FC<Props> = ({ restauranteId, nomeRestaurante, 
     };
 
     try {
-      await api.post('/pedidos', pedido);
+      const response = await api.post('/pedidos', pedido);
+      window.open(linkPagamento, '_blank');
       setCarrinho([]);
-      setMensagemSucesso('✅ Pedido realizado com sucesso!');
-      setTimeout(() => setMensagemSucesso(null), 4000); // limpa após 4s
+      setMensagemSucesso(`✅ Pedido #${response.data.id} realizado! Redirecionando para pagamento...`);
+      setTimeout(() => setMensagemSucesso(null), 5000);
     } catch (error) {
       console.error('Erro ao fazer pedido:', error);
-      alert('Erro ao realizar pedido.');
+      setErro('Erro ao realizar pedido. Tente novamente.');
     }
   };
 
   return (
     <div className="cardapio-container">
-      <button className="voltar-btn" onClick={onVoltar}>← Voltar</button>
+      <button className="voltar-btn" onClick={onVoltar}>
+        ← Voltar
+      </button>
       <h2 className="titulo-cardapio">Cardápio de {nomeRestaurante}</h2>
 
-      {erro && <p className="erro-cardapio">{erro}</p>}
-      {mensagemSucesso && <p className="mensagem-sucesso">{mensagemSucesso}</p>}
+      {erro && <div className="erro-cardapio">{erro}</div>}
+      {mensagemSucesso && <div className="mensagem-sucesso">{mensagemSucesso}</div>}
 
-      <ul className="cardapio-list">
-        {cardapio.map((produto) => (
-          <li className="cardapio-item" key={produto.id}>
-            <strong>{produto.nome}</strong>
-            <em>{produto.descricao}</em>
-            <span>R$ {produto.preco.toFixed(2)}</span>
-            <button className="adicionar-btn" onClick={() => adicionarAoCarrinho(produto.id)}>Adicionar</button>
-          </li>
-        ))}
-      </ul>
+      <div className="cardapio-content">
+        <ul className="cardapio-list">
+          {cardapio.map((produto) => (
+            <li className="cardapio-item" key={produto.id}>
+              <div className="produto-info">
+                <h3>{produto.nome}</h3>
+                <p>{produto.descricao}</p>
+                <span>R$ {produto.preco.toFixed(2)}</span>
+              </div>
+              <button
+                className="adicionar-btn"
+                onClick={() => adicionarAoCarrinho(produto.id)}
+              >
+                Adicionar
+              </button>
+            </li>
+          ))}
+        </ul>
 
-      {carrinho.length > 0 && (
-        <div className="carrinho-section">
-          <h3>Carrinho</h3>
-          <ul>
-            {carrinho.map((item) => {
-              const produto = cardapio.find((p) => p.id === item.id);
-              return (
-                <li key={item.id}>
-                  {produto?.nome} — {item.quantidade}x R$ {(produto?.preco || 0).toFixed(2)}
-                </li>
-              );
-            })}
-          </ul>
-          <button className="finalizar-btn" onClick={fazerPedido}>Finalizar Pedido</button>
-        </div>
-      )}
+        {carrinho.length > 0 && (
+          <div className="carrinho-section">
+            <h3>Seu Carrinho</h3>
+            <ul className="carrinho-list">
+              {carrinho.map((item) => {
+                const produto = cardapio.find((p) => p.id === item.id);
+                return (
+                  <li key={item.id} className="carrinho-item">
+                    <div className="carrinho-item-info">
+                      <span>{produto?.nome}</span>
+                      <div className="quantidade-control">
+                        <button onClick={() => atualizarQuantidade(item.id, item.quantidade - 1)}>
+                          -
+                        </button>
+                        <span>{item.quantidade}</span>
+                        <button onClick={() => atualizarQuantidade(item.id, item.quantidade + 1)}>
+                          +
+                        </button>
+                      </div>
+                      <span>R$ {(produto?.preco || 0 * item.quantidade).toFixed(2)}</span>
+                    </div>
+                    <button
+                      className="remover-btn"
+                      onClick={() => removerDoCarrinho(item.id)}
+                    >
+                      Remover
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+            <div className="carrinho-total">
+              <span>Total:</span>
+              <span>R$ {calcularTotal().toFixed(2)}</span>
+            </div>
+            <button className="finalizar-btn" onClick={fazerPedido}>
+              Finalizar Pedido e Pagar
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

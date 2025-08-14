@@ -15,17 +15,12 @@ const DonoLogin: React.FC = () => {
     setLoading(true);
 
     try {
-      // 1) Login do dono
-      const loginRes = await api.post('/api/auth/donos/login', { email, senha });
-
-      // 2) Usar o PRÓPRIO ID do dono como restauranteId (sem chamadas extras)
+      const loginRes = await api.post('/auth/donos/login', { email, senha });
       const donoId = Number(loginRes.data?.id);
       if (!Number.isFinite(donoId) || donoId <= 0) {
         setErro('Não foi possível identificar o usuário (ID inválido).');
         return;
       }
-
-      // 3) Redirecionar para o painel do restaurante (id == donoId)
       navigate(`/painel-restaurante/${donoId}`);
     } catch (err: any) {
       console.error(err);
