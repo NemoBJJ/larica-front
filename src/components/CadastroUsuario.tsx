@@ -11,6 +11,7 @@ function CadastroUsuario({ onVoltar }: Props) {
     email: '',
     senha: '',
     telefone: '',
+    tipo: 'CLIENTE',
     dataCadastro: new Date().toISOString().split('T')[0]
   });
 
@@ -26,7 +27,7 @@ function CadastroUsuario({ onVoltar }: Props) {
     return `(${nums.slice(0, 2)}) ${nums.slice(2, 7)}-${nums.slice(7, 11)}`;
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
 
     if (name === 'telefone') {
@@ -63,6 +64,7 @@ function CadastroUsuario({ onVoltar }: Props) {
         email: formData.email,
         senha: formData.senha,
         telefone: formData.telefone.replace(/\D/g, ''),
+        tipo: formData.tipo,
         dataCadastro: formData.dataCadastro
       };
 
@@ -74,6 +76,7 @@ function CadastroUsuario({ onVoltar }: Props) {
         email: '',
         senha: '',
         telefone: '',
+        tipo: 'CLIENTE',
         dataCadastro: new Date().toISOString().split('T')[0]
       });
     } catch (erro: any) {
@@ -201,6 +204,25 @@ function CadastroUsuario({ onVoltar }: Props) {
             }}
           />
           {erros.telefone && <span style={{ color: '#dc3545', fontSize: '14px' }}>{erros.telefone}</span>}
+        </div>
+
+        <div>
+          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Tipo de Usuário *</label>
+          <select
+            name="tipo"
+            value={formData.tipo}
+            onChange={handleChange}
+            style={{
+              width: '100%',
+              padding: '10px',
+              borderRadius: '4px',
+              border: '1px solid #ced4da',
+              fontSize: '16px'
+            }}
+          >
+            <option value="CLIENTE">Cliente</option>
+            <option value="DONO_RESTAURANTE">Dono de Restaurante</option>
+          </select>
         </div>
 
         <input type="hidden" name="dataCadastro" value={formData.dataCadastro} />

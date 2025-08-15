@@ -4,7 +4,6 @@ import { BrowserRouter as Router, Route, Routes, Link, useParams } from 'react-r
 
 import HomePage from '../pages/HomePage';
 import ListaRestaurantes from '../components/ListaRestaurantes';
-// import Dashboard from '../components/Dashboard'; // ❌ não usamos mais
 import CadastroUsuario from '../components/CadastroUsuario';
 import PainelRestaurante from '../components/PainelRestaurante';
 import DonoLogin from '../components/DonoLogin';
@@ -12,7 +11,7 @@ import CadastroDono from '../components/CadastroDono';
 import CardapioRestaurante from '../components/CardapioRestaurante';
 import UsuarioLogin from '../components/UsuarioLogin';
 import HistoricoUsuario from '../components/HistoricoUsuario';
-import HistoricoGeral from '../components/HistoricoGeral'; // histórico do manager
+import HistoricoGeral from '../components/HistoricoGeral';
 
 import './App.css';
 
@@ -40,7 +39,6 @@ const HistoricoUsuarioWrapper: React.FC = () => {
 };
 
 const HistoricoGeralWrapper: React.FC = () => {
-  // HistoricoGeral não recebe props
   return <HistoricoGeral />;
 };
 
@@ -52,13 +50,11 @@ const App: React.FC = () => {
     <Router>
       <nav className="navbar">
         <Link to="/" className="nav-link">🏠 Home</Link>
-        {/* Removido o link Dashboard do menu, mas a ROTA /dashboard continua existindo */}
         <Link to="/cadastro" className="nav-link">👤 Cadastro Cliente</Link>
         <Link to="/cadastro-dono" className="nav-link">🏪 Cadastro Dono</Link>
         <Link to="/painel-restaurante" className="nav-link">🍽️ Painel Restaurante</Link>
         <Link to="/login-dono" className="nav-link">🔐 Login Dono</Link>
         <Link to="/login" className="nav-link">🔓 Login Cliente</Link>
-        {/* Último ícone do menu -> Histórico Geral (Manager) */}
         <Link to="/historico-geral" className="nav-link">≡ Histórico</Link>
       </nav>
 
@@ -68,7 +64,6 @@ const App: React.FC = () => {
         {/* Cliente */}
         <Route path="/login" element={<UsuarioLogin />} />
         <Route path="/cadastro" element={<CadastroUsuario onVoltar={handleVoltar} />} />
-        {/* /dashboard precisa existir pq o login redireciona pra cá; mostra a lista de restaurantes */}
         <Route path="/dashboard" element={<ListaRestaurantes />} />
         <Route path="/cardapio/:restauranteId" element={<CardapioWrapper />} />
         <Route path="/historico-usuario" element={<HistoricoUsuarioWrapper />} />
@@ -79,7 +74,7 @@ const App: React.FC = () => {
         <Route path="/painel-restaurante" element={<PainelRestaurante restauranteId={4} onVoltar={handleVoltar} />} />
         <Route path="/painel-restaurante/:restauranteId" element={<PainelWrapper />} />
 
-        {/* Rota da lista (sem link no topo; fica disponível se precisar) */}
+        {/* Lista geral */}
         <Route path="/restaurantes" element={<ListaRestaurantes />} />
 
         {/* Manager */}

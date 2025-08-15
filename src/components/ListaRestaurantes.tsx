@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
 import CardapioRestaurante from './CardapioRestaurante';
-import HistoricoUsuario from './HistoricoUsuario'; // 👈 troca aqui
+import HistoricoUsuario from './HistoricoUsuario';
 import { useNavigate } from 'react-router-dom';
 
 interface Restaurante {
@@ -17,25 +17,57 @@ const ListaRestaurantes: React.FC = () => {
   const [carregando, setCarregando] = useState(true);
   const [restauranteSelecionado, setRestauranteSelecionado] = useState<Restaurante | null>(null);
   const [mostrarHistorico, setMostrarHistorico] = useState(false);
-
-  // pega o id do cliente salvo no login
+  const [raioKm, setRaioKm] = useState<number>(5);
   const usuarioId = Number(localStorage.getItem('usuarioId')) || 1;
-
   const navigate = useNavigate();
 
   useEffect(() => {
-    api.get('/restaurantes', { params: { pagina: 0, tamanho: 10 } })
-      .then((res) => setRestaurantes(res.data))
-      .catch((err) => console.error('Erro ao carregar restaurantes:', err))
-      .finally(() => setCarregando(false));
+    carregarRestaurantes();
   }, []);
+
+  const carregarRestaurantes = async (latitude?: number, longitude?: number, raio?: number) => {
+    try {
+      setCarregando(true);
+      let res;
+
+      if (latitude && longitude && raio) {
+        res = await api.get('/restaurantes/proximos', {
+          params: {
+            lat: latitude,
+            lng: longitude,
+            raioKm: raio
+          }
+        });
+      } else {
+        res = await api.get('/restaurantes', { params: { pagina: 0, tamanho: 10 } });
+      }
+
+      setRestaurantes(res.data);
+    } catch (err) {
+      console.error('Erro ao carregar restaurantes:', err);
+    } finally {
+      setCarregando(false);
+    }
+  };
+
+  const buscarPorDistancia = () => {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        carregarRestaurantes(latitude, longitude, raioKm);
+      },
+      (err) => {
+        alert('Não foi possível obter a localização: ' + err.message);
+      },
+      { timeout: 5000 }
+    );
+  };
 
   const handleSelecionar = (restaurante: Restaurante) => setRestauranteSelecionado(restaurante);
   const handleVoltar = () => setRestauranteSelecionado(null);
 
   if (carregando) return <p>Carregando restaurantes...</p>;
 
-  // quando abrir o histórico, mostra só ele
   if (mostrarHistorico) {
     return (
       <HistoricoUsuario
@@ -47,7 +79,7 @@ const ListaRestaurantes: React.FC = () => {
 
   return (
     <div>
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
         <button
           onClick={() => setMostrarHistorico(true)}
           style={{
@@ -76,6 +108,33 @@ const ListaRestaurantes: React.FC = () => {
           }}
         >
           ➕ CADASTRAR USUÁRIO
+        </button>
+      </div>
+
+      {/* Filtro por distância */}
+      <div style={{ marginBottom: '20px' }}>
+        <label>
+          📍  (Km):{' '}
+          <input
+            type="number"
+            value={raioKm}
+            onChange={(e) => setRaioKm(Number(e.target.value))}
+            style={{ padding: '5px', width: '60px', marginRight: '10px' }}
+          />
+        </label>
+        <button
+          onClick={buscarPorDistancia}
+          style={{
+            padding: '6px 12px',
+            background: '#28a745',
+            color: 'white',
+            border: 'none',
+            borderRadius: '10px',
+            cursor: 'pointer',
+            fontWeight: 'bold'
+          }}
+        >
+          🔍 Perto de você
         </button>
       </div>
 

@@ -1,7 +1,7 @@
-// src/components/CadastroDono.tsx
 import React, { useState } from 'react';
 import api from '../services/api';
 import { useNavigate } from 'react-router-dom';
+import './CadastroDono.css';
 
 const CadastroDono: React.FC = () => {
   const navigate = useNavigate();
@@ -27,8 +27,10 @@ const CadastroDono: React.FC = () => {
     setErro(null);
     setSucesso(null);
 
-    // validações simples
-    if (!nomeRestaurante.trim() || !enderecoRestaurante.trim()) {
+    const nomeR = nomeRestaurante.trim();
+    const endR = enderecoRestaurante.trim();
+
+    if (!nomeR || !endR) {
       setErro('Preencha Nome do Restaurante e Endereço.');
       return;
     }
@@ -36,22 +38,19 @@ const CadastroDono: React.FC = () => {
     setLoading(true);
     try {
       const payload = {
-        // Dono
-        nome,
-        email,
+        nome: nome.trim(),
+        email: email.trim(),
         senha,
-        telefone,
-        // Restaurante (tem que bater com o que você testou no Postman)
-        nomeRestaurante,
-        enderecoRestaurante,
-        telefoneRestaurante,
+        telefone: telefone.trim(),
+        nomeRestaurante: nomeR,
+        enderecoRestaurante: endR,
+        telefoneRestaurante: telefoneRestaurante.trim(),
       };
 
-      const { data } = await api.post('/api/auth/donos/register', payload);
-      setSucesso(typeof data === 'string' ? data : 'Dono e restaurante cadastrados com sucesso');
+      const { data } = await api.post('/auth/donos/register', payload);
 
-      // Redireciona pro login do dono depois de 1.5s
-      setTimeout(() => navigate('/login-dono'), 1500);
+      setSucesso(typeof data === 'string' ? data : 'Dono e restaurante cadastrados com sucesso');
+      setTimeout(() => navigate('/login-dono'), 1200);
     } catch (err: any) {
       console.error(err);
       const msg = err?.response?.data || 'Erro ao cadastrar';
@@ -62,50 +61,82 @@ const CadastroDono: React.FC = () => {
   };
 
   return (
-    <div style={{ maxWidth: 520, margin: '40px auto', padding: 24, border: '1px solid #eee', borderRadius: 8, background: '#fff' }}>
-      <h2 style={{ marginTop: 0 }}>Cadastro de Dono + Restaurante</h2>
+    <div className="cadastro-dono-container">
+      <h2 className="cadastro-dono-title">Cadastro de Dono + Restaurante</h2>
 
-      {erro && <div style={{ marginBottom: 12, padding: 10, background: '#fdecea', color: '#b71c1c', borderRadius: 6 }}>{erro}</div>}
-      {sucesso && <div style={{ marginBottom: 12, padding: 10, background: '#e8f5e9', color: '#2e7d32', borderRadius: 6 }}>{sucesso}</div>}
+      {erro && <div className="mensagem mensagem-erro">{erro}</div>}
+      {sucesso && <div className="mensagem mensagem-sucesso">{sucesso}</div>}
 
-      <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 12 }}>
-        <fieldset style={{ border: '1px solid #eee', borderRadius: 8, padding: 12 }}>
-          <legend style={{ padding: '0 6px' }}>Dados do Dono</legend>
-          <input type="text" placeholder="Nome" value={nome} onChange={e => setNome(e.target.value)} required />
-          <input type="email" placeholder="E-mail" value={email} onChange={e => setEmail(e.target.value)} required />
-          <input type="password" placeholder="Senha" value={senha} onChange={e => setSenha(e.target.value)} required />
-          <input type="tel" placeholder="Telefone (opcional)" value={telefone} onChange={e => setTelefone(e.target.value)} />
+      <form onSubmit={handleSubmit} className="cadastro-dono-form">
+        <fieldset className="grupo">
+          <legend>Dados do Dono</legend>
+
+          <input
+            className="input"
+            type="text"
+            placeholder="Nome"
+            value={nome}
+            onChange={(e) => setNome(e.target.value)}
+            required
+          />
+          <input
+            className="input"
+            type="email"
+            placeholder="E-mail"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+          <input
+            className="input"
+            type="password"
+            placeholder="Senha"
+            value={senha}
+            onChange={(e) => setSenha(e.target.value)}
+            required
+          />
+          <input
+            className="input"
+            type="tel"
+            placeholder="Telefone (opcional)"
+            value={telefone}
+            onChange={(e) => setTelefone(e.target.value)}
+          />
         </fieldset>
 
-        <fieldset style={{ border: '1px solid #eee', borderRadius: 8, padding: 12 }}>
-          <legend style={{ padding: '0 6px' }}>Dados do Restaurante</legend>
+        <fieldset className="grupo">
+          <legend>Dados do Restaurante</legend>
+
           <input
+            className="input"
             type="text"
             placeholder="Nome do Restaurante"
             value={nomeRestaurante}
-            onChange={e => setNomeRestaurante(e.target.value)}
+            onChange={(e) => setNomeRestaurante(e.target.value)}
             required
           />
           <input
+            className="input"
             type="text"
             placeholder="Endereço do Restaurante"
             value={enderecoRestaurante}
-            onChange={e => setEnderecoRestaurante(e.target.value)}
+            onChange={(e) => setEnderecoRestaurante(e.target.value)}
             required
           />
           <input
+            className="input"
             type="tel"
             placeholder="Telefone do Restaurante (opcional)"
             value={telefoneRestaurante}
-            onChange={e => setTelefoneRestaurante(e.target.value)}
+            onChange={(e) => setTelefoneRestaurante(e.target.value)}
           />
+
+          <small className="dica">
+            Dica: Rua + Número + Bairro + Cidade (ex.: “Rua das Flores, 123 - Centro, Natal”).
+          </small>
         </fieldset>
 
-        <button
-          type="submit"
-          disabled={loading}
-          style={{ padding: '10px 16px', border: 'none', borderRadius: 8, background: '#0d6efd', color: '#fff', cursor: 'pointer' }}
-        >
+        <button type="submit" disabled={loading} className="btn-cadastro">
           {loading ? 'Cadastrando...' : 'Cadastrar'}
         </button>
       </form>
