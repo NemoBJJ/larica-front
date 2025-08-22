@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
-import './UsuarioLogin.css'; // Estilo específico (opcional)
+import './UsuarioLogin.css';
 
 const UsuarioLogin: React.FC = () => {
   const navigate = useNavigate();
@@ -16,21 +16,20 @@ const UsuarioLogin: React.FC = () => {
     setLoading(true);
 
     try {
-      // 1) Login do usuário (endpoint diferente do dono)
-      const response = await api.post('/api/auth/usuarios/login', { email, senha });
+      const response = await api.post('/auth/usuarios/login', { email, senha });
 
-      // 2) Extrair ID do usuário da resposta
-      const usuarioId = response.data?.id;
-      if (!usuarioId) {
-        throw new Error('ID do usuário não encontrado na resposta');
-      }
+      // ✅ SALVA TOKEN E DADOS DO USUÁRIO (em vez de só o ID)
+      const { token, id, nome, email: userEmail } = response.data;
 
-      // ✅ Salva o ID no localStorage
-      localStorage.setItem("usuarioId", usuarioId.toString());
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify({
+        id,
+        nome,
+        email: userEmail,
+        tipo: 'CLIENTE'
+      }));
 
-      // 3) Redirecionar para dashboard ou lista de restaurantes
-      navigate('/dashboard'); // Ou `/usuario/${usuarioId}` se tiver perfil
-
+      navigate('/dashboard');
     } catch (err: any) {
       console.error('Erro no login:', err);
       setErro(

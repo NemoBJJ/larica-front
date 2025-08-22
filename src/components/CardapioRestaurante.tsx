@@ -1,3 +1,4 @@
+// src/components/CardapioRestaurante.tsx
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
 import './CardapioRestaurante.css';
@@ -35,7 +36,8 @@ const CardapioRestaurante: React.FC<Props> = ({ restauranteId, nomeRestaurante, 
   useEffect(() => {
     const carregarCardapio = async () => {
       try {
-        const response = await api.get(`/api/produtos/por-restaurante/${restauranteId}`);
+        // ✅ SEM /api aqui (baseURL já tem /api)
+        const response = await api.get(`/produtos/por-restaurante/${restauranteId}`);
         setCardapio(response.data);
         setErro(null);
       } catch (error) {
@@ -75,12 +77,12 @@ const CardapioRestaurante: React.FC<Props> = ({ restauranteId, nomeRestaurante, 
   const calcularTotal = () => {
     return carrinho.reduce((total, item) => {
       const produto = cardapio.find((p) => p.id === item.id);
-      return total + (produto?.preco || 0) * item.quantidade;
+      return total + ((produto?.preco || 0) * item.quantidade);
     }, 0);
   };
 
   const fazerPedido = async () => {
-    const usuarioId = parseInt(localStorage.getItem('usuarioId') || '1');
+    const usuarioId = parseInt(localStorage.getItem('usuarioId') || '1', 10);
     const totalPedido = calcularTotal();
     const linkPagamento = `https://mpago.la/1kiC4gC?amount=${(totalPedido * 100).toFixed(0)}`;
 
@@ -96,6 +98,7 @@ const CardapioRestaurante: React.FC<Props> = ({ restauranteId, nomeRestaurante, 
     };
 
     try {
+      // ✅ endpoint correto (sem /api no início)
       const response = await api.post('/pedidos', pedido);
       window.open(linkPagamento, '_blank');
       setCarrinho([]);
@@ -142,6 +145,7 @@ const CardapioRestaurante: React.FC<Props> = ({ restauranteId, nomeRestaurante, 
             <ul className="carrinho-list">
               {carrinho.map((item) => {
                 const produto = cardapio.find((p) => p.id === item.id);
+                const subtotal = ((produto?.preco || 0) * item.quantidade).toFixed(2);
                 return (
                   <li key={item.id} className="carrinho-item">
                     <div className="carrinho-item-info">
@@ -155,7 +159,7 @@ const CardapioRestaurante: React.FC<Props> = ({ restauranteId, nomeRestaurante, 
                           +
                         </button>
                       </div>
-                      <span>R$ {(produto?.preco || 0 * item.quantidade).toFixed(2)}</span>
+                      <span>R$ {subtotal}</span>
                     </div>
                     <button
                       className="remover-btn"

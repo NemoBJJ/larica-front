@@ -3,8 +3,6 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import './PainelRestaurante.css';
-
-// 👇 importa o histórico só para uso aqui
 import HistoricoRestaurante from './HistoricoRestaurante';
 
 interface ItemPedido {
@@ -41,20 +39,20 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
   const [msgOk, setMsgOk] = useState<string | null>(null);
   const [msgErro, setMsgErro] = useState<string | null>(null);
 
-  // nome do restaurante
   const [nomeRestaurante, setNomeRestaurante] = useState<string>('');
+  const [enderecoRestaurante, setEnderecoRestaurante] = useState<string>('');
+  const [telefoneRestaurante, setTelefoneRestaurante] = useState<string>('');
 
-  // 👇 controla a visualização do histórico LOCAL (apenas nesta página)
   const [mostrarHistorico, setMostrarHistorico] = useState(false);
 
   const navigate = useNavigate();
 
   const carregarPedidos = async () => {
     try {
-      const res = await api.get(`/api/restaurantes/${restauranteId}/pedidos`, {
+      const res = await api.get(`/restaurantes/${restauranteId}/pedidos`, {
         params: { page: 0, size: 10 },
       });
-      setPedidos(res.data?.content || []);
+      setPedidos(res.data?.content || res.data || []);
       setErro(null);
     } catch (err: any) {
       const status = err?.response?.status;
@@ -68,36 +66,125 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
     }
   };
 
-  // buscar nome do restaurante (tenta /api e depois sem /api)
-  const carregarNomeRestaurante = async () => {
+  const carregarDadosRestaurante = async () => {
     try {
-      const r1 = await api.get(`/api/restaurantes/${restauranteId}`);
-      setNomeRestaurante(r1.data?.nome || '');
-      return;
-    } catch (_) {
-      try {
-        const r2 = await api.get(`/restaurantes/${restauranteId}`);
-        setNomeRestaurante(r2.data?.nome || '');
-        return;
-      } catch (err) {
-        console.error('Erro ao buscar restaurante:', err);
-        setNomeRestaurante(''); // fallback vazio
-      }
+      const r = await api.get(`/restaurantes/${restauranteId}`);
+      setNomeRestaurante(r.data?.nome || '');
+      setEnderecoRestaurante(r.data?.endereco || '');
+      setTelefoneRestaurante(r.data?.telefone || '');
+    } catch (err) {
+      console.error('Erro ao buscar restaurante:', err);
+      setNomeRestaurante('');
+      setEnderecoRestaurante('');
+      setTelefoneRestaurante('');
     }
   };
 
   useEffect(() => {
     carregarPedidos();
-    carregarNomeRestaurante();
+    carregarDadosRestaurante();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restauranteId]);
 
   const atualizarStatus = async (pedidoId: number, novoStatus: string) => {
+    await api.patch(
+      `/restaurantes/${restauranteId}/pedidos/${pedidoId}/status`,
+      null,
+      { params: { status: novoStatus } }
+    );
+  };
+
+  // ======== WhatsApp cooperativa ========
+  const coopStorageKey = (id: number) => `coop_whats_${id}`;
+  const limparNaoDigitos = (s: string) => s.replace(/\D+/g, '');
+
+  const normalizarNumero = (raw: string) => {
+    let n = limparNaoDigitos(raw);
+    if (!n.startsWith('55') && (n.length === 10 || n.length === 11)) {
+      n = '55' + n;
+    }
+    return n;
+  };
+
+  const obterOuConfigurarCooperativa = (): string | null => {
+    const key = coopStorageKey(restauranteId);
+    const atual = localStorage.getItem(key);
+    if (atual) return atual;
+
+    const informado = window.prompt(
+      'Informe o WhatsApp da cooperativa/motoboy (com DDI/DDD). Ex.: 5584XXXXXXXXX'
+    );
+    if (!informado) return null;
+
+    const numero = normalizarNumero(informado);
+    if (!/^55\d{10,13}$/.test(numero)) {
+      alert('Número inválido. Use DDI 55 + DDD + número.');
+      return null;
+    }
+    localStorage.setItem(key, numero);
+    return numero;
+  };
+
+  const configurarCooperativa = () => {
+    const key = coopStorageKey(restauranteId);
+    const atual = localStorage.getItem(key) || '';
+    const informado = window.prompt(
+      'Definir/alterar WhatsApp da cooperativa (com DDI/DDD).',
+      atual
+    );
+    if (!informado) return;
+    const numero = normalizarNumero(informado);
+    if (!/^55\d{10,13}$/.test(numero)) {
+      alert('Número inválido. Use DDI 55 + DDD + número.');
+      return;
+    }
+    localStorage.setItem(key, numero);
+    alert('Número salvo com sucesso!');
+  };
+
+  const montarMensagemWhats = (pedido: Pedido) => {
+    const itensResumo = pedido.itens.map(i => `${i.quantidade}x ${i.nomeProduto}`).join(', ');
+    const linhas = [
+      `Olá! Pedido #${pedido.id} — ${nomeRestaurante}`,
+      `Retirar: ${nomeRestaurante}${enderecoRestaurante ? ` — ${enderecoRestaurante}` : ''}${telefoneRestaurante ? ` (tel ${telefoneRestaurante})` : ''}`,
+      `Cliente: ${pedido.nomeCliente}${pedido.telefoneCliente ? ` (tel ${pedido.telefoneCliente})` : ''}`,
+      `Itens: ${itensResumo}`,
+      `Total: R$ ${pedido.total.toFixed(2)}`,
+      `Consegue fazer agora? 🙏`,
+    ];
+    return linhas.join('\n');
+  };
+
+  const abrirWhatsParaPedido = (pedido: Pedido) => {
+    const numero = obterOuConfigurarCooperativa();
+    if (!numero) return;
+    const texto = montarMensagemWhats(pedido);
+    const url = `https://wa.me/${numero}?text=${encodeURIComponent(texto)}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleAceitar = async (pedido: Pedido) => {
     try {
-      await api.patch(
-        `/api/restaurantes/${restauranteId}/pedidos/${pedidoId}/status`,
-        null,
-        { params: { status: novoStatus } }
-      );
+      await atualizarStatus(pedido.id, 'EM_PREPARO');
+      await carregarPedidos();
+      abrirWhatsParaPedido(pedido);
+    } catch {
+      setErro('Erro ao aceitar o pedido.');
+    }
+  };
+
+  const handleRecusar = async (pedidoId: number) => {
+    try {
+      await atualizarStatus(pedidoId, 'CANCELADO');
+      await carregarPedidos();
+    } catch {
+      setErro('Erro ao atualizar status do pedido.');
+    }
+  };
+
+  const marcarEntregue = async (pedidoId: number) => {
+    try {
+      await atualizarStatus(pedidoId, 'ENTREGUE');
       await carregarPedidos();
     } catch {
       setErro('Erro ao atualizar status do pedido.');
@@ -132,7 +219,7 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
 
     setSalvando(true);
     try {
-      await api.post(`/api/produtos/por-restaurante/${restauranteId}`, {
+      await api.post(`/produtos/por-restaurante/${restauranteId}`, {
         nome: nomeProd.trim(),
         descricao: descProd.trim(),
         preco: precoNumber,
@@ -154,7 +241,6 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
     }
   };
 
-  // 👉 quando o histórico estiver aberto, a página mostra somente o histórico
   if (mostrarHistorico) {
     return (
       <div className="painel-container">
@@ -177,18 +263,17 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
 
   return (
     <div className="painel-container">
-      <button onClick={() => (onVoltar ? onVoltar() : navigate(-1))} className="btn-voltar">
+      <button
+        onClick={() => (onVoltar ? onVoltar() : navigate(-1))}
+        className="btn-voltar"
+      >
         &larr; Voltar
       </button>
 
-      {/* nome do restaurante em destaque */}
-      <h2 className="painel-nome-restaurante">
-        {nomeRestaurante || `Restaurante #${restauranteId}`}
-      </h2>
-
-      <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-        <h1 className="painel-titulo" style={{ margin: 0 }}>Painel de Pedidos</h1>
-        {/* 👇 botão para abrir o histórico local */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+        <h2 className="painel-nome-restaurante" style={{ margin: 0 }}>
+          {nomeRestaurante || `Restaurante #${restauranteId}`}
+        </h2>
         <button
           className="btn-historico"
           onClick={() => setMostrarHistorico(true)}
@@ -196,14 +281,21 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
         >
           📜 Ver histórico
         </button>
+        <button
+          className="btn-secundario"
+          onClick={configurarCooperativa}
+          title="Definir/alterar WhatsApp da cooperativa"
+        >
+          ⚙️ Configurar Whats da cooperativa
+        </button>
       </div>
+
       <p className="painel-subtitulo">Usando ID: {restauranteId}</p>
 
       {msgOk && <div className="alert sucesso">{msgOk}</div>}
       {msgErro && <div className="alert erro">{msgErro}</div>}
       {erro && <div className="alert erro">{erro}</div>}
 
-      {/* Novo Produto */}
       <div className="novo-produto-card">
         <h2>Novo produto</h2>
         <form onSubmit={criarProduto} className="novo-produto-form">
@@ -251,58 +343,87 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
         </form>
       </div>
 
-      {/* Lista de Pedidos */}
       <div className="pedidos-lista">
         {pedidos.length === 0 ? (
-          <div className="sem-pedidos"><p>Nenhum pedido encontrado.</p></div>
+          <div className="sem-pedidos">
+            <p>Nenhum pedido encontrado.</p>
+          </div>
         ) : (
-          pedidos.map((pedido) => (
-            <div key={pedido.id} className="pedido-card">
-              <div className="pedido-header">
-                <h3>Pedido #{pedido.id}</h3>
-                <span className={`status-badge ${getStatusClass(pedido.status)}`}>
-                  {pedido.status}
-                </span>
-              </div>
-              <div className="pedido-info">
-                <p><strong>Data:</strong> {new Date(pedido.data).toLocaleString()}</p>
-                <p><strong>Cliente:</strong> {pedido.nomeCliente}</p>
-                <p><strong>Telefone:</strong> {pedido.telefoneCliente}</p>
-                <p><strong>Total:</strong> R$ {pedido.total.toFixed(2)}</p>
-              </div>
-              <div className="itens-container">
-                <h4>Itens:</h4>
-                <ul className="itens-lista">
-                  {pedido.itens.map((item) => (
-                    <li key={item.id}>
-                      <span className="item-quantidade">{item.quantidade}x</span>
-                      <span className="item-nome">{item.nomeProduto}</span>
-                      <span className="item-preco">
-                        R$ {(item.quantidade * item.precoUnitario).toFixed(2)}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div className="acoes-pedido">
-                {pedido.status.toUpperCase() === 'AGUARDANDO' && (
-                  <>
-                    <button onClick={() => atualizarStatus(pedido.id, 'EM_PREPARO')} className="btn-aceitar">
-                      Aceitar Pedido
+          pedidos.map((pedido) => {
+            const statusUp = (pedido.status || '').toUpperCase();
+            const podeChamarWhats = statusUp === 'EM_PREPARO' || statusUp === 'PRONTO';
+
+            return (
+              <div key={pedido.id} className="pedido-card">
+                <div className="pedido-header">
+                  <h3>Pedido #{pedido.id}</h3>
+                  <span className={`status-badge ${getStatusClass(pedido.status)}`}>
+                    {pedido.status}
+                  </span>
+                </div>
+
+                <div className="pedido-info">
+                  <p><strong>Data:</strong> {new Date(pedido.data).toLocaleString()}</p>
+                  <p><strong>Cliente:</strong> {pedido.nomeCliente}</p>
+                  <p><strong>Telefone:</strong> {pedido.telefoneCliente}</p>
+                  <p><strong>Total:</strong> R$ {pedido.total.toFixed(2)}</p>
+                </div>
+
+                <div className="itens-container">
+                  <h4>Itens:</h4>
+                  <ul className="itens-lista">
+                    {pedido.itens.map((item) => (
+                      <li key={item.id}>
+                        <span className="item-quantidade">{item.quantidade}x</span>
+                        <span className="item-nome">{item.nomeProduto}</span>
+                        <span className="item-preco">
+                          R$ {(item.quantidade * item.precoUnitario).toFixed(2)}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="acoes-pedido" style={{ gap: 8 }}>
+                  {(statusUp === 'AGUARDANDO') && (
+                    <>
+                      <button
+                        onClick={() => handleAceitar(pedido)}
+                        className="btn-aceitar"
+                      >
+                        Aceitar Pedido
+                      </button>
+                      <button
+                        onClick={() => handleRecusar(pedido.id)}
+                        className="btn-recusar"
+                      >
+                        Recusar Pedido
+                      </button>
+                    </>
+                  )}
+
+                  {podeChamarWhats && (
+                    <button
+                      onClick={() => abrirWhatsParaPedido(pedido)}
+                      className="btn-primario"
+                      title="Abrir conversa no WhatsApp com a cooperativa/motoboy"
+                    >
+                      📲 Chamar no WhatsApp
                     </button>
-                    <button onClick={() => atualizarStatus(pedido.id, 'CANCELADO')} className="btn-recusar">
-                      Recusar Pedido
+                  )}
+
+                  {(statusUp === 'EM_PREPARO' || statusUp === 'PRONTO') && (
+                    <button
+                      onClick={() => marcarEntregue(pedido.id)}
+                      className="btn-entregue"
+                    >
+                      Marcar como Entregue
                     </button>
-                  </>
-                )}
-                {(pedido.status.toUpperCase() === 'EM_PREPARO' || pedido.status.toUpperCase() === 'PRONTO') && (
-                  <button onClick={() => atualizarStatus(pedido.id, 'ENTREGUE')} className="btn-entregue">
-                    Marcar como Entregue
-                  </button>
-                )}
+                  )}
+                </div>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
     </div>

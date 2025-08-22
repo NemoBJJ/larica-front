@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import axios from 'axios';
+// src/components/CadastroUsuario.tsx
+import React, { useState } from 'react';
+import api from '../services/api';
 
 type Props = {
   onVoltar: () => void;
@@ -68,7 +69,7 @@ function CadastroUsuario({ onVoltar }: Props) {
         dataCadastro: formData.dataCadastro
       };
 
-      await axios.post('http://localhost:8086/api/auth/usuarios/register', dadosParaEnviar);
+      await api.post('/auth/usuarios/register', dadosParaEnviar);
 
       setMensagemSucesso('Usuário cadastrado com sucesso!');
       setFormData({

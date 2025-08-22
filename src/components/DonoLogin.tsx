@@ -15,13 +15,21 @@ const DonoLogin: React.FC = () => {
     setLoading(true);
 
     try {
-      const loginRes = await api.post('/auth/donos/login', { email, senha });
-      const donoId = Number(loginRes.data?.id);
-      if (!Number.isFinite(donoId) || donoId <= 0) {
-        setErro('Não foi possível identificar o usuário (ID inválido).');
-        return;
-      }
-      navigate(`/painel-restaurante/${donoId}`);
+      const response = await api.post('/auth/donos/login', { email, senha });
+
+      // ✅ SALVA TOKEN E DADOS DO DONO
+      const { token, id, nome, email: donoEmail, telefone } = response.data;
+
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify({
+        id,
+        nome,
+        email: donoEmail,
+        telefone,
+        tipo: 'DONO'
+      }));
+
+      navigate(`/painel-restaurante/${id}`);
     } catch (err: any) {
       console.error(err);
       const status = err?.response?.status;
