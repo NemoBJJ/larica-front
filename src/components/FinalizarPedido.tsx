@@ -14,8 +14,10 @@ const FinalizarPedido: React.FC<FinalizarPedidoProps> = ({ carrinho, usuarioId, 
     carrinho.reduce((tot, item) => tot + item.produto.preco * item.quantidade, 0);
 
   const finalizarPedido = async () => {
-    console.log('[FinalizarPedido] DEV sem pagamento – iniciando');
-    if (carrinho.length === 0) { setMensagem('Seu carrinho está vazio!'); return; }
+    if (carrinho.length === 0) {
+      setMensagem('Seu carrinho está vazio!');
+      return;
+    }
 
     const restauranteId = carrinho[0].produto.restauranteId;
     if (carrinho.some(i => i.produto.restauranteId !== restauranteId)) {
@@ -27,18 +29,23 @@ const FinalizarPedido: React.FC<FinalizarPedidoProps> = ({ carrinho, usuarioId, 
     setMensagem('');
 
     try {
+      // 1. Cria o pedido no backend
       const payload = {
         usuarioId,
         restauranteId,
         itens: carrinho.map((i) => ({ produtoId: i.produto.id, quantidade: i.quantidade })),
       };
 
-      const res = await api.post('/pedidos', payload);
-      console.log('[FinalizarPedido] Pedido criado:', res.data);
+      const pedidoRes = await api.post('/pedidos', payload);
+      const pedidoId = pedidoRes.data.id;
 
-      // 🔒 DEV: não abre pagamento
-      setMensagem(`Pedido #${res.data.id} criado com sucesso!`);
-      onFinalizado();
+      // 2. Gera o link de pagamento REAL
+      const pagamentoRes = await api.post(`/pagamentos/mercadopago/preference/${pedidoId}`);
+      const initPoint = pagamentoRes.data.initPoint;
+
+      // 3. Redireciona para o Mercado Pago
+      window.location.href = initPoint;
+
     } catch (err: any) {
       const msg = err?.response?.data?.message || err?.response?.data || err?.message || 'Erro ao finalizar pedido';
       console.error('❌ Erro ao criar pedido', err?.response || err);
@@ -65,7 +72,7 @@ const FinalizarPedido: React.FC<FinalizarPedidoProps> = ({ carrinho, usuarioId, 
       </div>
 
       <button onClick={finalizarPedido} disabled={carregando} className="botao-pagamento">
-        {carregando ? 'Processando...' : 'Finalizar Pedido (sem pagamento)'}
+        {carregando ? 'Processando...' : 'Finalizar Pedido e Pagar'}
       </button>
 
       {mensagem && (

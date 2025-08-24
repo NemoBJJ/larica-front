@@ -16,27 +16,21 @@ interface Produto {
   preco: number;
 }
 
-interface PedidoRequest {
-  usuarioId: number;
-  restauranteId: number;
-  valorTotal: number;
-  linkPagamento: string;
-  itens: {
-    produtoId: number;
-    quantidade: number;
-  }[];
+interface ItemCarrinho {
+  id: number;
+  quantidade: number;
 }
 
 const CardapioRestaurante: React.FC<Props> = ({ restauranteId, nomeRestaurante, onVoltar }) => {
   const [cardapio, setCardapio] = useState<Produto[]>([]);
-  const [carrinho, setCarrinho] = useState<{ id: number; quantidade: number }[]>([]);
+  const [carrinho, setCarrinho] = useState<ItemCarrinho[]>([]);
   const [erro, setErro] = useState<string | null>(null);
   const [mensagemSucesso, setMensagemSucesso] = useState<string | null>(null);
+  const [carregando, setCarregando] = useState(false);
 
   useEffect(() => {
     const carregarCardapio = async () => {
       try {
-        // ✅ SEM /api aqui (baseURL já tem /api)
         const response = await api.get(`/produtos/por-restaurante/${restauranteId}`);
         setCardapio(response.data);
         setErro(null);
@@ -83,30 +77,40 @@ const CardapioRestaurante: React.FC<Props> = ({ restauranteId, nomeRestaurante, 
 
   const fazerPedido = async () => {
     const usuarioId = parseInt(localStorage.getItem('usuarioId') || '1', 10);
-    const totalPedido = calcularTotal();
-    const linkPagamento = `https://mpago.la/1kiC4gC?amount=${(totalPedido * 100).toFixed(0)}`;
-
-    const pedido: PedidoRequest = {
-      usuarioId,
-      restauranteId,
-      valorTotal: totalPedido,
-      linkPagamento,
-      itens: carrinho.map((item) => ({
-        produtoId: item.id,
-        quantidade: item.quantidade,
-      })),
-    };
+    setCarregando(true);
+    setErro(null);
+    setMensagemSucesso(null);
 
     try {
-      // ✅ endpoint correto (sem /api no início)
-      const response = await api.post('/pedidos', pedido);
-      window.open(linkPagamento, '_blank');
+      // 1. Cria o pedido no backend
+      const payload = {
+        usuarioId,
+        restauranteId,
+        itens: carrinho.map((item) => ({
+          produtoId: item.id,
+          quantidade: item.quantidade,
+        })),
+      };
+
+      const pedidoRes = await api.post('/pedidos', payload);
+      const pedidoId = pedidoRes.data.id;
+
+      // 2. Gera o link de pagamento DINÂMICO
+      const pagamentoRes = await api.post(`/pagamentos/mercadopago/preference/${pedidoId}`);
+      const initPoint = pagamentoRes.data.initPoint;
+
+      // 3. Redireciona para o Mercado Pago
+      window.open(initPoint, '_blank');
       setCarrinho([]);
-      setMensagemSucesso(`✅ Pedido #${response.data.id} realizado! Redirecionando para pagamento...`);
+      setMensagemSucesso(`✅ Pedido #${pedidoId} realizado! Redirecionando para pagamento...`);
       setTimeout(() => setMensagemSucesso(null), 5000);
-    } catch (error) {
+
+    } catch (error: any) {
       console.error('Erro ao fazer pedido:', error);
-      setErro('Erro ao realizar pedido. Tente novamente.');
+      const mensagem = error?.response?.data?.message || 'Erro ao realizar pedido. Tente novamente.';
+      setErro(mensagem);
+    } finally {
+      setCarregando(false);
     }
   };
 
@@ -175,8 +179,12 @@ const CardapioRestaurante: React.FC<Props> = ({ restauranteId, nomeRestaurante, 
               <span>Total:</span>
               <span>R$ {calcularTotal().toFixed(2)}</span>
             </div>
-            <button className="finalizar-btn" onClick={fazerPedido}>
-              Finalizar Pedido e Pagar
+            <button
+              className="finalizar-btn"
+              onClick={fazerPedido}
+              disabled={carregando}
+            >
+              {carregando ? 'Processando...' : 'Finalizar Pedido e Pagar'}
             </button>
           </div>
         )}
