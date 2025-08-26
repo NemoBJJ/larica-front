@@ -1,0 +1,153 @@
+.pagamento-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
+}
+
+.pagamento-sucesso {
+  background: white;
+  padding: 40px;
+  border-radius: 20px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  max-width: 500px;
+  width: 100%;
+}
+
+.icon {
+  font-size: 80px;
+  margin-bottom: 20px;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+h1 {
+  color: #2d3748;
+  font-size: 2.5rem;
+  margin-bottom: 15px;
+  font-weight: 700;
+}
+
+.mensagem {
+  color: #718096;
+  font-size: 1.2rem;
+  margin-bottom: 30px;
+  line-height: 1.6;
+}
+
+.payment-info {
+  background: #f7fafc;
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 30px;
+  border-left: 4px solid #48bb78;
+}
+
+.payment-info p {
+  margin: 0;
+  color: #2d3748;
+  font-family: monospace;
+  font-size: 0.9rem;
+}
+
+.acoes {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 30px;
+}
+
+.btn-primario, .btn-secundario {
+  padding: 15px 30px;
+  border-radius: 10px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  display: inline-block;
+}
+
+.btn-primario {
+  background: #48bb78;
+  color: white;
+}
+
+.btn-primario:hover {
+  background: #38a169;
+  transform: translateY(-2px);
+}
+
+.btn-secundario {
+  background: transparent;
+  color: #48bb78;
+  border: 2px solid #48bb78;
+}
+
+.btn-secundario:hover {
+  background: #48bb78;
+  color: white;
+  transform: translateY(-2px);
+}
+
+.contato {
+  border-top: 1px solid #e2e8f0;
+  padding-top: 20px;
+}
+
+.contato a {
+  color: #667eea;
+  text-decoration: none;
+}
+
+.contato a:hover {
+  text-decoration: underline;
+}
+
+/* Loading */
+.loading {
+  text-align: center;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #e2e8f0;
+  border-top: 4px solid #48bb78;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Responsivo */
+@media (max-width: 600px) {
+  .pagamento-sucesso {
+    padding: 30px 20px;
+    margin: 10px;
+  }
+
+  h1 {
+    font-size: 2rem;
+  }
+
+  .acoes {
+    flex-direction: column;
+  }
+
+  .btn-primario, .btn-secundario {
+    width: 100%;
+    text-align: center;
+  }
+}
