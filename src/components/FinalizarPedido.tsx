@@ -1,12 +1,11 @@
-// src/components/FinalizarPedido.tsx
 import React, { useState } from 'react';
 import api from '../services/api';
 
 interface Produto { id: number; nome: string; preco: number; restauranteId: number; }
 interface ItemCarrinho { produto: Produto; quantidade: number; }
-interface FinalizarPedidoProps { carrinho: ItemCarrinho[]; usuarioId: number; onFinalizado: () => void; }
+interface FinalizarPedidoProps { carrinho: ItemCarrinho[]; onFinalizado: () => void; }
 
-const FinalizarPedido: React.FC<FinalizarPedidoProps> = ({ carrinho, usuarioId, onFinalizado }) => {
+const FinalizarPedido: React.FC<FinalizarPedidoProps> = ({ carrinho, onFinalizado }) => {
   const [mensagem, setMensagem] = useState('');
   const [carregando, setCarregando] = useState(false);
 
@@ -14,6 +13,20 @@ const FinalizarPedido: React.FC<FinalizarPedidoProps> = ({ carrinho, usuarioId, 
     carrinho.reduce((tot, item) => tot + item.produto.preco * item.quantidade, 0);
 
   const finalizarPedido = async () => {
+    const usuarioIdRaw = localStorage.getItem('usuarioId');
+
+    if (!usuarioIdRaw) {
+      setMensagem('Usuário não está logado! Faça login novamente.');
+      return;
+    }
+
+    const usuarioId = parseInt(usuarioIdRaw, 10);
+
+    if (isNaN(usuarioId)) {
+      setMensagem('ID de usuário inválido! Faça login novamente.');
+      return;
+    }
+
     if (carrinho.length === 0) {
       setMensagem('Seu carrinho está vazio!');
       return;
