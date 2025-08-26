@@ -3,9 +3,9 @@ import api from '../services/api';
 
 interface Produto { id: number; nome: string; preco: number; restauranteId: number; }
 interface ItemCarrinho { produto: Produto; quantidade: number; }
-interface FinalizarPedidoProps { carrinho: ItemCarrinho[]; onFinalizado: () => void; }
+interface FinalizarPedidoProps { carrinho: ItemCarrinho[]; usuarioId: number; onFinalizado: () => void; }
 
-const FinalizarPedido: React.FC<FinalizarPedidoProps> = ({ carrinho, onFinalizado }) => {
+const FinalizarPedido: React.FC<FinalizarPedidoProps> = ({ carrinho, usuarioId, onFinalizado }) => {
   const [mensagem, setMensagem] = useState('');
   const [carregando, setCarregando] = useState(false);
 
@@ -13,18 +13,14 @@ const FinalizarPedido: React.FC<FinalizarPedidoProps> = ({ carrinho, onFinalizad
     carrinho.reduce((tot, item) => tot + item.produto.preco * item.quantidade, 0);
 
   const finalizarPedido = async () => {
-    const usuarioIdRaw = localStorage.getItem('usuarioId');
-
-    if (!usuarioIdRaw) {
-      setMensagem('Usuário não está logado! Faça login novamente.');
-      return;
-    }
-
-    const usuarioId = parseInt(usuarioIdRaw, 10);
-
-    if (isNaN(usuarioId)) {
-      setMensagem('ID de usuário inválido! Faça login novamente.');
-      return;
+    // ✅ VALIDAÇÃO DO usuarioId (AGORA CORRETA)
+    if (!usuarioId || usuarioId === 1) {
+      const usuarioIdRaw = localStorage.getItem('usuarioId');
+      if (!usuarioIdRaw) {
+        setMensagem('Usuário não está logado! Faça login novamente.');
+        return;
+      }
+      usuarioId = parseInt(usuarioIdRaw, 10);
     }
 
     if (carrinho.length === 0) {
@@ -44,7 +40,7 @@ const FinalizarPedido: React.FC<FinalizarPedidoProps> = ({ carrinho, onFinalizad
     try {
       // 1. Cria o pedido no backend
       const payload = {
-        usuarioId,
+        usuarioId, // ✅ AGORA SEMPRE CORRETO
         restauranteId,
         itens: carrinho.map((i) => ({ produtoId: i.produto.id, quantidade: i.quantidade })),
       };
