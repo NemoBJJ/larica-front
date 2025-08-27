@@ -2,7 +2,7 @@
   "name": "larica-frontend",
   "version": "0.1.0",
   "private": true,
-  "homepage": ".",  // ✅ ADICIONA ESTA LINHA
+  "homepage": ".",
   "engines": {
     "node": "18"
   },
@@ -21,7 +21,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build",  // ✅ REMOVE O "set CI=false&&"
+    "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "dev": "react-scripts start",
