@@ -7,6 +7,7 @@ interface Props {
   restauranteId: number;
   nomeRestaurante: string;
   onVoltar: () => void;
+  usuarioId: number; // ✅ AGORA RECEBE via props
 }
 
 interface Produto {
@@ -21,7 +22,7 @@ interface ItemCarrinho {
   quantidade: number;
 }
 
-const CardapioRestaurante: React.FC<Props> = ({ restauranteId, nomeRestaurante, onVoltar }) => {
+const CardapioRestaurante: React.FC<Props> = ({ restauranteId, nomeRestaurante, onVoltar, usuarioId }) => {
   const [cardapio, setCardapio] = useState<Produto[]>([]);
   const [carrinho, setCarrinho] = useState<ItemCarrinho[]>([]);
   const [erro, setErro] = useState<string | null>(null);
@@ -76,7 +77,7 @@ const CardapioRestaurante: React.FC<Props> = ({ restauranteId, nomeRestaurante, 
   };
 
   const fazerPedido = async () => {
-    const usuarioId = parseInt(localStorage.getItem('usuarioId') || '1', 10);
+    // ✅ CORREÇÃO: Remove a linha do localStorage e usa o usuarioId das props
     setCarregando(true);
     setErro(null);
     setMensagemSucesso(null);
@@ -84,7 +85,7 @@ const CardapioRestaurante: React.FC<Props> = ({ restauranteId, nomeRestaurante, 
     try {
       // 1. Cria o pedido no backend
       const payload = {
-        usuarioId,
+        usuarioId, // ✅ Já vem das props
         restauranteId,
         itens: carrinho.map((item) => ({
           produtoId: item.id,

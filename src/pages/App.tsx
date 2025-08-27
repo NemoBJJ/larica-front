@@ -12,6 +12,7 @@ import CardapioRestaurante from '../components/CardapioRestaurante';
 import UsuarioLogin from '../components/UsuarioLogin';
 import HistoricoUsuario from '../components/HistoricoUsuario';
 import HistoricoGeral from '../components/HistoricoGeral';
+import VerificarUsuario from '../components/VerificarUsuario'; // ✅ IMPORT ADICIONADO
 
 import './App.css';
 
@@ -23,12 +24,15 @@ const PainelWrapper: React.FC = () => {
 
 const CardapioWrapper: React.FC = () => {
   const { restauranteId } = useParams<{ restauranteId: string }>();
+  // ✅ CORREÇÃO: Adicionado usuarioId do localStorage
+  const usuarioId = parseInt(localStorage.getItem('usuarioId') || '1', 10);
   const id = Number(restauranteId ?? 1);
   return (
     <CardapioRestaurante
       restauranteId={id}
       nomeRestaurante={`Restaurante #${id}`}
       onVoltar={() => window.history.back()}
+      usuarioId={usuarioId} // ✅ AGORA COM usuarioId
     />
   );
 };
@@ -56,6 +60,7 @@ const App: React.FC = () => {
         <Link to="/login-dono" className="nav-link">🔐 Login Dono</Link>
         <Link to="/login" className="nav-link">🔓 Login Cliente</Link>
         <Link to="/historico-geral" className="nav-link">≡ Histórico</Link>
+        <Link to="/debug-usuario" className="nav-link">🔍 Debug</Link> {/* ✅ LINK ADICIONADO */}
       </nav>
 
       <Routes>
@@ -79,6 +84,9 @@ const App: React.FC = () => {
 
         {/* Manager */}
         <Route path="/historico-geral" element={<HistoricoGeralWrapper />} />
+
+        {/* ✅ ROTA ADICIONADA PARA DEBUG */}
+        <Route path="/debug-usuario" element={<VerificarUsuario />} />
       </Routes>
     </Router>
   );

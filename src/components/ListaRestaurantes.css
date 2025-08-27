@@ -1,0 +1,95 @@
+/* src/components/ListaRestaurantes.css */
+.lista-restaurantes {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.lista-restaurantes h2 {
+  text-align: center;
+  color: #333;
+  margin-bottom: 30px;
+}
+
+.restaurantes-list {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.restaurante-item {
+  background: white;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.restaurante-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+
+.restaurante-info h3 {
+  margin: 0 0 10px 0;
+  color: #2c5530;
+  font-size: 1.2em;
+}
+
+.restaurante-info p {
+  margin: 5px 0;
+  color: #666;
+  font-size: 0.9em;
+}
+
+.tipo-cozinha {
+  display: inline-block;
+  background: #f0f8ff;
+  color: #2c5530;
+  padding: 4px 8px;
+  border-radius: 15px;
+  font-size: 0.8em;
+  margin-top: 10px;
+}
+
+.ver-cardapio-btn {
+  background: #2c5530;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 15px;
+  width: 100%;
+}
+
+.ver-cardapio-btn:hover {
+  background: #1e3a23;
+}
+
+.carregando {
+  text-align: center;
+  padding: 40px;
+  font-size: 1.2em;
+  color: #666;
+}
+
+.erro {
+  text-align: center;
+  padding: 40px;
+  color: #d32f2f;
+  font-size: 1.1em;
+}
+
+@media (max-width: 768px) {
+  .restaurantes-list {
+    grid-template-columns: 1fr;
+  }
+  
+  .lista-restaurantes {
+    padding: 10px;
+  }
+}

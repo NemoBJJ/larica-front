@@ -31,7 +31,7 @@ const FinalizarPedido: React.FC<FinalizarPedidoProps> = ({ carrinho, usuarioId, 
     try {
       // 1. Cria o pedido no backend
       const payload = {
-        usuarioId,
+        usuarioId, // ✅ Já vem via props
         restauranteId,
         itens: carrinho.map((i) => ({ produtoId: i.produto.id, quantidade: i.quantidade })),
       };
