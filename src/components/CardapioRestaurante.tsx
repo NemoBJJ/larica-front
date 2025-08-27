@@ -1,3 +1,4 @@
+// src/components/CardapioRestaurante.tsx
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
 import './CardapioRestaurante.css';
@@ -75,20 +76,7 @@ const CardapioRestaurante: React.FC<Props> = ({ restauranteId, nomeRestaurante, 
   };
 
   const fazerPedido = async () => {
-    const usuarioIdRaw = localStorage.getItem('usuarioId');
-
-    if (!usuarioIdRaw) {
-      setErro('Usuário não está logado! Faça login novamente.');
-      return;
-    }
-
-    const usuarioId = parseInt(usuarioIdRaw, 10);
-
-    if (isNaN(usuarioId)) {
-      setErro('ID de usuário inválido! Faça login novamente.');
-      return;
-    }
-
+    const usuarioId = parseInt(localStorage.getItem('usuarioId') || '1', 10);
     setCarregando(true);
     setErro(null);
     setMensagemSucesso(null);

@@ -1,3 +1,4 @@
+// src/components/FinalizarPedido.tsx
 import React, { useState } from 'react';
 import api from '../services/api';
 
@@ -13,16 +14,6 @@ const FinalizarPedido: React.FC<FinalizarPedidoProps> = ({ carrinho, usuarioId, 
     carrinho.reduce((tot, item) => tot + item.produto.preco * item.quantidade, 0);
 
   const finalizarPedido = async () => {
-    // ✅ VALIDAÇÃO DO usuarioId (AGORA CORRETA)
-    if (!usuarioId || usuarioId === 1) {
-      const usuarioIdRaw = localStorage.getItem('usuarioId');
-      if (!usuarioIdRaw) {
-        setMensagem('Usuário não está logado! Faça login novamente.');
-        return;
-      }
-      usuarioId = parseInt(usuarioIdRaw, 10);
-    }
-
     if (carrinho.length === 0) {
       setMensagem('Seu carrinho está vazio!');
       return;
@@ -40,7 +31,7 @@ const FinalizarPedido: React.FC<FinalizarPedidoProps> = ({ carrinho, usuarioId, 
     try {
       // 1. Cria o pedido no backend
       const payload = {
-        usuarioId, // ✅ AGORA SEMPRE CORRETO
+        usuarioId,
         restauranteId,
         itens: carrinho.map((i) => ({ produtoId: i.produto.id, quantidade: i.quantidade })),
       };
