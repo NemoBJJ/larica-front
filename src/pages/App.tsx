@@ -1,4 +1,3 @@
-// src/pages/App.tsx
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Route, Routes, Link, useParams } from 'react-router-dom';
 
@@ -12,7 +11,7 @@ import CardapioRestaurante from '../components/CardapioRestaurante';
 import UsuarioLogin from '../components/UsuarioLogin';
 import HistoricoUsuario from '../components/HistoricoUsuario';
 import HistoricoGeral from '../components/HistoricoGeral';
-import VerificarUsuario from '../components/VerificarUsuario'; // ✅ IMPORT ADICIONADO
+import VerificarUsuario from '../components/VerificarUsuario';
 
 import './App.css';
 
@@ -24,22 +23,112 @@ const PainelWrapper: React.FC = () => {
 
 const CardapioWrapper: React.FC = () => {
   const { restauranteId } = useParams<{ restauranteId: string }>();
-  // ✅ CORREÇÃO: Adicionado usuarioId do localStorage
-  const usuarioId = parseInt(localStorage.getItem('usuarioId') || '1', 10);
-  const id = Number(restauranteId ?? 1);
-  return (
-    <CardapioRestaurante
-      restauranteId={id}
-      nomeRestaurante={`Restaurante #${id}`}
-      onVoltar={() => window.history.back()}
-      usuarioId={usuarioId} // ✅ AGORA COM usuarioId
-    />
-  );
+  
+  // ✅✅✅ CORREÇÃO: SEM FALLBACK, SÓ USA O ID REAL
+  const userData = localStorage.getItem('user');
+  
+  if (!userData) {
+    console.error('🚨 ERRO: Nenhum usuário logado!');
+    return (
+      <div style={{ padding: '20px', textAlign: 'center' }}>
+        <h2>❌ Acesso não autorizado</h2>
+        <p>Você precisa fazer login para acessar o cardápio.</p>
+        <button 
+          onClick={() => window.location.href = '/login'}
+          style={{ padding: '10px 20px', background: '#007bff', color: 'white', border: 'none', borderRadius: '5px' }}
+        >
+          Fazer Login
+        </button>
+      </div>
+    );
+  }
+  
+  try {
+    const user = JSON.parse(userData);
+    const usuarioId = user?.id;
+    
+    if (!usuarioId) {
+      throw new Error('ID do usuário não encontrado');
+    }
+    
+    console.log('✅ Usuário logado. ID:', usuarioId);
+    
+    const id = Number(restauranteId ?? 1);
+    return (
+      <CardapioRestaurante
+        restauranteId={id}
+        nomeRestaurante={`Restaurante #${id}`}
+        onVoltar={() => window.history.back()}
+        usuarioId={usuarioId}
+      />
+    );
+    
+  } catch (error) {
+    console.error('❌ Erro ao processar dados do usuário:', error);
+    return (
+      <div style={{ padding: '20px', textAlign: 'center' }}>
+        <h2>❌ Erro nos dados do usuário</h2>
+        <p>Os dados de login estão corrompidos. Faça login novamente.</p>
+        <button 
+          onClick={() => {
+            localStorage.clear();
+            window.location.href = '/login';
+          }}
+          style={{ padding: '10px 20px', background: '#dc3545', color: 'white', border: 'none', borderRadius: '5px' }}
+        >
+          Fazer Login Novamente
+        </button>
+      </div>
+    );
+  }
 };
 
 const HistoricoUsuarioWrapper: React.FC = () => {
-  const usuarioId = parseInt(localStorage.getItem('usuarioId') || '1', 10);
-  return <HistoricoUsuario usuarioId={usuarioId} onVoltar={() => window.history.back()} />;
+  const userData = localStorage.getItem('user');
+  
+  if (!userData) {
+    return (
+      <div style={{ padding: '20px', textAlign: 'center' }}>
+        <h2>❌ Acesso não autorizado</h2>
+        <p>Você precisa fazer login para ver o histórico.</p>
+        <button 
+          onClick={() => window.location.href = '/login'}
+          style={{ padding: '10px 20px', background: '#007bff', color: 'white', border: 'none', borderRadius: '5px' }}
+        >
+          Fazer Login
+        </button>
+      </div>
+    );
+  }
+  
+  try {
+    const user = JSON.parse(userData);
+    const usuarioId = user?.id;
+    
+    if (!usuarioId) {
+      throw new Error('ID do usuário não encontrado');
+    }
+    
+    return <HistoricoUsuario usuarioId={usuarioId} onVoltar={() => window.history.back()} />;
+    
+  } catch (error) {
+    console.error('Erro ao processar dados do usuário:', error);
+    return (
+      <div style={{ padding: '20px', textAlign: 'center' }}>
+        <h2>❌ Erro nos dados do usuário</h2>
+        <p>Os dados de login estão corrompidos. Faça login novamente.</p>
+        <button 
+          onClick={() => {
+            localStorage.clear();
+            window.location.href = '/login';
+          }}
+          style={{ padding: '10px 20px', background: '#dc3545', color: 'white', border: 'none', borderRadius: '5px' }}
+        >
+          Fazer Login Novamente
+        </button>
+      </div>
+    );
+  }
 };
 
 const HistoricoGeralWrapper: React.FC = () => {
@@ -60,7 +149,7 @@ const App: React.FC = () => {
         <Link to="/login-dono" className="nav-link">🔐 Login Dono</Link>
         <Link to="/login" className="nav-link">🔓 Login Cliente</Link>
         <Link to="/historico-geral" className="nav-link">≡ Histórico</Link>
-        <Link to="/debug-usuario" className="nav-link">🔍 Debug</Link> {/* ✅ LINK ADICIONADO */}
+        <Link to="/debug-usuario" className="nav-link">🔍 Debug</Link>
       </nav>
 
       <Routes>
@@ -85,7 +174,7 @@ const App: React.FC = () => {
         {/* Manager */}
         <Route path="/historico-geral" element={<HistoricoGeralWrapper />} />
 
-        {/* ✅ ROTA ADICIONADA PARA DEBUG */}
+        {/* Debug */}
         <Route path="/debug-usuario" element={<VerificarUsuario />} />
       </Routes>
     </Router>
