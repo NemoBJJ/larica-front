@@ -1,9 +1,9 @@
 // src/components/ListaRestaurantes.tsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import api from '../services/api';
 import './ListaRestaurantes.css';
 
-// Interface para tipar os dados do restaurante
 interface Restaurante {
   id: number;
   nome: string;
@@ -24,17 +24,11 @@ const ListaRestaurantes: React.FC = () => {
     const fetchRestaurantes = async () => {
       try {
         setCarregando(true);
-        const response = await fetch('http://localhost:8086/api/restaurantes');
+        const response = await api.get('/restaurantes');
         
-        if (!response.ok) {
-          throw new Error('Erro ao carregar restaurantes');
-        }
-        
-        const data: Restaurante[] = await response.json();
-        setRestaurantes(data);
+        setRestaurantes(response.data);
       } catch (error) {
         console.error('Erro ao buscar restaurantes:', error);
-        // Tratamento seguro para erro do tipo unknown
         if (error instanceof Error) {
           setErro(error.message);
         } else {
