@@ -12,7 +12,7 @@ interface ItemPedidoDTO {
 interface HistoricoPedidoDTO {
   pedidoId: number;
   nomeRestaurante: string;
-  data: string; // pode vir 'YYYY-MM-DD' ou ISO
+  data: string;
   status: string;
   itens: ItemPedidoDTO[];
 }
@@ -65,7 +65,8 @@ const HistoricoGeral: React.FC = () => {
     const load = async () => {
       try {
         setCarregando(true);
-        const response = await api.get<HistoricoPedidoDTO[]>('http://localhost:8086/pedidos/todos');
+        // ✅✅✅ CORREÇÃO AQUI - remove a URL absoluta
+        const response = await api.get<HistoricoPedidoDTO[]>('/pedidos/todos');
         setPedidos(response.data || []);
       } catch (err) {
         console.error('Erro ao carregar histórico geral:', err);

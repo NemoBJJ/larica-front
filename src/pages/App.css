@@ -1,27 +1,42 @@
-/* src/pages/App.css */
+/* App.css */
 .navbar {
-  background-color: #f8f9fa;
-  padding: 15px;
-  margin-bottom: 20px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  background-color: #000; /* Fundo preto */
+  padding: 15px 20px;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  box-shadow: 0 2px 10px rgba(255, 140, 0, 0.3); /* Sombra laranja */
+  border-bottom: 2px solid #ff8c00; /* Linha laranja */
 }
 
 .nav-link {
-  margin-right: 15px;
+  color: #ff8c00; /* Texto laranja */
   text-decoration: none;
-  color: #333;
-  font-weight: 500;
-  padding: 8px 12px;
-  border-radius: 4px;
+  margin: 0 15px;
+  padding: 10px 15px;
+  border-radius: 5px;
   transition: all 0.3s ease;
+  font-weight: 500;
+  border: 1px solid transparent;
 }
 
 .nav-link:hover {
-  background-color: #e9ecef;
-  color: #0056b3;
+  background-color: rgba(255, 140, 0, 0.1); /* Fundo laranja claro */
+  color: #ff6a00; /* Laranja mais escuro */
+  border: 1px solid #ff8c00; /* Borda laranja */
+  transform: translateY(-2px);
 }
 
-.nav-link.active {
-  background-color: #007bff;
-  color: white;
+/* Responsividade */
+@media (max-width: 768px) {
+  .navbar {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .nav-link {
+    margin: 5px 0;
+    width: 80%;
+    text-align: center;
+  }
 }

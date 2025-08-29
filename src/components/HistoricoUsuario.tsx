@@ -1,4 +1,3 @@
-// src/components/HistoricoUsuario.tsx
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
 
@@ -17,7 +16,10 @@ interface HistoricoPedidoDTO {
   itens: ItemPedidoDTO[];
 }
 
-const HistoricoUsuario: React.FC<{ usuarioId: number; onVoltar: () => void }> = ({ usuarioId, onVoltar }) => {
+const HistoricoUsuario: React.FC<{ 
+  usuarioId: number; 
+  onVoltar?: () => void; // ✅ AGORA É OPCIONAL
+}> = ({ usuarioId, onVoltar }) => {
   const [pedidos, setPedidos] = useState<HistoricoPedidoDTO[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
@@ -54,7 +56,9 @@ const HistoricoUsuario: React.FC<{ usuarioId: number; onVoltar: () => void }> = 
   if (!pedidos.length) {
     return (
       <div style={{ padding: 20 }}>
-        <button onClick={onVoltar} style={{ marginBottom: 12 }}>← Voltar</button>
+        {onVoltar && (
+          <button onClick={onVoltar} style={{ marginBottom: 12 }}>← Voltar</button>
+        )}
         <p>Nenhum pedido encontrado.</p>
       </div>
     );
@@ -62,10 +66,16 @@ const HistoricoUsuario: React.FC<{ usuarioId: number; onVoltar: () => void }> = 
 
   return (
     <div style={{ padding: 20 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-        <button onClick={onVoltar}>← Voltar</button>
-        <h2 style={{ margin: 0 }}>📜 Meu Histórico</h2>
-      </div>
+      {/* ✅ BOTÃO VOLtar SÓ APARECE SE onVoltar EXISTIR */}
+      {onVoltar && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+          <button onClick={onVoltar}>← Voltar</button>
+          <h2 style={{ margin: 0 }}>📜 Meu Histórico</h2>
+        </div>
+      )}
+      
+      {/* ✅ TÍTULO SEM Botão voltar */}
+      {!onVoltar && <h2>📜 Meu Histórico</h2>}
 
       {pedidos.map((pedido) => (
         <div

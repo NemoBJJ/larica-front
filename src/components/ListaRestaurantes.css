@@ -3,12 +3,17 @@
   padding: 20px;
   max-width: 1200px;
   margin: 0 auto;
+  background-color: #000; /* Fundo preto */
+  min-height: 100vh;
 }
 
 .lista-restaurantes h2 {
   text-align: center;
-  color: #333;
+  color: #ff8c00; /* Laranja para o título */
   margin-bottom: 30px;
+  font-size: 2rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .restaurantes-list {
@@ -20,76 +25,94 @@
 }
 
 .restaurante-item {
-  background: white;
+  background: #111; /* Fundo escuro para os cards */
   border-radius: 10px;
   padding: 20px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 15px rgba(255, 140, 0, 0.2); /* Sombra laranja */
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
+  border: 1px solid #333;
 }
 
 .restaurante-item:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(255, 140, 0, 0.3); /* Sombra laranja mais intensa */
 }
 
 .restaurante-info h3 {
   margin: 0 0 10px 0;
-  color: #2c5530;
-  font-size: 1.2em;
+  color: #ff8c00; /* Laranja para os nomes dos restaurantes */
+  font-size: 1.4em;
+  border-bottom: 2px solid #ff8c00;
+  padding-bottom: 8px;
 }
 
 .restaurante-info p {
-  margin: 5px 0;
-  color: #666;
-  font-size: 0.9em;
+  margin: 8px 0;
+  color: #ccc; /* Cinza claro para as informações */
+  font-size: 0.95em;
 }
 
 .tipo-cozinha {
   display: inline-block;
-  background: #f0f8ff;
-  color: #2c5530;
-  padding: 4px 8px;
-  border-radius: 15px;
-  font-size: 0.8em;
-  margin-top: 10px;
+  background: rgba(255, 140, 0, 0.2); /* Fundo laranja claro */
+  color: #ff8c00; /* Texto laranja */
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.85em;
+  margin-top: 12px;
+  font-weight: 500;
 }
 
 .ver-cardapio-btn {
-  background: #2c5530;
-  color: white;
+  background: #ff8c00; /* Botão laranja */
+  color: #000; /* Texto preto */
   border: none;
-  padding: 10px 15px;
-  border-radius: 5px;
+  padding: 12px 18px;
+  border-radius: 8px;
   cursor: pointer;
-  margin-top: 15px;
+  margin-top: 20px;
   width: 100%;
+  font-weight: bold;
+  transition: all 0.3s;
+  font-size: 1em;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .ver-cardapio-btn:hover {
-  background: #1e3a23;
+  background: #ff6a00; /* Laranja mais escuro no hover */
+  transform: scale(1.02);
 }
 
 .carregando {
   text-align: center;
-  padding: 40px;
-  font-size: 1.2em;
-  color: #666;
+  padding: 60px;
+  font-size: 1.4em;
+  color: #ff8c00; /* Laranja */
 }
 
 .erro {
   text-align: center;
-  padding: 40px;
-  color: #d32f2f;
-  font-size: 1.1em;
+  padding: 60px;
+  color: #ff4500; /* Laranja avermelhado para erro */
+  font-size: 1.2em;
+  background: rgba(255, 69, 0, 0.1);
+  border-radius: 10px;
+  margin: 20px;
 }
 
+/* Responsividade */
 @media (max-width: 768px) {
   .restaurantes-list {
     grid-template-columns: 1fr;
   }
   
   .lista-restaurantes {
-    padding: 10px;
+    padding: 15px;
+  }
+  
+  .lista-restaurantes h2 {
+    font-size: 1.6rem;
   }
 }

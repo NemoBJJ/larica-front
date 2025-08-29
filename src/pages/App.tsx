@@ -24,7 +24,6 @@ const PainelWrapper: React.FC = () => {
 const CardapioWrapper: React.FC = () => {
   const { restauranteId } = useParams<{ restauranteId: string }>();
   
-  // ✅✅✅ CORREÇÃO: SEM FALLBACK, SÓ USA O ID REAL
   const userData = localStorage.getItem('user');
   
   if (!userData) {
@@ -148,7 +147,8 @@ const App: React.FC = () => {
         <Link to="/painel-restaurante" className="nav-link">🍽️ Painel Restaurante</Link>
         <Link to="/login-dono" className="nav-link">🔐 Login Dono</Link>
         <Link to="/login" className="nav-link">🔓 Login Cliente</Link>
-        <Link to="/historico-geral" className="nav-link">≡ Histórico</Link>
+        <Link to="/historico-usuario" className="nav-link">📋 Meu Histórico</Link>
+        <Link to="/historico-geral" className="nav-link">≡ Histórico Geral</Link>
         <Link to="/debug-usuario" className="nav-link">🔍 Debug</Link>
       </nav>
 

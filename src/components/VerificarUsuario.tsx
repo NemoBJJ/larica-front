@@ -1,170 +1,204 @@
-import React from 'react';
+// src/components/VerificarUsuario.tsx
+import React, { useCallback, useEffect, useState } from 'react';
+import api from '../services/api';
+
+type BackendDebug = {
+  username?: string;
+  userId?: number;
+  roles?: string[];
+  tokenValid?: boolean;
+  tokenPreview?: string;
+  clientIp?: string;
+  userAgent?: string;
+  error?: string;
+};
+
+const Badge: React.FC<{ ok?: boolean; text: string }> = ({ ok, text }) => (
+  <span
+    style={{
+      display: 'inline-block',
+      padding: '4px 10px',
+      borderRadius: 999,
+      fontSize: 12,
+      fontWeight: 700,
+      background: ok === undefined ? '#e9ecef' : ok ? '#e8f5e8' : '#ffeaea',
+      color: ok === undefined ? '#495057' : ok ? '#2e7d32' : '#c62828',
+      border: `1px solid ${ok === undefined ? '#ced4da' : ok ? '#a5d6a7' : '#ef9a9a'}`,
+      marginLeft: 8,
+    }}
+  >
+    {text}
+  </span>
+);
+
+const Card: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
+  <div
+    style={{
+      padding: 16,
+      marginBottom: 16,
+      background: '#fff',
+      borderRadius: 10,
+      border: '1px solid #ddd',
+      boxShadow: '0 1px 2px rgba(0,0,0,.04)',
+    }}
+  >
+    <h4 style={{ margin: '0 0 10px 0' }}>{title}</h4>
+    {children}
+  </div>
+);
 
 const VerificarUsuario: React.FC = () => {
-  // Dados do localStorage
-  const token = localStorage.getItem('token');
-  const userData = localStorage.getItem('user');
-  const usuarioIdSeparado = localStorage.getItem('usuarioId');
-  
-  // Parsear dados do usuário
-  let usuarioId = 'Nenhum usuário logado';
-  let usuarioNome = 'Nenhum nome encontrado';
-  let usuarioEmail = 'Nenhum email encontrado';
-  let usuarioTipo = 'Nenhum tipo encontrado';
-  
-  if (userData) {
-    try {
-      const user = JSON.parse(userData);
-      usuarioId = user?.id || 'ID não encontrado';
-      usuarioNome = user?.nome || 'Nome não encontrado';
-      usuarioEmail = user?.email || 'Email não encontrado';
-      usuarioTipo = user?.tipo || 'Tipo não encontrado';
-    } catch (error) {
-      console.error('Erro ao parsear user data:', error);
-    }
-  }
+  const [data, setData] = useState<BackendDebug | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  // Verificar se o token é válido (baseado no formato)
-  const tokenValido = token && token.length > 50; // Verificação básica
+  const fetchInfo = useCallback(async () => {
+    setLoading(true);
+    try {
+      // baseURL do api já inclui o prefixo (ex.: /api)
+      const res = await api.get('/debug/token-info');
+      setData(res.data as BackendDebug);
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.error ||
+        err?.response?.data ||
+        err?.message ||
+        'Falha ao buscar /debug/token-info';
+      setData({ error: msg });
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchInfo();
+  }, [fetchInfo]);
+
+  const copyJson = async () => {
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(data ?? {}, null, 2));
+      alert('Copiado pro clipboard ✅');
+    } catch {
+      alert('Não consegui copiar 😞');
+    }
+  };
+
+  // statusOk vira true quando não há erro e (tokenValid é true ou indefinido)
+  const statusOk: boolean | undefined = data
+    ? !data.error && (data.tokenValid === undefined || data.tokenValid === true)
+    : undefined;
 
   return (
-    <div style={{ padding: '20px', background: '#f5f5f5', borderRadius: '10px', margin: '20px' }}>
-      <h3>🔍 Informações do Usuário Logado</h3>
-      
-      {/* Status do Token */}
-      <div style={{ 
-        padding: '10px', 
-        marginBottom: '15px', 
-        background: tokenValido ? '#e8f5e8' : '#ffeaea',
-        borderRadius: '5px',
-        border: `2px solid ${tokenValido ? '#4caf50' : '#ff4757'}`
-      }}>
-        <strong>Token JWT:</strong> {tokenValido ? '✅ VÁLIDO' : '❌ INVÁLIDO/AUSENTE'}
-        {token && (
-          <div style={{ fontSize: '12px', marginTop: '5px', wordBreak: 'break-all' }}>
-            <strong>Token:</strong> {token.substring(0, 50)}...
+    <div style={{ padding: 20, background: '#f5f5f5', borderRadius: 10, margin: 20 }}>
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
+        <h3 style={{ margin: 0 }}>🔍 Debug do Token (Backend)</h3>
+        <Badge
+          ok={statusOk ?? undefined}
+          text={
+            statusOk === true
+              ? 'OK'
+              : data?.error || data?.tokenValid === false
+              ? 'PROBLEMA'
+              : '—'
+          }
+        />
+      </div>
+
+      <Card title="Resultado do /debug/token-info">
+        {loading ? (
+          <p>⏳ Carregando…</p>
+        ) : (
+          <div style={{ lineHeight: 1.6 }}>
+            <p>
+              <strong>Usuário:</strong> {data?.username ?? '—'}
+            </p>
+            <p>
+              <strong>User ID:</strong> {data?.userId ?? '—'}
+            </p>
+            <p>
+              <strong>Roles:</strong> {data?.roles?.join(', ') || '—'}
+            </p>
+            <p>
+              <strong>Token válido:</strong>{' '}
+              {data?.tokenValid === undefined ? '—' : data?.tokenValid ? '✅ SIM' : '❌ NÃO'}
+            </p>
+            <p>
+              <strong>Token preview:</strong> {data?.tokenPreview ?? '—'}
+            </p>
+            <p>
+              <strong>Client IP:</strong> {data?.clientIp ?? '—'}
+            </p>
+            <p style={{ wordBreak: 'break-word' }}>
+              <strong>User-Agent:</strong> {data?.userAgent ?? '—'}
+            </p>
+            {data?.error && (
+              <p style={{ color: '#c62828' }}>
+                <strong>Erro:</strong> {data.error}
+              </p>
+            )}
+
+            <div style={{ marginTop: 10, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <button
+                onClick={fetchInfo}
+                disabled={loading}
+                style={{
+                  padding: '8px 14px',
+                  background: '#007bff',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: 6,
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  fontWeight: 700,
+                }}
+              >
+                {loading ? '🔄 Atualizando…' : '🔄 Atualizar'}
+              </button>
+              <button
+                onClick={copyJson}
+                style={{
+                  padding: '8px 14px',
+                  background: '#6c757d',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: 6,
+                  cursor: 'pointer',
+                  fontWeight: 700,
+                }}
+              >
+                📋 Copiar JSON
+              </button>
+            </div>
           </div>
         )}
-      </div>
+      </Card>
 
-      {/* Informações do Usuário */}
-      <div style={{ 
-        padding: '15px', 
-        marginBottom: '15px', 
-        background: '#fff', 
-        borderRadius: '5px',
-        border: '1px solid #ddd'
-      }}>
-        <h4>👤 Dados do Usuário</h4>
-        <p><strong>ID:</strong> {usuarioId}</p>
-        <p><strong>Nome:</strong> {usuarioNome}</p>
-        <p><strong>Email:</strong> {usuarioEmail}</p>
-        <p><strong>Tipo:</strong> {usuarioTipo}</p>
-        <p><strong>ID Separado:</strong> {usuarioIdSeparado || '❌ Não encontrado'}</p>
-      </div>
-
-      {/* Ações */}
-      <div style={{ 
-        padding: '15px', 
-        marginBottom: '15px', 
-        background: '#e3f2fd', 
-        borderRadius: '5px'
-      }}>
-        <h4>⚡ Ações Rápidas</h4>
-        <button 
-          onClick={() => {
-            localStorage.removeItem('user');
-            localStorage.removeItem('token');
-            localStorage.removeItem('usuarioId');
-            alert('Login limpo! Atualizando página...');
-            window.location.reload();
-          }}
-          style={{ 
-            padding: '8px 15px', 
-            background: '#ff4757', 
-            color: 'white', 
-            border: 'none', 
-            borderRadius: '5px',
-            marginRight: '10px',
-            cursor: 'pointer'
+      <Card title="Payload cru (para inspeção)">
+        <pre
+          style={{
+            background: '#f8f9fa',
+            padding: 12,
+            borderRadius: 8,
+            overflow: 'auto',
+            fontSize: 12,
+            margin: 0,
           }}
         >
-          🗑️ Limpar Login
-        </button>
-        
-        <button 
-          onClick={() => window.location.reload()}
-          style={{ 
-            padding: '8px 15px', 
-            background: '#007bff', 
-            color: 'white', 
-            border: 'none', 
-            borderRadius: '5px',
-            marginRight: '10px',
-            cursor: 'pointer'
-          }}
-        >
-          🔄 Atualizar Página
-        </button>
-
-        <button 
-          onClick={() => {
-            const userData = localStorage.getItem('user');
-            if (userData) {
-              try {
-                const user = JSON.parse(userData);
-                console.log('🔍 Dados do usuário no console:');
-                console.log('User Object:', user);
-                console.log('Token:', localStorage.getItem('token'));
-                alert('Dados logados no console (F12)');
-              } catch (error) {
-                console.error('Erro:', error);
-              }
-            }
-          }}
-          style={{ 
-            padding: '8px 15px', 
-            background: '#663399', 
-            color: 'white', 
-            border: 'none', 
-            borderRadius: '5px',
-            cursor: 'pointer'
-          }}
-        >
-          📋 Log no Console
-        </button>
-      </div>
-
-      {/* Todo o localStorage */}
-      <div style={{ 
-        padding: '15px', 
-        background: '#fff', 
-        borderRadius: '5px',
-        border: '1px solid #ddd'
-      }}>
-        <h4>🎯 Todo o Conteúdo do LocalStorage</h4>
-        <pre style={{ 
-          background: '#f8f9fa', 
-          padding: '10px', 
-          borderRadius: '5px', 
-          overflow: 'auto',
-          fontSize: '12px'
-        }}>
-          {JSON.stringify(localStorage, null, 2)}
+{JSON.stringify(data ?? {}, null, 2)}
         </pre>
-      </div>
+      </Card>
 
-      {/* Informações de Debug */}
-      <div style={{ 
-        marginTop: '15px', 
-        padding: '10px', 
-        background: '#fff3cd', 
-        borderRadius: '5px',
-        border: '1px solid #ffeaa7'
-      }}>
-        <h4>🐛 Informações para Debug</h4>
-        <p><strong>Problema conhecido:</strong> O sistema procura por <code>localStorage.getItem('user')</code> mas alguns componentes podem estar procurando por <code>localStorage.getItem('usuarioId')</code> separadamente.</p>
-        <p><strong>Solução:</strong> Verificar se o login está salvando corretamente no objeto <code>user</code>.</p>
+      <div
+        style={{
+          marginTop: 8,
+          padding: 10,
+          background: '#fff3cd',
+          borderRadius: 8,
+          border: '1px solid #ffeaa7',
+          fontSize: 13,
+          lineHeight: 1.5,
+        }}
+      >
+        Este painel mostra exatamente o retorno de <code>/debug/token-info</code> (o{' '}
+        <code>api</code> já injeta o <code>Authorization</code>).
       </div>
     </div>
   );

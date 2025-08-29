@@ -1,91 +1,95 @@
+// src/components/ListaRestaurantes.tsx
 import React, { useState, useEffect } from 'react';
-import api from '../services/api';
-import CardapioRestaurante from './CardapioRestaurante';
+import { useNavigate } from 'react-router-dom';
 import './ListaRestaurantes.css';
 
+// Interface para tipar os dados do restaurante
 interface Restaurante {
   id: number;
   nome: string;
   endereco: string;
-  tipoCozinha: string;
+  telefone: string;
+  dono_id?: number;
+  latitude?: number;
+  longitude?: number;
 }
 
 const ListaRestaurantes: React.FC = () => {
   const [restaurantes, setRestaurantes] = useState<Restaurante[]>([]);
-  const [restauranteSelecionado, setRestauranteSelecionado] = useState<Restaurante | null>(null);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
-
-  // ✅ PEGA O usuarioId DO LOCALSTORAGE
-  const usuarioId = parseInt(localStorage.getItem('usuarioId') || '1', 10);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const carregarRestaurantes = async () => {
+    const fetchRestaurantes = async () => {
       try {
-        const response = await api.get('/restaurantes');
-        setRestaurantes(response.data);
-        setErro(null);
+        setCarregando(true);
+        const response = await fetch('http://localhost:8086/api/restaurantes');
+        
+        if (!response.ok) {
+          throw new Error('Erro ao carregar restaurantes');
+        }
+        
+        const data: Restaurante[] = await response.json();
+        setRestaurantes(data);
       } catch (error) {
-        console.error('Erro ao carregar restaurantes:', error);
-        setErro('Erro ao carregar restaurantes. Tente novamente.');
+        console.error('Erro ao buscar restaurantes:', error);
+        // Tratamento seguro para erro do tipo unknown
+        if (error instanceof Error) {
+          setErro(error.message);
+        } else {
+          setErro('Erro desconhecido ao carregar restaurantes');
+        }
       } finally {
         setCarregando(false);
       }
     };
 
-    carregarRestaurantes();
+    fetchRestaurantes();
   }, []);
 
-  const handleRestauranteClick = (restaurante: Restaurante) => {
-    setRestauranteSelecionado(restaurante);
-  };
-
-  const handleVoltar = () => {
-    setRestauranteSelecionado(null);
+  const handleVerCardapio = (restauranteId: number) => {
+    navigate(`/cardapio/${restauranteId}`);
   };
 
   if (carregando) {
-    return <div className="carregando">Carregando restaurantes...</div>;
+    return (
+      <div className="lista-restaurantes">
+        <div className="carregando">Carregando restaurantes...</div>
+      </div>
+    );
   }
 
   if (erro) {
-    return <div className="erro">{erro}</div>;
-  }
-
-  if (restauranteSelecionado) {
     return (
-      <CardapioRestaurante
-        restauranteId={restauranteSelecionado.id}
-        nomeRestaurante={restauranteSelecionado.nome}
-        onVoltar={handleVoltar}
-        usuarioId={usuarioId} // ✅ AGORA COM usuarioId
-      />
+      <div className="lista-restaurantes">
+        <div className="erro">Erro: {erro}</div>
+      </div>
     );
   }
 
   return (
     <div className="lista-restaurantes">
       <h2>Restaurantes Disponíveis</h2>
-      {restaurantes.length > 0 ? (
-        <ul className="restaurantes-list">
-          {restaurantes.map((restaurante) => (
-            <li
-              key={restaurante.id}
-              className="restaurante-item"
-              onClick={() => handleRestauranteClick(restaurante)}
+      
+      <ul className="restaurantes-list">
+        {restaurantes.map(restaurante => (
+          <li key={restaurante.id} className="restaurante-item">
+            <div className="restaurante-info">
+              <h3>{restaurante.nome}</h3>
+              <p>{restaurante.endereco}</p>
+              <p>{restaurante.telefone}</p>
+              <span className="tipo-cozinha">Culinária variada</span>
+            </div>
+            <button 
+              className="ver-cardapio-btn"
+              onClick={() => handleVerCardapio(restaurante.id)}
             >
-              <div className="restaurante-info">
-                <h3>{restaurante.nome}</h3>
-                <p>{restaurante.endereco}</p>
-                <span className="tipo-cozinha">{restaurante.tipoCozinha}</span>
-              </div>
-              <button className="ver-cardapio-btn">Ver Cardápio</button>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p>Nenhum restaurante encontrado.</p>
-      )}
+              Ver Cardápio
+            </button>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 };
