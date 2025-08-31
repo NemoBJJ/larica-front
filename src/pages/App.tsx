@@ -12,6 +12,7 @@ import UsuarioLogin from '../components/UsuarioLogin';
 import HistoricoUsuario from '../components/HistoricoUsuario';
 import HistoricoGeral from '../components/HistoricoGeral';
 import VerificarUsuario from '../components/VerificarUsuario';
+import TelaEntregador from '../components/TelaEntregador';
 
 import './App.css';
 
@@ -176,6 +177,9 @@ const App: React.FC = () => {
 
         {/* Debug */}
         <Route path="/debug-usuario" element={<VerificarUsuario />} />
+
+        {/* ✅ NOVA ROTA DO ENTREGADOR - ADICIONA ISSO AQUI */}
+        <Route path="/entregador/pedido/:pedidoId" element={<TelaEntregador />} />
       </Routes>
     </Router>
   );

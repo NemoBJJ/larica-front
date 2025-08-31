@@ -1,4 +1,3 @@
-// src/components/PainelRestaurante.tsx
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
@@ -20,6 +19,26 @@ interface Pedido {
   telefoneCliente: string;
   itens: ItemPedido[];
   total: number;
+  restaurante?: {
+    id: number;
+    nome: string;
+    endereco: string;
+    numero: string;
+    bairro: string;
+    cidade: string;
+    cep: string;
+    telefone: string;
+    latitude: number;
+    longitude: number;
+  };
+  cliente?: {
+    nome: string;
+    endereco: string;
+    numero: string;
+    bairro: string;
+    cidade: string;
+    cep: string;
+  };
 }
 
 interface PainelProps {
@@ -52,7 +71,19 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
       const res = await api.get(`/restaurantes/${restauranteId}/pedidos`, {
         params: { page: 0, size: 10 },
       });
-      setPedidos(res.data?.content || res.data || []);
+      
+      // ✅ GARANTE QUE OS PEDIDOS TENHAM DADOS DO RESTAURANTE
+      const pedidosCompletos = (res.data?.content || res.data || []).map((pedido: any) => ({
+        ...pedido,
+        restaurante: {
+          id: restauranteId,
+          nome: nomeRestaurante,
+          endereco: enderecoRestaurante,
+          telefone: telefoneRestaurante
+        }
+      }));
+      
+      setPedidos(pedidosCompletos);
       setErro(null);
     } catch (err: any) {
       const status = err?.response?.status;
@@ -81,9 +112,9 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
   };
 
   useEffect(() => {
-    carregarPedidos();
-    carregarDadosRestaurante();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    carregarDadosRestaurante().then(() => {
+      carregarPedidos();
+    });
   }, [restauranteId]);
 
   const atualizarStatus = async (pedidoId: number, novoStatus: string) => {
@@ -142,32 +173,42 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
     alert('Número salvo com sucesso!');
   };
 
-  const montarMensagemWhats = (pedido: Pedido) => {
-    const itensResumo = pedido.itens.map(i => `${i.quantidade}x ${i.nomeProduto}`).join(', ');
-    const linhas = [
-      `Olá! Pedido #${pedido.id} — ${nomeRestaurante}`,
-      `Retirar: ${nomeRestaurante}${enderecoRestaurante ? ` — ${enderecoRestaurante}` : ''}${telefoneRestaurante ? ` (tel ${telefoneRestaurante})` : ''}`,
-      `Cliente: ${pedido.nomeCliente}${pedido.telefoneCliente ? ` (tel ${pedido.telefoneCliente})` : ''}`,
-      `Itens: ${itensResumo}`,
-      `Total: R$ ${pedido.total.toFixed(2)}`,
-      `Consegue fazer agora? 🙏`,
-    ];
-    return linhas.join('\n');
-  };
-
-  const abrirWhatsParaPedido = (pedido: Pedido) => {
+  // ✅ FUNÇÃO CORRIGIDA PARA CHAMAR MEU ENTREGADOR
+  const chamarMeuEntregador = (pedido: Pedido) => {
     const numero = obterOuConfigurarCooperativa();
     if (!numero) return;
-    const texto = montarMensagemWhats(pedido);
-    const url = `https://wa.me/${numero}?text=${encodeURIComponent(texto)}`;
-    window.open(url, '_blank', 'noopener,noreferrer');
+    
+    const nomeRest = pedido.restaurante?.nome || nomeRestaurante || 'Restaurante';
+    
+    const mensagem = `🚚 *LARICA - ENTREGA DISPONÍVEL* 🚚%0A%0A` +
+                     `*Pedido:* #${pedido.id}%0A` +
+                     `*Restaurante:* ${nomeRest}%0A%0A` +
+                     `📍 *ACESSE O MAPA COMPLETO:*%0A` +
+                     `${window.location.origin}/entregador/pedido/${pedido.id}%0A%0A` +
+                     `💰 *Valor sugerido:* R$ 15,00%0A` +
+                     `⏰ *Prazo:* 30 minutos`;
+
+    window.open(`https://wa.me/${numero}?text=${mensagem}`, '_blank');
+  };
+
+  // ✅ FUNÇÃO CORRIGIDA PARA CHAMAR GRUPO DE ENTREGADORES
+  const postarNoGrupoWhatsApp = (pedido: Pedido) => {
+    const nomeRest = pedido.restaurante?.nome || nomeRestaurante || 'Restaurante';
+    
+    const mensagem = `🚚 *LARICA - ENTREGA DISPONÍVEL* 🚚%0A%0A` +
+                     `*Pedido:* #${pedido.id}%0A` +
+                     `*Restaurante:* ${nomeRest}%0A%0A` +
+                     `📍 *ACESSE O MAPA COMPLETO:*%0A` +
+                     `${window.location.origin}/entregador/pedido/${pedido.id}%0A%0A` +
+                     `⚠️ *QUEM PEGAR COMENTA NO GRUPO!*`;
+
+    window.open(`https://web.whatsapp.com/send?text=${mensagem}`, '_blank');
   };
 
   const handleAceitar = async (pedido: Pedido) => {
     try {
       await atualizarStatus(pedido.id, 'EM_PREPARO');
       await carregarPedidos();
-      abrirWhatsParaPedido(pedido);
     } catch {
       setErro('Erro ao aceitar o pedido.');
     }
@@ -351,7 +392,7 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
         ) : (
           pedidos.map((pedido) => {
             const statusUp = (pedido.status || '').toUpperCase();
-            const podeChamarWhats = statusUp === 'EM_PREPARO' || statusUp === 'PRONTO';
+            const podeChamarEntregador = statusUp === 'EM_PREPARO' || statusUp === 'PRONTO';
 
             return (
               <div key={pedido.id} className="pedido-card">
@@ -402,14 +443,26 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
                     </>
                   )}
 
-                  {podeChamarWhats && (
-                    <button
-                      onClick={() => abrirWhatsParaPedido(pedido)}
-                      className="btn-primario"
-                      title="Abrir conversa no WhatsApp com a cooperativa/motoboy"
-                    >
-                      📲 Chamar no WhatsApp
-                    </button>
+                  {podeChamarEntregador && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+                      {/* ✅ BOTÃO: CHAMAR MEU ENTREGADOR */}
+                      <button
+                        onClick={() => chamarMeuEntregador(pedido)}
+                        className="btn-primario"
+                        title="Chamar meu entregador próprio"
+                      >
+                        📞 Chamar Meu Entregador
+                      </button>
+
+                      {/* ✅ BOTÃO: CHAMAR GRUPO DE ENTREGADORES */}
+                      <button
+                        onClick={() => postarNoGrupoWhatsApp(pedido)}
+                        className="btn-secundario"
+                        title="Postar no grupo de entregadores"
+                      >
+                        📢 Chamar Grupo de Entregadores
+                      </button>
+                    </div>
                   )}
 
                   {(statusUp === 'EM_PREPARO' || statusUp === 'PRONTO') && (

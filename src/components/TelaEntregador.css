@@ -1,0 +1,113 @@
+.container-entregador {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.header-entregador {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.header-entregador h1 {
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.status {
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: bold;
+  display: inline-block;
+}
+
+.status.aguardando {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.status.preparando {
+  background-color: #d1ecf1;
+  color: #0c5460;
+}
+
+.status.saiu-para-entrega {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.status.entregue {
+  background-color: #28a745;
+  color: white;
+}
+
+.card {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  margin-bottom: 20px;
+}
+
+.card h2 {
+  margin-top: 0;
+  color: #333;
+}
+
+.btn-navegar {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  margin-top: 10px;
+  width: 100%;
+}
+
+.btn-navegar:hover {
+  background-color: #0056b3;
+}
+
+.btn-atualizar {
+  background-color: #28a745;
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  margin-right: 10px;
+}
+
+.btn-atualizar:hover {
+  background-color: #218838;
+}
+
+.btn-voltar {
+  background-color: #6c757d;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 6px;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.btn-voltar:hover {
+  background-color: #5a6268;
+}
+
+.acoes {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.erro {
+  color: #dc3545;
+  text-align: center;
+  padding: 20px;
+  font-size: 18px;
+}
