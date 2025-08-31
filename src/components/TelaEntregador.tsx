@@ -27,7 +27,7 @@ function TelaEntregador() {
   const carregarPedido = async () => {
     try {
       setCarregando(true);
-      const response = await api.get(`/entregador/pedido/${pedidoId}`);
+    const response = await api.get(`/api/entregador/pedido/${pedidoId}`);
       setPedido(response.data);
       setErro('');
     } catch (error) {
