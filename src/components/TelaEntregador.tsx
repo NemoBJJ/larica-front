@@ -5,11 +5,14 @@ import api from '../services/api';
 import './TelaEntregador.css';
 
 interface PedidoEntregador {
-  id: number;          // vem do backend
+  pedidoId: number;
   status: string;
-  clienteId: number;
-  restauranteId: number;
-  data: string;
+  enderecoRestaurante: string;
+  latRestaurante: number;
+  lngRestaurante: number;
+  enderecoCliente: string;
+  latCliente: number;
+  lngCliente: number;
 }
 
 const TelaEntregador: React.FC = () => {
@@ -26,9 +29,8 @@ const TelaEntregador: React.FC = () => {
     }
     try {
       setCarregando(true);
-      // baseURL já é https://api-larica.neemindev.com/api
-      // então aqui é SÓ /pedidos/${id}
-      const response = await api.get<PedidoEntregador>(`/pedidos/${pedidoId}`);
+      // ✅ AGORA USA O ENDPOINT CORRETO DO ENTREGADOR
+      const response = await api.get<PedidoEntregador>(`/entregador/pedido/${pedidoId}`);
       setPedido(response.data);
       setErro('');
     } catch (e) {
@@ -43,11 +45,20 @@ const TelaEntregador: React.FC = () => {
     carregarPedido();
   }, [pedidoId]);
 
-  // Stubs – depois trocamos para o endpoint /entregador/pedido/{id} com lat/lng
-  const abrirGoogleMapsRestaurante = () =>
-    alert('Navegação para o restaurante será implementada com lat/lng.');
-  const abrirGoogleMapsCliente = () =>
-    alert('Navegação para o cliente será implementada com lat/lng.');
+  // ✅ FUNÇÕES DE NAVEGAÇÃO AGORA FUNCIONAIS
+  const abrirGoogleMapsRestaurante = () => {
+    if (pedido) {
+      const url = `https://www.google.com/maps/dir/?api=1&destination=${pedido.latRestaurante},${pedido.lngRestaurante}`;
+      window.open(url, '_blank');
+    }
+  };
+
+  const abrirGoogleMapsCliente = () => {
+    if (pedido && pedido.latCliente && pedido.lngCliente) {
+      const url = `https://www.google.com/maps/dir/?api=1&destination=${pedido.latCliente},${pedido.lngCliente}`;
+      window.open(url, '_blank');
+    }
+  };
 
   if (carregando) {
     return <div className="container">Carregando pedido #{pedidoId}...</div>;
@@ -65,16 +76,15 @@ const TelaEntregador: React.FC = () => {
   return (
     <div className="container-entregador">
       <header className="header-entregador">
-        <h1>📦 Pedido #{pedido.id}</h1>
+        <h1>📦 Pedido #{pedido.pedidoId}</h1>
         <div className={`status ${pedido.status.toLowerCase().replace(' ', '-')}`}>
           Status: {pedido.status}
         </div>
-        <p>Data: {new Date(pedido.data).toLocaleString()}</p>
       </header>
 
       <div className="card">
         <h2>🏪 Restaurante</h2>
-        <p>ID: {pedido.restauranteId}</p>
+        <p>Endereço: {pedido.enderecoRestaurante}</p>
         <button className="btn-navegar" onClick={abrirGoogleMapsRestaurante}>
           🗺️ Navegar até o Restaurante
         </button>
@@ -82,7 +92,7 @@ const TelaEntregador: React.FC = () => {
 
       <div className="card">
         <h2>👤 Cliente</h2>
-        <p>ID: {pedido.clienteId}</p>
+        <p>Endereço: {pedido.enderecoCliente}</p>
         <button className="btn-navegar" onClick={abrirGoogleMapsCliente}>
           🗺️ Navegar até o Cliente
         </button>
