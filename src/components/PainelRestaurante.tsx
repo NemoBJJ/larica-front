@@ -1,3 +1,4 @@
+// src/components/PainelRestaurante.tsx
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
@@ -72,7 +73,6 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
         params: { page: 0, size: 10 },
       });
       
-      // ✅ GARANTE QUE OS PEDIDOS TENHAM DADOS DO RESTAURANTE
       const pedidosCompletos = (res.data?.content || res.data || []).map((pedido: any) => ({
         ...pedido,
         restaurante: {
@@ -125,7 +125,6 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
     );
   };
 
-  // ======== WhatsApp cooperativa ========
   const coopStorageKey = (id: number) => `coop_whats_${id}`;
   const limparNaoDigitos = (s: string) => s.replace(/\D+/g, '');
 
@@ -173,7 +172,7 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
     alert('Número salvo com sucesso!');
   };
 
-  // ✅ FUNÇÃO CORRIGIDA PARA CHAMAR MEU ENTREGADOR
+  // ✅ FUNÇÃO CORRIGIDA - AGORA COM /api NO LINK
   const chamarMeuEntregador = (pedido: Pedido) => {
     const numero = obterOuConfigurarCooperativa();
     if (!numero) return;
@@ -184,14 +183,14 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
                      `*Pedido:* #${pedido.id}%0A` +
                      `*Restaurante:* ${nomeRest}%0A%0A` +
                      `📍 *ACESSE O MAPA COMPLETO:*%0A` +
-                     `${window.location.origin}/entregador/pedido/${pedido.id}%0A%0A` +
+                     `${window.location.origin}/api/entregador/pedido/${pedido.id}%0A%0A` + // ✅ CORRETO
                      `💰 *Valor sugerido:* R$ 15,00%0A` +
                      `⏰ *Prazo:* 30 minutos`;
 
     window.open(`https://wa.me/${numero}?text=${mensagem}`, '_blank');
   };
 
-  // ✅ FUNÇÃO CORRIGIDA PARA CHAMAR GRUPO DE ENTREGADORES
+  // ✅ FUNÇÃO CORRIGIDA - AGORA COM /api NO LINK
   const postarNoGrupoWhatsApp = (pedido: Pedido) => {
     const nomeRest = pedido.restaurante?.nome || nomeRestaurante || 'Restaurante';
     
@@ -199,7 +198,7 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
                      `*Pedido:* #${pedido.id}%0A` +
                      `*Restaurante:* ${nomeRest}%0A%0A` +
                      `📍 *ACESSE O MAPA COMPLETO:*%0A` +
-                     `${window.location.origin}/entregador/pedido/${pedido.id}%0A%0A` +
+                     `${window.location.origin}/api/entregador/pedido/${pedido.id}%0A%0A` + // ✅ CORRETO
                      `⚠️ *QUEM PEGAR COMENTA NO GRUPO!*`;
 
     window.open(`https://web.whatsapp.com/send?text=${mensagem}`, '_blank');
@@ -445,7 +444,6 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
 
                   {podeChamarEntregador && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
-                      {/* ✅ BOTÃO: CHAMAR MEU ENTREGADOR */}
                       <button
                         onClick={() => chamarMeuEntregador(pedido)}
                         className="btn-primario"
@@ -454,7 +452,6 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
                         📞 Chamar Meu Entregador
                       </button>
 
-                      {/* ✅ BOTÃO: CHAMAR GRUPO DE ENTREGADORES */}
                       <button
                         onClick={() => postarNoGrupoWhatsApp(pedido)}
                         className="btn-secundario"
