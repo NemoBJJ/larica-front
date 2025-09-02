@@ -4,14 +4,11 @@ import api from '../services/api';
 import './TelaEntregador.css';
 
 interface PedidoEntregador {
-  pedidoId: number;
+  id: number;               // ✅ Agora é "id" em vez de "pedidoId"
   status: string;
-  enderecoRestaurante: string;
-  latRestaurante: number;
-  lngRestaurante: number;
-  enderecoCliente: string;
-  latCliente: number;
-  lngCliente: number;
+  clienteId: number;        // ✅ Adicionado
+  restauranteId: number;    // ✅ Adicionado  
+  data: string;             // ✅ Adicionado
 }
 
 function TelaEntregador() {
@@ -27,7 +24,8 @@ function TelaEntregador() {
   const carregarPedido = async () => {
     try {
       setCarregando(true);
-    const response = await api.get(`/api/entregador/pedido/${pedidoId}`);
+      // ✅ Agora busca do endpoint correto
+      const response = await api.get(`/api/pedidos/${pedidoId}`);
       setPedido(response.data);
       setErro('');
     } catch (error) {
@@ -38,9 +36,15 @@ function TelaEntregador() {
     }
   };
 
-  const abrirGoogleMaps = (lat: number, lng: number, endereco: string) => {
-    const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving&dir_action=navigate`;
-    window.open(url, '_blank');
+  // ✅ Funções temporárias - você vai implementar depois
+  const abrirGoogleMapsRestaurante = () => {
+    // Implemente depois quando tiver os dados de endereço
+    alert('Funcionalidade de navegação será implementada em breve!');
+  };
+
+  const abrirGoogleMapsCliente = () => {
+    // Implemente depois quando tiver os dados de endereço  
+    alert('Funcionalidade de navegação será implementada em breve!');
   };
 
   if (carregando) {
@@ -59,18 +63,19 @@ function TelaEntregador() {
   return (
     <div className="container-entregador">
       <header className="header-entregador">
-        <h1>📦 Pedido #{pedido.pedidoId}</h1>
+        <h1>📦 Pedido #{pedido.id}</h1> {/* ✅ Mudou para pedido.id */}
         <div className={`status ${pedido.status.toLowerCase().replace(' ', '-')}`}>
           Status: {pedido.status}
         </div>
+        <p>Data: {new Date(pedido.data).toLocaleString()}</p>
       </header>
 
       <div className="card">
         <h2>🏪 Restaurante</h2>
-        <p>{pedido.enderecoRestaurante}</p>
+        <p>ID: {pedido.restauranteId}</p>
         <button 
           className="btn-navegar"
-          onClick={() => abrirGoogleMaps(pedido.latRestaurante, pedido.lngRestaurante, pedido.enderecoRestaurante)}
+          onClick={abrirGoogleMapsRestaurante}
         >
           🗺️ Navegar até o Restaurante
         </button>
@@ -78,10 +83,10 @@ function TelaEntregador() {
 
       <div className="card">
         <h2>👤 Cliente</h2>
-        <p>{pedido.enderecoCliente}</p>
+        <p>ID: {pedido.clienteId}</p>
         <button 
           className="btn-navegar"
-          onClick={() => abrirGoogleMaps(pedido.latCliente, pedido.lngCliente, pedido.enderecoCliente)}
+          onClick={abrirGoogleMapsCliente}
         >
           🗺️ Navegar até o Cliente
         </button>
@@ -92,6 +97,12 @@ function TelaEntregador() {
           🔄 Atualizar Status
         </button>
         <Link to="/" className="btn-voltar">Voltar para Início</Link>
+      </div>
+
+      {/* ✅ Seção de debug - pode remover depois */}
+      <div className="card debug">
+        <h3>🔧 Dados Recebidos (Debug)</h3>
+        <pre>{JSON.stringify(pedido, null, 2)}</pre>
       </div>
     </div>
   );
