@@ -29,8 +29,7 @@ const TelaEntregador: React.FC = () => {
     }
     try {
       setCarregando(true);
-      // ✅ AGORA USA O ENDPOINT CORRETO DO ENTREGADOR
-      const response = await api.get<PedidoEntregador>(`/entregador/pedido/${pedidoId}`);
+      const response = await api.get<PedidoEntregador>(`/api/entregador/pedido/${pedidoId}`);
       setPedido(response.data);
       setErro('');
     } catch (e) {
@@ -45,7 +44,6 @@ const TelaEntregador: React.FC = () => {
     carregarPedido();
   }, [pedidoId]);
 
-  // ✅ FUNÇÕES DE NAVEGAÇÃO AGORA FUNCIONAIS
   const abrirGoogleMapsRestaurante = () => {
     if (pedido) {
       const url = `https://www.google.com/maps/dir/?api=1&destination=${pedido.latRestaurante},${pedido.lngRestaurante}`;
