@@ -1,21 +1,97 @@
-import React, { useState } from 'react';
+// src/App.tsx
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, Link, useParams } from 'react-router-dom';
+import api from './services/api';
 
-import HomePage from '../pages/HomePage';
-import ListaRestaurantes from '../components/ListaRestaurantes';
-import CadastroUsuario from '../components/CadastroUsuario';
-import PainelRestaurante from '../components/PainelRestaurante';
-import DonoLogin from '../components/DonoLogin';
-import CadastroDono from '../components/CadastroDono';
-import CardapioRestaurante from '../components/CardapioRestaurante';
-import UsuarioLogin from '../components/UsuarioLogin';
-import HistoricoUsuario from '../components/HistoricoUsuario';
-import HistoricoGeral from '../components/HistoricoGeral';
-import VerificarUsuario from '../components/VerificarUsuario';
-import TelaEntregador from '../components/TelaEntregador';
+import HomePage from './pages/HomePage';
+import ListaRestaurantes from './components/ListaRestaurantes';
+import CadastroUsuario from './components/CadastroUsuario';
+import PainelRestaurante from './components/PainelRestaurante';
+import DonoLogin from './components/DonoLogin';
+import CadastroDono from './components/CadastroDono';
+import CardapioRestaurante from './components/CardapioRestaurante';
+import UsuarioLogin from './components/UsuarioLogin';
+import HistoricoUsuario from './components/HistoricoUsuario';
+import HistoricoGeral from './components/HistoricoGeral';
+import VerificarUsuario from './components/VerificarUsuario';
+import TelaEntregador from './components/TelaEntregador';
 
 import './App.css';
 
+// Interface para os dados do pedido
+interface PedidoEntregador {
+  pedidoId: number;
+  status: string;
+  enderecoRestaurante: string;
+  latRestaurante: number;
+  lngRestaurante: number;
+  enderecoCliente: string;
+  latCliente: number;
+  lngCliente: number;
+}
+
+// Componente para redirecionar para o Google Maps
+const RedirectMaps: React.FC = () => {
+  const { pedidoId } = useParams<{ pedidoId: string }>();
+  const [message, setMessage] = useState('🔄 Redirecionando para Google Maps...');
+
+  useEffect(() => {
+    const redirectToMaps = async () => {
+      if (!pedidoId) {
+        setMessage('❌ ID do pedido não encontrado');
+        return;
+      }
+
+      try {
+        // ✅ BUSCA NA API DO BACKEND
+        const response = await api.get<PedidoEntregador>(`/entregador/pedido/${pedidoId}`);
+        const data = response.data;
+        
+        // ✅ MONTA URL DO MAPS com as coordenadas do CLIENTE
+        const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${data.latCliente},${data.lngCliente}`;
+        
+        // ✅ REDIRECIONA DIRETO!
+        window.location.href = mapsUrl;
+        
+      } catch (error) {
+        console.error('Erro ao carregar dados do pedido:', error);
+        
+        try {
+          // Fallback: tenta redirecionar pelo menos para Natal
+          const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=-5.7945,-35.211`;
+          window.location.href = mapsUrl;
+        } catch (fallbackError) {
+          setMessage('❌ Erro ao carregar rota. Verifique o console.');
+        }
+      }
+    };
+
+    redirectToMaps();
+  }, [pedidoId]);
+
+  return (
+    <div style={{ 
+      padding: '50px', 
+      textAlign: 'center',
+      backgroundColor: '#f8f9fa',
+      minHeight: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      alignItems: 'center'
+    }}>
+      <h2 style={{ color: '#333', marginBottom: '20px' }}>{message}</h2>
+      <p style={{ color: '#666' }}>Pedido: #{pedidoId}</p>
+      <div style={{ marginTop: '20px' }}>
+        <Link to="/" style={{ padding: '10px 20px', background: '#007bff', color: 'white', textDecoration: 'none', borderRadius: '5px' }}>
+          Voltar para o Início
+        </Link>
+      </div>
+    </div>
+  );
+};
+
+// Wrappers existentes
 const PainelWrapper: React.FC = () => {
   const { restauranteId } = useParams<{ restauranteId: string }>();
   const id = Number(restauranteId);
@@ -135,6 +211,7 @@ const HistoricoGeralWrapper: React.FC = () => {
   return <HistoricoGeral />;
 };
 
+// Componente principal
 const App: React.FC = () => {
   const [mostrarCadastro, setMostrarCadastro] = useState(false);
   const handleVoltar = () => setMostrarCadastro(false);
@@ -151,6 +228,10 @@ const App: React.FC = () => {
         <Link to="/historico-usuario" className="nav-link">📋 Meu Histórico</Link>
         <Link to="/historico-geral" className="nav-link">≡ Histórico Geral</Link>
         <Link to="/debug-usuario" className="nav-link">🔍 Debug</Link>
+        {/* Link de teste para o maps */}
+        <Link to="/maps/73" className="nav-link" style={{background: '#28a745'}}>
+          🗺️ Testar Maps (Pedido 73)
+        </Link>
       </nav>
 
       <Routes>
@@ -178,8 +259,11 @@ const App: React.FC = () => {
         {/* Debug */}
         <Route path="/debug-usuario" element={<VerificarUsuario />} />
 
-        {/* ✅ NOVA ROTA DO ENTREGADOR - ADICIONA ISSO AQUI */}
+        {/* ✅ ROTA DO ENTREGADOR */}
         <Route path="/entregador/pedido/:pedidoId" element={<TelaEntregador />} />
+        
+        {/* ✅ NOVA ROTA DE REDIRECIONAMENTO PARA MAPS - ESSA É A QUE VOCÊ PRECISA! */}
+        <Route path="/maps/:pedidoId" element={<RedirectMaps />} />
       </Routes>
     </Router>
   );
