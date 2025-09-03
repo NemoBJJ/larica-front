@@ -1,7 +1,6 @@
-// src/App.tsx
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, Link, useParams } from 'react-router-dom';
-import api from './services/api';
+import axios from 'axios';
 
 import HomePage from './pages/HomePage';
 import ListaRestaurantes from './components/ListaRestaurantes';
@@ -17,6 +16,13 @@ import VerificarUsuario from './components/VerificarUsuario';
 import TelaEntregador from './components/TelaEntregador';
 
 import './App.css';
+
+// Configuração direta da API - sem import de arquivo externo
+const api = axios.create({
+  baseURL: 'https://larica.neemindev.com/api',
+  timeout: 10000,
+  headers: { 'Content-Type': 'application/json' },
+});
 
 // Interface para os dados do pedido
 interface PedidoEntregador {
@@ -43,26 +49,16 @@ const RedirectMaps: React.FC = () => {
       }
 
       try {
-        // ✅ BUSCA NA API DO BACKEND
         const response = await api.get<PedidoEntregador>(`/entregador/pedido/${pedidoId}`);
         const data = response.data;
         
-        // ✅ MONTA URL DO MAPS com as coordenadas do CLIENTE
         const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${data.latCliente},${data.lngCliente}`;
-        
-        // ✅ REDIRECIONA DIRETO!
         window.location.href = mapsUrl;
         
       } catch (error) {
         console.error('Erro ao carregar dados do pedido:', error);
-        
-        try {
-          // Fallback: tenta redirecionar pelo menos para Natal
-          const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=-5.7945,-35.211`;
-          window.location.href = mapsUrl;
-        } catch (fallbackError) {
-          setMessage('❌ Erro ao carregar rota. Verifique o console.');
-        }
+        const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=-5.7945,-35.211`;
+        window.location.href = mapsUrl;
       }
     };
 
@@ -70,23 +66,10 @@ const RedirectMaps: React.FC = () => {
   }, [pedidoId]);
 
   return (
-    <div style={{ 
-      padding: '50px', 
-      textAlign: 'center',
-      backgroundColor: '#f8f9fa',
-      minHeight: '100vh',
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'center',
-      alignItems: 'center'
-    }}>
-      <h2 style={{ color: '#333', marginBottom: '20px' }}>{message}</h2>
-      <p style={{ color: '#666' }}>Pedido: #{pedidoId}</p>
-      <div style={{ marginTop: '20px' }}>
-        <Link to="/" style={{ padding: '10px 20px', background: '#007bff', color: 'white', textDecoration: 'none', borderRadius: '5px' }}>
-          Voltar para o Início
-        </Link>
-      </div>
+    <div style={{ padding: '50px', textAlign: 'center' }}>
+      <h2>{message}</h2>
+      <p>Pedido: #{pedidoId}</p>
+      <Link to="/">Voltar para o Início</Link>
     </div>
   );
 };
@@ -104,7 +87,6 @@ const CardapioWrapper: React.FC = () => {
   const userData = localStorage.getItem('user');
   
   if (!userData) {
-    console.error('🚨 ERRO: Nenhum usuário logado!');
     return (
       <div style={{ padding: '20px', textAlign: 'center' }}>
         <h2>❌ Acesso não autorizado</h2>
@@ -126,8 +108,6 @@ const CardapioWrapper: React.FC = () => {
     if (!usuarioId) {
       throw new Error('ID do usuário não encontrado');
     }
-    
-    console.log('✅ Usuário logado. ID:', usuarioId);
     
     const id = Number(restauranteId ?? 1);
     return (
@@ -228,41 +208,26 @@ const App: React.FC = () => {
         <Link to="/historico-usuario" className="nav-link">📋 Meu Histórico</Link>
         <Link to="/historico-geral" className="nav-link">≡ Histórico Geral</Link>
         <Link to="/debug-usuario" className="nav-link">🔍 Debug</Link>
-        {/* Link de teste para o maps */}
-        <Link to="/maps/73" className="nav-link" style={{background: '#28a745'}}>
+        <Link to="/maps/73" className="nav-link" style={{background: '#28a745', color: 'white'}}>
           🗺️ Testar Maps (Pedido 73)
         </Link>
       </nav>
 
       <Routes>
         <Route path="/" element={<HomePage />} />
-
-        {/* Cliente */}
         <Route path="/login" element={<UsuarioLogin />} />
         <Route path="/cadastro" element={<CadastroUsuario onVoltar={handleVoltar} />} />
         <Route path="/dashboard" element={<ListaRestaurantes />} />
         <Route path="/cardapio/:restauranteId" element={<CardapioWrapper />} />
         <Route path="/historico-usuario" element={<HistoricoUsuarioWrapper />} />
-
-        {/* Dono */}
         <Route path="/login-dono" element={<DonoLogin />} />
         <Route path="/cadastro-dono" element={<CadastroDono />} />
         <Route path="/painel-restaurante" element={<PainelRestaurante restauranteId={4} onVoltar={handleVoltar} />} />
         <Route path="/painel-restaurante/:restauranteId" element={<PainelWrapper />} />
-
-        {/* Lista geral */}
         <Route path="/restaurantes" element={<ListaRestaurantes />} />
-
-        {/* Manager */}
         <Route path="/historico-geral" element={<HistoricoGeralWrapper />} />
-
-        {/* Debug */}
         <Route path="/debug-usuario" element={<VerificarUsuario />} />
-
-        {/* ✅ ROTA DO ENTREGADOR */}
         <Route path="/entregador/pedido/:pedidoId" element={<TelaEntregador />} />
-        
-        {/* ✅ NOVA ROTA DE REDIRECIONAMENTO PARA MAPS - ESSA É A QUE VOCÊ PRECISA! */}
         <Route path="/maps/:pedidoId" element={<RedirectMaps />} />
       </Routes>
     </Router>
