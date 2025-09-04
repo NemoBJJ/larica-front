@@ -14,8 +14,8 @@ import HistoricoGeral from '../components/HistoricoGeral';
 import VerificarUsuario from '../components/VerificarUsuario';
 import TelaEntregador from '../components/TelaEntregador';
 
-
-OS ERROS DE DEPLOY INICIARAM APÓS VOCE ALTERAR MEU App.tsx, faço mais alguns comentários a diante. 
+// OS ERROS DE DEPLOY INICIARAM APÓS VOCE ALTERAR MEU App.tsx, faço mais alguns comentários a diante.
+// ↑ essa linha estava sem comentário e quebrava o build no Netlify
 
 import './App.css';
 
@@ -181,7 +181,7 @@ const App: React.FC = () => {
         {/* Debug */}
         <Route path="/debug-usuario" element={<VerificarUsuario />} />
 
-        {/* ✅ NOVA ROTA DO ENTREGADOR - ADICIONA ISSO AQUI */}
+        {/* ✅ NOVA ROTA DO ENTREGADOR */}
         <Route path="/entregador/pedido/:pedidoId" element={<TelaEntregador />} />
       </Routes>
     </Router>
