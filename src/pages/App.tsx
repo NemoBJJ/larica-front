@@ -1,80 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Route, Routes, Link, useParams } from 'react-router-dom';
-import axios from 'axios';
 
-import HomePage from './pages/HomePage';
-import ListaRestaurantes from './components/ListaRestaurantes';
-import CadastroUsuario from './components/CadastroUsuario';
-import PainelRestaurante from './components/PainelRestaurante';
-import DonoLogin from './components/DonoLogin';
-import CadastroDono from './components/CadastroDono';
-import CardapioRestaurante from './components/CardapioRestaurante';
-import UsuarioLogin from './components/UsuarioLogin';
-import HistoricoUsuario from './components/HistoricoUsuario';
-import HistoricoGeral from './components/HistoricoGeral';
-import VerificarUsuario from './components/VerificarUsuario';
-import TelaEntregador from './components/TelaEntregador';
+import HomePage from '../pages/HomePage';
+import ListaRestaurantes from '../components/ListaRestaurantes';
+import CadastroUsuario from '../components/CadastroUsuario';
+import PainelRestaurante from '../components/PainelRestaurante';
+import DonoLogin from '../components/DonoLogin';
+import CadastroDono from '../components/CadastroDono';
+import CardapioRestaurante from '../components/CardapioRestaurante';
+import UsuarioLogin from '../components/UsuarioLogin';
+import HistoricoUsuario from '../components/HistoricoUsuario';
+import HistoricoGeral from '../components/HistoricoGeral';
+import VerificarUsuario from '../components/VerificarUsuario';
+import TelaEntregador from '../components/TelaEntregador';
+
+
+OS ERROS DE DEPLOY INICIARAM APÓS VOCE ALTERAR MEU App.tsx, faço mais alguns comentários a diante. 
 
 import './App.css';
 
-// Configuração direta da API - sem import de arquivo externo
-const api = axios.create({
-  baseURL: 'https://larica.neemindev.com/api',
-  timeout: 10000,
-  headers: { 'Content-Type': 'application/json' },
-});
-
-// Interface para os dados do pedido
-interface PedidoEntregador {
-  pedidoId: number;
-  status: string;
-  enderecoRestaurante: string;
-  latRestaurante: number;
-  lngRestaurante: number;
-  enderecoCliente: string;
-  latCliente: number;
-  lngCliente: number;
-}
-
-// Componente para redirecionar para o Google Maps
-const RedirectMaps: React.FC = () => {
-  const { pedidoId } = useParams<{ pedidoId: string }>();
-  const [message, setMessage] = useState('🔄 Redirecionando para Google Maps...');
-
-  useEffect(() => {
-    const redirectToMaps = async () => {
-      if (!pedidoId) {
-        setMessage('❌ ID do pedido não encontrado');
-        return;
-      }
-
-      try {
-        const response = await api.get<PedidoEntregador>(`/entregador/pedido/${pedidoId}`);
-        const data = response.data;
-        
-        const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${data.latCliente},${data.lngCliente}`;
-        window.location.href = mapsUrl;
-        
-      } catch (error) {
-        console.error('Erro ao carregar dados do pedido:', error);
-        const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=-5.7945,-35.211`;
-        window.location.href = mapsUrl;
-      }
-    };
-
-    redirectToMaps();
-  }, [pedidoId]);
-
-  return (
-    <div style={{ padding: '50px', textAlign: 'center' }}>
-      <h2>{message}</h2>
-      <p>Pedido: #{pedidoId}</p>
-      <Link to="/">Voltar para o Início</Link>
-    </div>
-  );
-};
-
-// Wrappers existentes
 const PainelWrapper: React.FC = () => {
   const { restauranteId } = useParams<{ restauranteId: string }>();
   const id = Number(restauranteId);
@@ -87,6 +31,7 @@ const CardapioWrapper: React.FC = () => {
   const userData = localStorage.getItem('user');
   
   if (!userData) {
+    console.error('🚨 ERRO: Nenhum usuário logado!');
     return (
       <div style={{ padding: '20px', textAlign: 'center' }}>
         <h2>❌ Acesso não autorizado</h2>
@@ -108,6 +53,8 @@ const CardapioWrapper: React.FC = () => {
     if (!usuarioId) {
       throw new Error('ID do usuário não encontrado');
     }
+    
+    console.log('✅ Usuário logado. ID:', usuarioId);
     
     const id = Number(restauranteId ?? 1);
     return (
@@ -191,7 +138,6 @@ const HistoricoGeralWrapper: React.FC = () => {
   return <HistoricoGeral />;
 };
 
-// Componente principal
 const App: React.FC = () => {
   const [mostrarCadastro, setMostrarCadastro] = useState(false);
   const handleVoltar = () => setMostrarCadastro(false);
@@ -208,27 +154,35 @@ const App: React.FC = () => {
         <Link to="/historico-usuario" className="nav-link">📋 Meu Histórico</Link>
         <Link to="/historico-geral" className="nav-link">≡ Histórico Geral</Link>
         <Link to="/debug-usuario" className="nav-link">🔍 Debug</Link>
-        <Link to="/maps/73" className="nav-link" style={{background: '#28a745', color: 'white'}}>
-          🗺️ Testar Maps (Pedido 73)
-        </Link>
       </nav>
 
       <Routes>
         <Route path="/" element={<HomePage />} />
+
+        {/* Cliente */}
         <Route path="/login" element={<UsuarioLogin />} />
         <Route path="/cadastro" element={<CadastroUsuario onVoltar={handleVoltar} />} />
         <Route path="/dashboard" element={<ListaRestaurantes />} />
         <Route path="/cardapio/:restauranteId" element={<CardapioWrapper />} />
         <Route path="/historico-usuario" element={<HistoricoUsuarioWrapper />} />
+
+        {/* Dono */}
         <Route path="/login-dono" element={<DonoLogin />} />
         <Route path="/cadastro-dono" element={<CadastroDono />} />
         <Route path="/painel-restaurante" element={<PainelRestaurante restauranteId={4} onVoltar={handleVoltar} />} />
         <Route path="/painel-restaurante/:restauranteId" element={<PainelWrapper />} />
+
+        {/* Lista geral */}
         <Route path="/restaurantes" element={<ListaRestaurantes />} />
+
+        {/* Manager */}
         <Route path="/historico-geral" element={<HistoricoGeralWrapper />} />
+
+        {/* Debug */}
         <Route path="/debug-usuario" element={<VerificarUsuario />} />
+
+        {/* ✅ NOVA ROTA DO ENTREGADOR - ADICIONA ISSO AQUI */}
         <Route path="/entregador/pedido/:pedidoId" element={<TelaEntregador />} />
-        <Route path="/maps/:pedidoId" element={<RedirectMaps />} />
       </Routes>
     </Router>
   );
