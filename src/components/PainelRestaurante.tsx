@@ -72,7 +72,7 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
       const res = await api.get(`/restaurantes/${restauranteId}/pedidos`, {
         params: { page: 0, size: 10 },
       });
-      
+
       const pedidosCompletos = (res.data?.content || res.data || []).map((pedido: any) => ({
         ...pedido,
         restaurante: {
@@ -82,7 +82,7 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
           telefone: telefoneRestaurante
         }
       }));
-      
+
       setPedidos(pedidosCompletos);
       setErro(null);
     } catch (err: any) {
@@ -172,36 +172,50 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
     alert('Número salvo com sucesso!');
   };
 
-  // ✅ FUNÇÃO CORRIGIDA - AGORA COM /api NO LINK
+  // ========= helpers de link da rota (BACKEND EXPLÍCITO) =========
+  const API_BASE = 'https://api-larica.neemindev.com/api';
+
+  const linkRota = (pedidoId: number) =>
+    `${API_BASE}/entregador/pedido/${pedidoId}/rota`;
+
+  const linkRotaHtml = (pedidoId: number) =>
+    `${API_BASE}/entregador/pedido/${pedidoId}/rota-html`;
+
+  // 📞 CHAMAR MEU ENTREGADOR (contato direto)
   const chamarMeuEntregador = (pedido: Pedido) => {
     const numero = obterOuConfigurarCooperativa();
     if (!numero) return;
-    
-    const nomeRest = pedido.restaurante?.nome || nomeRestaurante || 'Restaurante';
-    
-    const mensagem = `🚚 *LARICA - ENTREGA DISPONÍVEL* 🚚%0A%0A` +
-                     `*Pedido:* #${pedido.id}%0A` +
-                     `*Restaurante:* ${nomeRest}%0A%0A` +
-                     `📍 *ACESSE O MAPA COMPLETO:*%0A` +
-                     `${window.location.origin}/api/entregador/pedido/${pedido.id}%0A%0A` + // ✅ CORRETO
-                     `💰 *Valor sugerido:* R$ 15,00%0A` +
-                     `⏰ *Prazo:* 30 minutos`;
 
-    window.open(`https://wa.me/${numero}?text=${mensagem}`, '_blank');
+    const nomeRest = pedido.restaurante?.nome || nomeRestaurante || 'Restaurante';
+    // Se algum aparelho/webview não seguir 302, troque para linkRotaHtml(pedido.id)
+    const urlRota = linkRota(pedido.id);
+
+    const mensagem =
+      `🚚 *LARICA - ENTREGA DISPONÍVEL* 🚚\n\n` +
+      `*Pedido:* #${pedido.id}\n` +
+      `*Restaurante:* ${nomeRest}\n\n` +
+      `📍 *ACESSE O MAPA COMPLETO:*\n` +
+      `${urlRota}\n\n` +
+      `💰 *Valor sugerido:* R$ 15,00\n` +
+      `⏰ *Prazo:* 30 minutos`;
+
+    window.open(`https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`, '_blank');
   };
 
-  // ✅ FUNÇÃO CORRIGIDA - AGORA COM /api NO LINK
+  // 📢 POSTAR NO GRUPO (Web WhatsApp)
   const postarNoGrupoWhatsApp = (pedido: Pedido) => {
     const nomeRest = pedido.restaurante?.nome || nomeRestaurante || 'Restaurante';
-    
-    const mensagem = `🚚 *LARICA - ENTREGA DISPONÍVEL* 🚚%0A%0A` +
-                     `*Pedido:* #${pedido.id}%0A` +
-                     `*Restaurante:* ${nomeRest}%0A%0A` +
-                     `📍 *ACESSE O MAPA COMPLETO:*%0A` +
-                     `${window.location.origin}/api/entregador/pedido/${pedido.id}%0A%0A` + // ✅ CORRETO
-                     `⚠️ *QUEM PEGAR COMENTA NO GRUPO!*`;
+    const urlRota = linkRota(pedido.id);
 
-    window.open(`https://web.whatsapp.com/send?text=${mensagem}`, '_blank');
+    const mensagem =
+      `🚚 *LARICA - ENTREGA DISPONÍVEL* 🚚\n\n` +
+      `*Pedido:* #${pedido.id}\n` +
+      `*Restaurante:* ${nomeRest}\n\n` +
+      `📍 *ACESSE O MAPA COMPLETO:*\n` +
+      `${urlRota}\n\n` +
+      `⚠️ *QUEM PEGAR COMENTA NO GRUPO!*`;
+
+    window.open(`https://web.whatsapp.com/send?text=${encodeURIComponent(mensagem)}`, '_blank');
   };
 
   const handleAceitar = async (pedido: Pedido) => {
