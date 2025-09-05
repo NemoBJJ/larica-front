@@ -1,0 +1,18 @@
+.pwa-install-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 22px;
+  border-radius: 14px;
+  border: 2px solid #ff8c00;
+  background: linear-gradient(135deg, #ff8c00, #ff6a00);
+  color: #000;
+  font-weight: 900;
+  font-size: 18px;
+  letter-spacing: .4px;
+  cursor: pointer;
+  box-shadow: 0 16px 34px rgba(255,140,0,.35);
+  transition: transform .08s ease, filter .15s ease, box-shadow .2s ease;
+}
+.pwa-install-cta:hover { transform: translateY(-1px); filter: brightness(1.05); }
+.pwa-install-cta:active { transform: translateY(0); }
