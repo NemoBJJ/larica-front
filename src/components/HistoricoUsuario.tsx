@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
+import './HistoricoUsuario.css';
 
 interface ItemPedidoDTO {
   id: number;
@@ -16,9 +17,9 @@ interface HistoricoPedidoDTO {
   itens: ItemPedidoDTO[];
 }
 
-const HistoricoUsuario: React.FC<{ 
-  usuarioId: number; 
-  onVoltar?: () => void; // ✅ AGORA É OPCIONAL
+const HistoricoUsuario: React.FC<{
+  usuarioId: number;
+  onVoltar?: () => void;
 }> = ({ usuarioId, onVoltar }) => {
   const [pedidos, setPedidos] = useState<HistoricoPedidoDTO[]>([]);
   const [carregando, setCarregando] = useState(true);
@@ -51,65 +52,76 @@ const HistoricoUsuario: React.FC<{
     return date.toLocaleDateString('pt-BR') + ' ' + date.toLocaleTimeString('pt-BR');
   };
 
-  if (carregando) return <p>Carregando histórico...</p>;
-  if (erro) return <p style={{ color: 'red' }}>{erro}</p>;
+  if (carregando) {
+    return (
+      <div className="historico-container">
+        <p>Carregando histórico...</p>
+      </div>
+    );
+  }
+
+  if (erro) {
+    return (
+      <div className="historico-container">
+        <div className="historico-empty">{erro}</div>
+      </div>
+    );
+  }
+
   if (!pedidos.length) {
     return (
-      <div style={{ padding: 20 }}>
+      <div className="historico-container">
         {onVoltar && (
-          <button onClick={onVoltar} style={{ marginBottom: 12 }}>← Voltar</button>
+          <div className="historico-header">
+            <button className="btn-voltar" onClick={onVoltar}>← Voltar</button>
+            <h2>📜 Meu Histórico</h2>
+          </div>
         )}
-        <p>Nenhum pedido encontrado.</p>
+        {!onVoltar && <h2 className="historico-header" style={{ margin: 0 }}>📜 Meu Histórico</h2>}
+
+        <div className="historico-empty">Nenhum pedido encontrado.</div>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: 20 }}>
-      {/* ✅ BOTÃO VOLtar SÓ APARECE SE onVoltar EXISTIR */}
-      {onVoltar && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-          <button onClick={onVoltar}>← Voltar</button>
-          <h2 style={{ margin: 0 }}>📜 Meu Histórico</h2>
+    <div className="historico-container">
+      {onVoltar ? (
+        <div className="historico-header">
+          <button className="btn-voltar" onClick={onVoltar}>← Voltar</button>
+          <h2>📜 Meu Histórico</h2>
+        </div>
+      ) : (
+        <div className="historico-header">
+          <h2>📜 Meu Histórico</h2>
         </div>
       )}
-      
-      {/* ✅ TÍTULO SEM Botão voltar */}
-      {!onVoltar && <h2>📜 Meu Histórico</h2>}
 
       {pedidos.map((pedido) => (
-        <div
-          key={pedido.pedidoId}
-          style={{
-            border: '1px solid #ccc',
-            padding: 16,
-            borderRadius: 10,
-            marginBottom: 16,
-            backgroundColor: '#f9f9f9'
-          }}
-        >
-          <h3>
-            Pedido #{pedido.pedidoId} — {pedido.nomeRestaurante}
-          </h3>
-          <p>
-            <strong>Status:</strong> {pedido.status} | <strong>Data:</strong> {formatarData(pedido.data)}
+        <div key={pedido.pedidoId} className="pedido-card">
+          <h3>Pedido #{pedido.pedidoId} — {pedido.nomeRestaurante}</h3>
+          <p className="pedido-meta">
+            <strong>Status:</strong> {pedido.status} &nbsp;|&nbsp; <strong>Data:</strong> {formatarData(pedido.data)}
           </p>
-          <ul>
+
+          <ul className="pedido-itens">
             {pedido.itens.map((item) => {
-              const preco =
-                typeof item.precoUnitario === 'string'
-                  ? parseFloat(item.precoUnitario)
-                  : item.precoUnitario;
+              const preco = typeof item.precoUnitario === 'string'
+                ? parseFloat(item.precoUnitario)
+                : item.precoUnitario;
               return (
                 <li key={item.id}>
-                  {item.quantidade}× {item.nomeProduto} — R$ {preco.toFixed(2)}
+                  <span>{item.quantidade}× {item.nomeProduto}</span>
+                  <span>R$ {preco.toFixed(2)}</span>
                 </li>
               );
             })}
           </ul>
-          <p>
-            <strong>Total:</strong> R$ {calcularTotal(pedido.itens).toFixed(2)}
-          </p>
+
+          <div className="pedido-total">
+            <span>Total</span>
+            <span>R$ {calcularTotal(pedido.itens).toFixed(2)}</span>
+          </div>
         </div>
       ))}
     </div>

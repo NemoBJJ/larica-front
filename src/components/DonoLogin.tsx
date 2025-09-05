@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import './DonoLogin.css';
 
 const DonoLogin: React.FC = () => {
   const navigate = useNavigate();
@@ -16,8 +17,6 @@ const DonoLogin: React.FC = () => {
 
     try {
       const response = await api.post('/auth/donos/login', { email, senha });
-
-      // ✅ SALVA TOKEN E DADOS DO DONO
       const { token, id, nome, email: donoEmail, telefone } = response.data;
 
       localStorage.setItem('token', token);
@@ -45,46 +44,40 @@ const DonoLogin: React.FC = () => {
   };
 
   return (
-    <div style={{ maxWidth: 420, margin: '40px auto', padding: 24, border: '1px solid #eee', borderRadius: 8, background: '#fff' }}>
-      <h2 style={{ marginTop: 0 }}>Login do Dono</h2>
+    <div className="loginD-container">
+      <div className="loginD-card">
+        <h2>Login do Dono</h2>
 
-      {erro && (
-        <div style={{ marginBottom: 12, padding: 10, background: '#fdecea', color: '#b71c1c', borderRadius: 6 }}>
-          {String(erro)}
-        </div>
-      )}
+        {erro && <div className="alert-erro">{String(erro)}</div>}
 
-      <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 12 }}>
-        <div>
-          <label style={{ display: 'block', marginBottom: 6 }}>E-mail</label>
-          <input
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            style={{ width: '100%', padding: 10, borderRadius: 6, border: '1px solid #ddd' }}
-            placeholder="dono@exemplo.com"
-          />
-        </div>
-        <div>
-          <label style={{ display: 'block', marginBottom: 6 }}>Senha</label>
-          <input
-            type="password"
-            required
-            value={senha}
-            onChange={(e) => setSenha(e.target.value)}
-            style={{ width: '100%', padding: 10, borderRadius: 6, border: '1px solid #ddd' }}
-            placeholder="••••••••"
-          />
-        </div>
-        <button
-          type="submit"
-          disabled={loading}
-          style={{ padding: '10px 16px', border: 'none', borderRadius: 8, background: '#0d6efd', color: '#fff', cursor: 'pointer' }}
-        >
-          {loading ? 'Entrando...' : 'Entrar'}
-        </button>
-      </form>
+        <form onSubmit={handleSubmit} className="loginD-form">
+          <div className="form-group">
+            <label>E-mail</label>
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="dono@exemplo.com"
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Senha</label>
+            <input
+              type="password"
+              required
+              value={senha}
+              onChange={(e) => setSenha(e.target.value)}
+              placeholder="••••••••"
+            />
+          </div>
+
+          <button type="submit" className="btn-primary" disabled={loading}>
+            {loading ? 'Entrando...' : 'Entrar'}
+          </button>
+        </form>
+      </div>
     </div>
   );
 };
