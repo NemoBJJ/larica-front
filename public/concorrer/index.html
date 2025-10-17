@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Larica — Cadastre-se e concorra a R$ 1000</title>
+  <meta name="description" content="Cadastre-se no Larica e concorra a R$ 1000. Pagamento via PIX, restaurantes da sua cidade, promoção válida até 11/11." />
+  <meta property="og:title" content="Larica — Cadastre-se e concorra a R$ 1000" />
+  <meta property="og:description" content="Instale o app e participe. PIX na hora. Promoção até 11/11." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://larica.neemindev.com/concorrer" />
+  <meta name="theme-color" content="#0f172a" />
+
+  <!-- Tailwind CDN (página estática) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Logo/ícones (substituir caminhos conforme seu deploy) -->
+  <link rel="icon" href="/assets/icon.png" />
+  <link rel="apple-touch-icon" href="/assets/icon-apple.png" />
+
+  <style>
+    html, body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; }
+    .glass { backdrop-filter: blur(8px); background: rgba(255,255,255,0.06); }
+  </style>
+</head>
+<body class="min-h-screen bg-slate-900 text-white">
+  <!-- Header -->
+  <header class="max-w-6xl mx-auto px-6 py-5 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl bg-white/10 grid place-items-center">
+        <span class="text-lg">🍔</span>
+      </div>
+      <strong class="text-lg">Larica</strong>
+    </div>
+    <a href="https://larica.neemindev.com/?utm_source=landing&utm_medium=nav&utm_campaign=blitzkrieg" class="hidden md:inline-flex items-center bg-white text-slate-900 px-4 py-2 rounded-xl font-semibold hover:opacity-90">Abrir App</a>
+  </header>
+
+  <!-- Hero -->
+  <section class="max-w-6xl mx-auto px-6 pt-6 pb-10 grid md:grid-cols-2 gap-8 items-center">
+    <div>
+      <h1 class="text-4xl md:text-5xl font-extrabold leading-tight">Cadastre-se no Larica e concorra a <span class="text-emerald-400">R$ 1000</span></h1>
+      <p class="mt-4 text-white/80 text-lg">Pagamento via <strong>PIX</strong>. Restaurantes da sua cidade. Promoção válida até <strong>11/11</strong>.</p>
+      <div class="mt-6 flex flex-wrap items-center gap-3">
+        <a id="ctaInstall" href="https://larica.neemindev.com/?utm_source=landing&utm_medium=cta&utm_campaign=blitzkrieg" class="inline-flex items-center gap-2 bg-emerald-400 text-slate-900 px-6 py-3 rounded-2xl font-bold shadow hover:opacity-90">
+          Instalar o App e Participar
+        </a>
+        <a href="#video" class="text-white/70 underline">Ver vídeo</a>
+      </div>
+      <div class="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="glass border border-white/10 rounded-2xl p-4">
+          <p class="font-semibold">PIX na hora</p>
+          <p class="text-white/70 text-sm">Pagamento simples e rápido.</p>
+        </div>
+        <div class="glass border border-white/10 rounded-2xl p-4">
+          <p class="font-semibold">Da sua cidade</p>
+          <p class="text-white/70 text-sm">Restaurantes locais.</p>
+        </div>
+        <div class="glass border border-white/10 rounded-2xl p-4">
+          <p class="font-semibold">Até 11/11</p>
+          <p class="text-white/70 text-sm">Promoção por tempo limitado.</p>
+        </div>
+      </div>
+    </div>
+    <div id="video" class="rounded-3xl overflow-hidden border border-white/10 bg-black">
+      <!-- Embed: substituir o src pelo Reels/TikTok/YT da influenciadora -->
+      <div class="aspect-video">
+        <iframe class="w-full h-full" src="https://www.youtube.com/embed/dQw4w9WgXcQ" title="Vídeo da campanha" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ curto (opcional) -->
+  <section class="max-w-6xl mx-auto px-6 pb-12">
+    <div class="grid md:grid-cols-3 gap-6">
+      <details class="glass border border-white/10 rounded-2xl p-5">
+        <summary class="font-semibold cursor-pointer">Como participo?</summary>
+        <p class="text-white/70 text-sm mt-2">Clique em “Instalar o App e Participar”, crie seu cadastro no app e pronto.</p>
+      </details>
+      <details class="glass border border-white/10 rounded-2xl p-5">
+        <summary class="font-semibold cursor-pointer">Funciona no iPhone?</summary>
+        <p class="text-white/70 text-sm mt-2">Abra o link no Safari, toque em Compartilhar → Adicionar à Tela de Início.</p>
+      </details>
+      <details class="glass border border-white/10 rounded-2xl p-5">
+        <summary class="font-semibold cursor-pointer">Até quando vale?</summary>
+        <p class="text-white/70 text-sm mt-2">Inscrições até 11/11. Divulgue suas indicações pelo app.</p>
+      </details>
+    </div>
+  </section>
+
+  <!-- Rodapé / Aviso legal -->
+  <footer class="border-t border-white/10">
+    <div class="max-w-6xl mx-auto px-6 py-10 text-sm text-white/70">
+      <p class="mb-2">Regulamento resumido: promoção válida até 11/11. Premiação mediante regras de cadastro e indicações registradas no app. Consulte regras completas.</p>
+      <div class="flex items-center gap-4 flex-wrap">
+        <a href="/regras" class="underline">Regras</a>
+        <a href="/privacidade" class="underline">Privacidade</a>
+        <a href="https://larica.neemindev.com/?utm_source=landing&utm_medium=footer&utm_campaign=blitzkrieg" class="underline">Abrir o App</a>
+      </div>
+      <p class="mt-4 text-white/50">© <span id="y"></span> Larica</p>
+    </div>
+  </footer>
+
+  <!-- Pixels/Analytics (placeholders) -->
+  <!-- Meta Pixel / GA4 podem ser inseridos aqui conforme necessidade -->
+
+  <script>
+    document.getElementById('y').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
