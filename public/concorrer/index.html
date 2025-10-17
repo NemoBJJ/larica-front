@@ -15,19 +15,38 @@
   <link rel="apple-touch-icon" href="../assets/icon-apple.png" />
   <style>
     :root { --larica-orange: #f59e0b; }
+    
     html, body {
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    }
+    
+    /* BACKGROUND DA LOGO - ESTILO APP */
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: url('../assets/larica-logo.png');
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: 60%;
+      opacity: 0.03;
+      z-index: -1;
+      pointer-events: none;
+    }
+    
+    /* Garante que o conteúdo fique acima */
+    .relative.z-10 {
+      position: relative;
+      z-index: 10;
     }
   </style>
 </head>
 
-<body class="min-h-screen bg-black text-[color:var(--larica-orange)] relative overflow-x-hidden">
+<body class="min-h-screen bg-black text-[color:var(--larica-orange)] overflow-x-hidden">
 
-  <!-- Marca d'água (logo ao fundo) - VERSÃO CORRIGIDA -->
-<div aria-hidden="true"
-     class="pointer-events-none fixed inset-0 opacity-[0.03] bg-center bg-no-repeat"
-     style="background-image:url('../assets/larica-logo.png'); background-size: 70%;"></div>
-	 
   <!-- Header -->
   <header class="relative z-10 max-w-6xl mx-auto px-6 py-5 flex items-center justify-between">
     <div class="flex items-center gap-3">
@@ -53,7 +72,7 @@
 
         <!-- NOVA FRASE ADICIONADA AQUI -->
         <div class="mt-4 p-4 bg-[color:var(--larica-orange)]/10 border border-[color:var(--larica-orange)]/30 rounded-2xl">
-          <p class="text-lg font-bold text-center"> Indique seus Amigos e Concorra a R$ 1500 </p>
+          <p class="text-lg font-bold text-center">🎉 Indique seus Amigos e Concorra a R$ 1500 🎉</p>
         </div>
 
         <div class="mt-7 flex flex-wrap items-center gap-3">
