@@ -20,7 +20,7 @@
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
     }
     
-    /* BACKGROUND DA LOGO - ESTILO APP */
+    /* BACKGROUND DA LOGO - RESPONSIVO E CORRIGIDO */
     body::before {
       content: "";
       position: fixed;
@@ -31,13 +31,28 @@
       background-image: url('../assets/larica-logo.png');
       background-repeat: no-repeat;
       background-position: center;
-      background-size: 60%;
-      opacity: 0.03;
+      background-size: 400px;
+      opacity: 0.04;
       z-index: -1;
       pointer-events: none;
+      filter: brightness(1) contrast(1);
+    }
+
+    /* Mobile */
+    @media (max-width: 768px) {
+      body::before {
+        background-size: 250px;
+        opacity: 0.03;
+      }
+    }
+
+    /* Telas grandes */
+    @media (min-width: 1200px) {
+      body::before {
+        background-size: 500px;
+      }
     }
     
-    /* Garante que o conteúdo fique acima */
     .relative.z-10 {
       position: relative;
       z-index: 10;
@@ -70,7 +85,7 @@
           R$ 1000 para Restaurante e R$ 1000 para Clientes. Sorteio dia <strong>11/11</strong>.
         </p>
 
-        <!-- NOVA FRASE ADICIONADA AQUI -->
+        <!-- NOVA FRASE ADICIONADA -->
         <div class="mt-4 p-4 bg-[color:var(--larica-orange)]/10 border border-[color:var(--larica-orange)]/30 rounded-2xl">
           <p class="text-lg font-bold text-center">🎉 Indique seus Amigos e Concorra a R$ 1500 🎉</p>
         </div>
@@ -80,15 +95,13 @@
              class="inline-flex items-center gap-2 bg-[color:var(--larica-orange)] text-black px-6 py-3 rounded-2xl font-bold hover:opacity-90">
             Instalar o App e Participar
           </a>
-          <a href="#video" class="inline-flex items-center gap-2 px-4 py-3 rounded-2xl border border-[color:var(--larica-orange)]/40 hover:bg-white/5">
-            Ver vídeo
-          </a>
+          <!-- BOTÃO "VER VÍDEO" REMOVIDO -->
         </div>
 
         <div class="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div class="rounded-2xl p-4 border border-[color:var(--larica-orange)]/30 bg-black/40">
-            <p class="text-xl font-bold">PIX NA HORA</p>
-            <p class="text-[color:var(--larica-orange)]/80 text-sm mt-1">Pagamento simples e rápido</p>
+            <p class="text-xl font-bold">LOGO APÓS O SORTEIO</p>
+            <p class="text-[color:var(--larica-orange)]/80 text-sm mt-1">Pagamento rápido via PIX</p>
           </div>
           <div class="rounded-2xl p-4 border border-[color:var(--larica-orange)]/30 bg-black/40">
             <p class="text-xl font-bold">PROMOÇÃO VÁLIDA</p>
