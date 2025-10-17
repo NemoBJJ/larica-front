@@ -1,3 +1,4 @@
-/api/* https://api-larica.neemindev.com/api/:splat 200
-/entregador/* /index.html 200
-/*    /index.html   200
+/concorrer            /concorrer/index.html    200
+/api/*                https://api-larica.neemindev.com/api/:splat    200
+/entregador/*         /index.html              200
+/*                    /index.html              200
