@@ -11,51 +11,34 @@
   <meta property="og:url" content="https://larica.neemindev.com/concorrer" />
   <meta name="theme-color" content="#000000" />
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="icon" href="../assets/icon.png" />
-  <link rel="apple-touch-icon" href="../assets/icon-apple.png" />
+  <link rel="icon" href="/assets/icon.png" />
+  <link rel="apple-touch-icon" href="/assets/icon-apple.png" />
   <style>
     :root { --larica-orange: #f59e0b; }
     
     html, body {
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-    }
-    
-    /* BACKGROUND DA LOGO - RESPONSIVO E CORRIGIDO */
-    body::before {
-      content: "";
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-image: url('../assets/larica-logo.png');
-      background-repeat: no-repeat;
-      background-position: center;
-      background-size: 400px;
-      opacity: 0.04;
-      z-index: -1;
-      pointer-events: none;
-      filter: brightness(1) contrast(1);
+      background: 
+        linear-gradient(rgba(0,0,0,0.95), rgba(0,0,0,0.95)),
+        url('/assets/larica-logo.png') center/350px no-repeat !important;
     }
 
     /* Mobile */
     @media (max-width: 768px) {
-      body::before {
-        background-size: 250px;
-        opacity: 0.03;
+      html, body {
+        background: 
+          linear-gradient(rgba(0,0,0,0.96), rgba(0,0,0,0.96)),
+          url('/assets/larica-logo.png') center/250px no-repeat !important;
       }
     }
 
-    /* Telas grandes */
+    /* Desktop grande */
     @media (min-width: 1200px) {
-      body::before {
-        background-size: 500px;
+      html, body {
+        background: 
+          linear-gradient(rgba(0,0,0,0.94), rgba(0,0,0,0.94)),
+          url('/assets/larica-logo.png') center/450px no-repeat !important;
       }
-    }
-    
-    .relative.z-10 {
-      position: relative;
-      z-index: 10;
     }
   </style>
 </head>
@@ -63,9 +46,9 @@
 <body class="min-h-screen bg-black text-[color:var(--larica-orange)] overflow-x-hidden">
 
   <!-- Header -->
-  <header class="relative z-10 max-w-6xl mx-auto px-6 py-5 flex items-center justify-between">
+  <header class="max-w-6xl mx-auto px-6 py-5 flex items-center justify-between">
     <div class="flex items-center gap-3">
-      <img src="../assets/larica-logo.png" alt="Larica" class="w-10 h-10 object-contain">
+      <img src="/assets/larica-logo.png" alt="Larica" class="w-10 h-10 object-contain">
       <strong class="text-lg tracking-wide">Larica</strong>
     </div>
     <a href="https://larica.neemindev.com/?utm_source=landing&utm_medium=nav&utm_campaign=blitzkrieg"
@@ -75,61 +58,57 @@
   </header>
 
   <!-- Hero -->
-  <section class="relative z-10">
-    <div class="max-w-6xl mx-auto px-6 py-12 grid md:grid-cols-2 gap-10 items-center">
-      <div>
-        <h1 class="text-4xl md:text-5xl font-extrabold leading-tight">
-          CADASTRE-SE AGORA E CONCORRA A <span class="underline decoration-[color:var(--larica-orange)]">R$ 1000,00</span>
-        </h1>
-        <p class="mt-4 text-[color:var(--larica-orange)]/90 text-lg">
-          R$ 1000 para Restaurante e R$ 1000 para Clientes. Sorteio dia <strong>11/11</strong>.
-        </p>
+  <section class="max-w-6xl mx-auto px-6 py-12 grid md:grid-cols-2 gap-10 items-center">
+    <div>
+      <h1 class="text-4xl md:text-5xl font-extrabold leading-tight">
+        CADASTRE-SE AGORA E CONCORRA A <span class="underline decoration-[color:var(--larica-orange)]">R$ 1000,00</span>
+      </h1>
+      <p class="mt-4 text-[color:var(--larica-orange)]/90 text-lg">
+        R$ 1000 para Restaurante e R$ 1000 para Clientes. Sorteio dia <strong>11/11</strong>.
+      </p>
 
-        <!-- NOVA FRASE ADICIONADA -->
-        <div class="mt-4 p-4 bg-[color:var(--larica-orange)]/10 border border-[color:var(--larica-orange)]/30 rounded-2xl">
-          <p class="text-lg font-bold text-center">🎉 Indique seus Amigos e Concorra a R$ 1500 🎉</p>
-        </div>
-
-        <div class="mt-7 flex flex-wrap items-center gap-3">
-          <a href="https://larica.neemindev.com/?utm_source=landing&utm_medium=cta&utm_campaign=blitzkrieg"
-             class="inline-flex items-center gap-2 bg-[color:var(--larica-orange)] text-black px-6 py-3 rounded-2xl font-bold hover:opacity-90">
-            Instalar o App e Participar
-          </a>
-          <!-- BOTÃO "VER VÍDEO" REMOVIDO -->
-        </div>
-
-        <div class="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div class="rounded-2xl p-4 border border-[color:var(--larica-orange)]/30 bg-black/40">
-            <p class="text-xl font-bold">LOGO APÓS O SORTEIO</p>
-            <p class="text-[color:var(--larica-orange)]/80 text-sm mt-1">Pagamento rápido via PIX</p>
-          </div>
-          <div class="rounded-2xl p-4 border border-[color:var(--larica-orange)]/30 bg-black/40">
-            <p class="text-xl font-bold">PROMOÇÃO VÁLIDA</p>
-            <p class="text-[color:var(--larica-orange)]/80 text-sm mt-1">Para Toda Grande Natal</p>
-          </div>
-          <div class="rounded-2xl p-4 border border-[color:var(--larica-orange)]/30 bg-black/40">
-            <p class="text-xl font-bold">ATÉ 11/11</p>
-            <p class="text-[color:var(--larica-orange)]/80 text-sm mt-1">Tempo limitado</p>
-          </div>
-        </div>
+      <!-- NOVA FRASE ADICIONADA -->
+      <div class="mt-4 p-4 bg-[color:var(--larica-orange)]/10 border border-[color:var(--larica-orange)]/30 rounded-2xl">
+        <p class="text-lg font-bold text-center">🎉 Indique seus Amigos e Concorra a R$ 1500 🎉</p>
       </div>
 
-      <!-- Vídeo -->
-      <div id="video" class="rounded-3xl overflow-hidden border border-[color:var(--larica-orange)]/30 bg-black">
-        <div class="aspect-video">
-          <!-- Troque o src pelo vídeo da influenciadora -->
-          <iframe class="w-full h-full"
-                  src="https://www.youtube.com/embed/dQw4w9WgXcQ"
-                  title="Vídeo da campanha" frameborder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowfullscreen></iframe>
+      <div class="mt-7 flex flex-wrap items-center">
+        <a href="https://larica.neemindev.com/?utm_source=landing&utm_medium=cta&utm_campaign=blitzkrieg"
+           class="inline-flex items-center gap-2 bg-[color:var(--larica-orange)] text-black px-6 py-3 rounded-2xl font-bold hover:opacity-90">
+          Instalar o App e Participar
+        </a>
+      </div>
+
+      <div class="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="rounded-2xl p-4 border border-[color:var(--larica-orange)]/30 bg-black/40">
+          <p class="text-xl font-bold">LOGO APÓS O SORTEIO</p>
+          <p class="text-[color:var(--larica-orange)]/80 text-sm mt-1">Pagamento rápido via PIX</p>
         </div>
+        <div class="rounded-2xl p-4 border border-[color:var(--larica-orange)]/30 bg-black/40">
+          <p class="text-xl font-bold">PROMOÇÃO VÁLIDA</p>
+          <p class="text-[color:var(--larica-orange)]/80 text-sm mt-1">Para Toda Grande Natal</p>
+        </div>
+        <div class="rounded-2xl p-4 border border-[color:var(--larica-orange)]/30 bg-black/40">
+          <p class="text-xl font-bold">ATÉ 11/11</p>
+          <p class="text-[color:var(--larica-orange)]/80 text-sm mt-1">Tempo limitado</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vídeo -->
+    <div class="rounded-3xl overflow-hidden border border-[color:var(--larica-orange)]/30 bg-black">
+      <div class="aspect-video">
+        <iframe class="w-full h-full"
+                src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+                title="Vídeo da campanha" frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen></iframe>
       </div>
     </div>
   </section>
 
   <!-- FAQ -->
-  <section class="relative z-10 max-w-6xl mx-auto px-6 pb-14">
+  <section class="max-w-6xl mx-auto px-6 pb-14">
     <h2 class="text-xl font-bold mb-5">Dúvidas rápidas</h2>
     <div class="grid md:grid-cols-3 gap-6">
       <details class="rounded-2xl p-5 border border-[color:var(--larica-orange)]/30 bg-black/40">
@@ -148,7 +127,7 @@
   </section>
 
   <!-- Rodapé -->
-  <footer class="relative z-10 border-t border-[color:var(--larica-orange)]/20">
+  <footer class="border-t border-[color:var(--larica-orange)]/20">
     <div class="max-w-6xl mx-auto px-6 py-10 text-sm">
       <p class="mb-3">Regulamento resumido: promoção válida até 11/11. Premiação mediante regras de cadastro e indicações registradas no app. Consulte regras completas.</p>
       <div class="flex items-center gap-4 flex-wrap">
