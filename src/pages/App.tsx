@@ -1,4 +1,4 @@
-// src/pages/App.tsx
+// src/pages/App.tsx - VERSÃO CORRIGIDA
 import React, { useEffect, useMemo, useState } from 'react';
 import { BrowserRouter as Router, Route, Routes, Link, useParams } from 'react-router-dom';
 
@@ -19,32 +19,37 @@ import InstallPWAButton from '../components/InstallPWAButton';
 
 import './App.css';
 
-/** Detecta se está rodando em modo PWA (standalone) */
-const getStandalone = () =>
-  (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
-  (window as any).navigator?.standalone === true;
-
+/** Detecta se está rodando em modo PWA (standalone) - VERSÃO SIMPLIFICADA */
 const useIsStandalone = () => {
-  const [standalone, setStandalone] = useState<boolean>(getStandalone());
+  const [standalone, setStandalone] = useState<boolean>(false);
 
   useEffect(() => {
+    // Verifica se está em modo standalone
+    const checkStandalone = () => {
+      const isStandalone = 
+        (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
+        (window.navigator as any).standalone === true;
+      setStandalone(isStandalone);
+    };
+
+    checkStandalone();
+    
+    // Listener simplificado
     const mql = window.matchMedia('(display-mode: standalone)');
-    const handler = () => setStandalone(getStandalone());
-    if (mql && 'addEventListener' in mql) {
+    const handler = () => checkStandalone();
+    
+    // Usa addEventListener moderno
+    if (mql.addEventListener) {
       mql.addEventListener('change', handler);
-    } else if (mql && 'addListener' in mql) {
-      mql.addListener(handler);
     }
+    
     window.addEventListener('appinstalled', handler);
-    window.addEventListener('visibilitychange', handler);
+    
     return () => {
-      if (mql && 'removeEventListener' in mql) {
+      if (mql.removeEventListener) {
         mql.removeEventListener('change', handler);
-      } else if (mql && 'removeListener' in mql) {
-        mql.removeListener(handler);
       }
       window.removeEventListener('appinstalled', handler);
-      window.removeEventListener('visibilitychange', handler);
     };
   }, []);
 
@@ -197,7 +202,6 @@ const App: React.FC = () => {
         <Link to="/" className="nav-link">🏠 Home</Link>
         <Link to="/cadastro" className="nav-link">👤 Cadastro Cliente</Link>
         <Link to="/cadastro-dono" className="nav-link">🏪 Cadastro Dono</Link>
-        {/* ✅ LINK FIXO PARA TESTES - TODO DONO CLICA AQUI */}
         <Link to="/painel-restaurante/1" className="nav-link">🍽️ Painel Restaurante (ID 1)</Link>
         <Link to="/login-dono" className="nav-link">🔐 Login Dono</Link>
         <Link to="/login" className="nav-link">🔓 Login Cliente</Link>
@@ -237,7 +241,6 @@ const App: React.FC = () => {
         {/* Dono */}
         <Route path="/login-dono" element={<DonoLogin />} />
         <Route path="/cadastro-dono" element={<CadastroDono />} />
-        {/* ✅ ROTAS DINÂMICAS - DONO VAI PRA /painel-restaurante/SEU_ID */}
         <Route path="/painel-restaurante/:restauranteId" element={<PainelWrapper />} />
 
         {/* Lista geral */}
