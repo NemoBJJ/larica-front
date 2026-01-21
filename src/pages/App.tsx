@@ -1,10 +1,8 @@
-// src/pages/App.tsx - COM IMPORTS CORRETOS
+// src/pages/App.tsx
 import React, { useEffect, useMemo, useState } from 'react';
 import { BrowserRouter as Router, Route, Routes, Link, useParams } from 'react-router-dom';
 
-// 🔥 ADICIONE ESTE IMPORT
 import api from '../services/api';
-
 import HomePage from '../pages/HomePage';
 import ListaRestaurantes from '../components/ListaRestaurantes';
 import CadastroUsuario from '../components/CadastroUsuario';
@@ -21,12 +19,9 @@ import InstallPWAButton from '../components/InstallPWAButton';
 
 import './App.css';
 
-// ... resto do código (igual ao que já temos)
-
 /** Detecta se está rodando em modo PWA (standalone) */
 const getStandalone = () =>
   (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
-  // iOS Safari
   (window as any).navigator?.standalone === true;
 
 const useIsStandalone = () => {
@@ -38,8 +33,6 @@ const useIsStandalone = () => {
     if (mql && 'addEventListener' in mql) {
       mql.addEventListener('change', handler);
     } else if (mql && 'addListener' in mql) {
-      // fallback antigo
-      // @ts-ignore
       mql.addListener(handler);
     }
     window.addEventListener('appinstalled', handler);
@@ -48,7 +41,6 @@ const useIsStandalone = () => {
       if (mql && 'removeEventListener' in mql) {
         mql.removeEventListener('change', handler);
       } else if (mql && 'removeListener' in mql) {
-        // @ts-ignore
         mql.removeListener(handler);
       }
       window.removeEventListener('appinstalled', handler);
@@ -82,7 +74,6 @@ const CardapioWrapper: React.FC = () => {
 
   useEffect(() => {
     if (restauranteId) {
-      // Buscar nome do restaurante para mostrar
       api.get(`/restaurantes/${restauranteId}`)
         .then(res => setNomeRestaurante(res.data.nome))
         .catch(() => setNomeRestaurante(`Restaurante #${restauranteId}`));
@@ -92,7 +83,6 @@ const CardapioWrapper: React.FC = () => {
   const userData = localStorage.getItem('user');
 
   if (!userData) {
-    console.error('🚨 ERRO: Nenhum usuário logado!');
     return (
       <div style={{ padding: '20px', textAlign: 'center' }}>
         <h2>❌ Acesso não autorizado</h2>
@@ -207,13 +197,13 @@ const App: React.FC = () => {
         <Link to="/" className="nav-link">🏠 Home</Link>
         <Link to="/cadastro" className="nav-link">👤 Cadastro Cliente</Link>
         <Link to="/cadastro-dono" className="nav-link">🏪 Cadastro Dono</Link>
-        {/* ❌ REMOVIDO: Link para painel fixo ID 4 */}
+        {/* ✅ LINK FIXO PARA TESTES - TODO DONO CLICA AQUI */}
+        <Link to="/painel-restaurante/1" className="nav-link">🍽️ Painel Restaurante (ID 1)</Link>
         <Link to="/login-dono" className="nav-link">🔐 Login Dono</Link>
         <Link to="/login" className="nav-link">🔓 Login Cliente</Link>
         <Link to="/historico-usuario" className="nav-link">📋 Meu Histórico</Link>
         <Link to="/historico-geral" className="nav-link">≡ Histórico Geral</Link>
         <Link to="/debug-usuario" className="nav-link">🔍 Debug</Link>
-        {/* botão instalar só na web */}
         <InstallPWAButton />
       </nav>
     ),
@@ -222,7 +212,7 @@ const App: React.FC = () => {
 
   // navbar para PWA (standalone)
   const PwaNavbar = useMemo(() => {
-    if (!clienteLogado) return null; // PWA sem login → sem navbar
+    if (!clienteLogado) return null;
     return (
       <nav className="navbar">
         <Link to="/historico-usuario" className="nav-link">📋 Meu Histórico</Link>
@@ -232,7 +222,6 @@ const App: React.FC = () => {
 
   return (
     <Router>
-      {/* Navbar condicional */}
       {isStandalone ? PwaNavbar : WebNavbar}
 
       <Routes>
@@ -248,8 +237,7 @@ const App: React.FC = () => {
         {/* Dono */}
         <Route path="/login-dono" element={<DonoLogin />} />
         <Route path="/cadastro-dono" element={<CadastroDono />} />
-        {/* ❌ REMOVIDO: Rota com ID fixo 4 */}
-        {/* ✅ Mantido apenas: Rota dinâmica */}
+        {/* ✅ ROTAS DINÂMICAS - DONO VAI PRA /painel-restaurante/SEU_ID */}
         <Route path="/painel-restaurante/:restauranteId" element={<PainelWrapper />} />
 
         {/* Lista geral */}
@@ -261,7 +249,7 @@ const App: React.FC = () => {
         {/* Debug */}
         <Route path="/debug-usuario" element={<VerificarUsuario />} />
 
-        {/* ✅ Rota do entregador */}
+        {/* Entregador */}
         <Route path="/entregador/pedido/:pedidoId" element={<TelaEntregador />} />
       </Routes>
     </Router>
