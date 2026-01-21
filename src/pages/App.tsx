@@ -1,6 +1,9 @@
-// src/pages/App.tsx
+// src/pages/App.tsx - COM IMPORTS CORRETOS
 import React, { useEffect, useMemo, useState } from 'react';
 import { BrowserRouter as Router, Route, Routes, Link, useParams } from 'react-router-dom';
+
+// 🔥 ADICIONE ESTE IMPORT
+import api from '../services/api';
 
 import HomePage from '../pages/HomePage';
 import ListaRestaurantes from '../components/ListaRestaurantes';
@@ -17,6 +20,8 @@ import TelaEntregador from '../components/TelaEntregador';
 import InstallPWAButton from '../components/InstallPWAButton';
 
 import './App.css';
+
+// ... resto do código (igual ao que já temos)
 
 /** Detecta se está rodando em modo PWA (standalone) */
 const getStandalone = () =>
