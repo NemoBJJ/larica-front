@@ -54,7 +54,7 @@ const useIsStandalone = () => {
   return standalone;
 };
 
-/** Considera “cliente logado” se existir user no localStorage */
+/** Considera "cliente logado" se existir user no localStorage */
 const useClienteLogado = () => {
   const [logged, setLogged] = useState<boolean>(() => !!localStorage.getItem('user'));
   useEffect(() => {
@@ -73,6 +73,16 @@ const PainelWrapper: React.FC = () => {
 
 const CardapioWrapper: React.FC = () => {
   const { restauranteId } = useParams<{ restauranteId: string }>();
+  const [nomeRestaurante, setNomeRestaurante] = useState('');
+
+  useEffect(() => {
+    if (restauranteId) {
+      // Buscar nome do restaurante para mostrar
+      api.get(`/restaurantes/${restauranteId}`)
+        .then(res => setNomeRestaurante(res.data.nome))
+        .catch(() => setNomeRestaurante(`Restaurante #${restauranteId}`));
+    }
+  }, [restauranteId]);
 
   const userData = localStorage.getItem('user');
 
@@ -104,7 +114,7 @@ const CardapioWrapper: React.FC = () => {
     return (
       <CardapioRestaurante
         restauranteId={id}
-        nomeRestaurante={`Restaurante #${id}`}
+        nomeRestaurante={nomeRestaurante || `Restaurante #${id}`}
         onVoltar={() => window.history.back()}
         usuarioId={usuarioId}
       />
@@ -192,7 +202,7 @@ const App: React.FC = () => {
         <Link to="/" className="nav-link">🏠 Home</Link>
         <Link to="/cadastro" className="nav-link">👤 Cadastro Cliente</Link>
         <Link to="/cadastro-dono" className="nav-link">🏪 Cadastro Dono</Link>
-        <Link to="/painel-restaurante" className="nav-link">🍽️ Painel Restaurante</Link>
+        {/* ❌ REMOVIDO: Link para painel fixo ID 4 */}
         <Link to="/login-dono" className="nav-link">🔐 Login Dono</Link>
         <Link to="/login" className="nav-link">🔓 Login Cliente</Link>
         <Link to="/historico-usuario" className="nav-link">📋 Meu Histórico</Link>
@@ -233,7 +243,8 @@ const App: React.FC = () => {
         {/* Dono */}
         <Route path="/login-dono" element={<DonoLogin />} />
         <Route path="/cadastro-dono" element={<CadastroDono />} />
-        <Route path="/painel-restaurante" element={<PainelRestaurante restauranteId={4} onVoltar={handleVoltar} />} />
+        {/* ❌ REMOVIDO: Rota com ID fixo 4 */}
+        {/* ✅ Mantido apenas: Rota dinâmica */}
         <Route path="/painel-restaurante/:restauranteId" element={<PainelWrapper />} />
 
         {/* Lista geral */}
@@ -253,4 +264,3 @@ const App: React.FC = () => {
 };
 
 export default App;
-

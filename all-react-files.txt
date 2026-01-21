@@ -1,0 +1,3314 @@
+﻿===== FILE: E:\larica-frontend\src\components\AcompanhamentoPedido.tsx =====
+
+import React, { useEffect, useState } from 'react';
+import api from '../services/api';
+
+interface Pedido {
+  id: number;
+  data: string;
+  status: string;
+}
+
+interface ItemPedidoDTO {
+  id: number;
+  nomeProduto: string;
+  quantidade: number;
+  precoUnitario: number | string;
+}
+
+interface AcompanhamentoPedidoProps {
+  usuarioId: number;
+}
+
+const AcompanhamentoPedido: React.FC<AcompanhamentoPedidoProps> = ({ usuarioId }) => {
+  const [pedido, setPedido] = useState<Pedido | null>(null);
+  const [itens, setItens] = useState<ItemPedidoDTO[]>([]);
+  const [carregando, setCarregando] = useState(true);
+
+  useEffect(() => {
+    const fetchPedidoEItens = async () => {
+      try {
+        setCarregando(true);
+
+        let pedidoData: Pedido;
+
+        try {
+          const pedidoRes = await api.get(`/pedidos/ultimo/${usuarioId}`);
+          pedidoData = pedidoRes.data;
+        } catch (err1: any) {
+          if (err1?.response?.status === 404) {
+            const pedidoRes2 = await api.get(`/api/pedidos/ultimo/${usuarioId}`);
+            pedidoData = pedidoRes2.data;
+          } else {
+            throw err1;
+          }
+        }
+
+        setPedido(pedidoData);
+
+        try {
+          const itensRes = await api.get<ItemPedidoDTO[]>(`/pedidos/${pedidoData.id}/itens`);
+          setItens(itensRes.data || []);
+        } catch (errI1: any) {
+          if (errI1?.response?.status === 404) {
+            const itensRes2 = await api.get<ItemPedidoDTO[]>(`/api/pedidos/${pedidoData.id}/itens`);
+            setItens(itensRes2.data || []);
+          } else {
+            throw errI1;
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao buscar pedido/itens:', error);
+        setPedido(null);
+        setItens([]);
+      } finally {
+        setCarregando(false);
+      }
+    };
+
+    fetchPedidoEItens();
+  }, [usuarioId]);
+
+  if (carregando) return <p>Carregando pedido...</p>;
+  if (!pedido) return <p>Nenhum pedido encontrado.</p>;
+
+  return (
+    <div style={{ padding: '1rem', border: '1px solid #ccc', borderRadius: 10 }}>
+      <h2>ðŸ“¦ Status do Pedido</h2>
+      <p><strong>Status:</strong> {pedido.status}</p>
+      <p><strong>Data:</strong> {new Date(pedido.data).toLocaleString()}</p>
+
+      <h3>ðŸ§¾ Itens do Pedido:</h3>
+      <ul>
+        {itens.map((item) => {
+          const preco = typeof item.precoUnitario === 'string'
+            ? parseFloat(item.precoUnitario)
+            : item.precoUnitario;
+          return (
+            <li key={item.id}>
+              {item.quantidade}Ã— {item.nomeProduto} â€” R$ {preco.toFixed(2)}
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+};
+
+export default AcompanhamentoPedido;
+
+
+===== FILE: E:\larica-frontend\src\components\CadastroDono.tsx =====
+
+import React, { useState } from 'react';
+import api from '../services/api';
+import { useNavigate } from 'react-router-dom';
+import './CadastroDono.css';
+
+const CadastroDono: React.FC = () => {
+  const navigate = useNavigate();
+
+  // Dono
+  const [nome, setNome] = useState('');
+  const [email, setEmail] = useState('');
+  const [senha, setSenha] = useState('');
+  const [telefone, setTelefone] = useState('');
+
+  // Restaurante
+  const [nomeRestaurante, setNomeRestaurante] = useState('');
+  const [enderecoRestaurante, setEnderecoRestaurante] = useState('');
+  const [telefoneRestaurante, setTelefoneRestaurante] = useState('');
+
+  // UI
+  const [erro, setErro] = useState<string | null>(null);
+  const [sucesso, setSucesso] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErro(null);
+    setSucesso(null);
+
+    const nomeR = nomeRestaurante.trim();
+    const endR = enderecoRestaurante.trim();
+
+    if (!nomeR || !endR) {
+      setErro('Preencha Nome do Restaurante e EndereÃ§o.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const payload = {
+        nome: nome.trim(),
+        email: email.trim(),
+        senha,
+        telefone: telefone.trim(),
+        nomeRestaurante: nomeR,
+        enderecoRestaurante: endR,
+        telefoneRestaurante: telefoneRestaurante.trim(),
+      };
+
+      const { data } = await api.post('/auth/donos/register', payload);
+
+      setSucesso(typeof data === 'string' ? data : 'Dono e restaurante cadastrados com sucesso');
+      setTimeout(() => navigate('/login-dono'), 1200);
+    } catch (err: any) {
+      console.error(err);
+      const msg = err?.response?.data || 'Erro ao cadastrar';
+      setErro(typeof msg === 'string' ? msg : JSON.stringify(msg));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="cadastro-dono-container">
+      <h2 className="cadastro-dono-title">Cadastro de Dono + Restaurante</h2>
+
+      {erro && <div className="mensagem mensagem-erro">{erro}</div>}
+      {sucesso && <div className="mensagem mensagem-sucesso">{sucesso}</div>}
+
+      <form onSubmit={handleSubmit} className="cadastro-dono-form">
+        <fieldset className="grupo">
+          <legend>Dados do Dono</legend>
+
+          <input
+            className="input"
+            type="text"
+            placeholder="Nome"
+            value={nome}
+            onChange={(e) => setNome(e.target.value)}
+            required
+          />
+          <input
+            className="input"
+            type="email"
+            placeholder="E-mail"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+          <input
+            className="input"
+            type="password"
+            placeholder="Senha"
+            value={senha}
+            onChange={(e) => setSenha(e.target.value)}
+            required
+          />
+          <input
+            className="input"
+            type="tel"
+            placeholder="Telefone (opcional)"
+            value={telefone}
+            onChange={(e) => setTelefone(e.target.value)}
+          />
+        </fieldset>
+
+        <fieldset className="grupo">
+          <legend>Dados do Restaurante</legend>
+
+          <input
+            className="input"
+            type="text"
+            placeholder="Nome do Restaurante"
+            value={nomeRestaurante}
+            onChange={(e) => setNomeRestaurante(e.target.value)}
+            required
+          />
+          <input
+            className="input"
+            type="text"
+            placeholder="EndereÃ§o do Restaurante"
+            value={enderecoRestaurante}
+            onChange={(e) => setEnderecoRestaurante(e.target.value)}
+            required
+          />
+          <input
+            className="input"
+            type="tel"
+            placeholder="Telefone do Restaurante (opcional)"
+            value={telefoneRestaurante}
+            onChange={(e) => setTelefoneRestaurante(e.target.value)}
+          />
+
+          <small className="dica">
+            Dica: Rua + NÃºmero + Bairro + Cidade (ex.: â€œRua das Flores, 123 - Centro, Natalâ€).
+          </small>
+        </fieldset>
+
+        <button type="submit" disabled={loading} className="btn-cadastro">
+          {loading ? 'Cadastrando...' : 'Cadastrar'}
+        </button>
+      </form>
+    </div>
+  );
+};
+
+export default CadastroDono;
+
+
+===== FILE: E:\larica-frontend\src\components\CadastroUsuario.tsx =====
+
+import React, { useState } from 'react';
+import api from '../services/api';
+import './CadastroUsuario.css';
+
+type Props = {
+  onVoltar: () => void;
+};
+
+function CadastroUsuario({ onVoltar }: Props) {
+  const [formData, setFormData] = useState({
+    nome: '',
+    email: '',
+    senha: '',
+    telefone: '',
+    tipo: 'CLIENTE',
+    dataCadastro: new Date().toISOString().split('T')[0]
+  });
+
+  const [erros, setErros] = useState<Record<string, string>>({});
+  const [mensagemSucesso, setMensagemSucesso] = useState('');
+
+  const formatarTelefone = (valor: string): string => {
+    const nums = valor.replace(/\D/g, '').slice(0, 11);
+    if (nums.length === 0) return '';
+    if (nums.length <= 2) return `(${nums}`;
+    if (nums.length <= 6) return `(${nums.slice(0, 2)}) ${nums.slice(2)}`;
+    if (nums.length <= 10) return `(${nums.slice(0, 2)}) ${nums.slice(2, 6)}-${nums.slice(6)}`;
+    return `(${nums.slice(0, 2)}) ${nums.slice(2, 7)}-${nums.slice(7, 11)}`;
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    if (name === 'telefone') {
+      setFormData(prev => ({ ...prev, [name]: formatarTelefone(value) }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const validarFormulario = (): boolean => {
+    const novosErros: Record<string, string> = {};
+    if (!formData.nome.trim()) novosErros.nome = 'Nome Ã© obrigatÃ³rio';
+    if (!formData.email.includes('@')) novosErros.email = 'Email invÃ¡lido';
+    if (formData.senha.length < 6) novosErros.senha = 'Senha deve ter 6+ caracteres';
+    if (formData.telefone.replace(/\D/g, '').length < 11) {
+      novosErros.telefone = 'Celular invÃ¡lido (11 dÃ­gitos com DDD)';
+    }
+    setErros(novosErros);
+    return Object.keys(novosErros).length === 0;
+  };
+
+  const cadastrar = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setMensagemSucesso('');
+    setErros({});
+    if (!validarFormulario()) return;
+
+    try {
+      const dadosParaEnviar = {
+        nome: formData.nome,
+        email: formData.email,
+        senha: formData.senha,
+        telefone: formData.telefone.replace(/\D/g, ''),
+        tipo: formData.tipo,
+        dataCadastro: formData.dataCadastro
+      };
+
+      await api.post('/auth/usuarios/register', dadosParaEnviar);
+
+      setMensagemSucesso('UsuÃ¡rio cadastrado com sucesso!');
+      setFormData({
+        nome: '',
+        email: '',
+        senha: '',
+        telefone: '',
+        tipo: 'CLIENTE',
+        dataCadastro: new Date().toISOString().split('T')[0]
+      });
+    } catch (erro: any) {
+      console.error('Erro no cadastro:', erro);
+      const status = erro?.response?.status;
+      if (status === 409) {
+        setErros({ servidor: 'Este e-mail jÃ¡ estÃ¡ cadastrado.' });
+      } else {
+        setErros({ servidor: 'Erro ao cadastrar usuÃ¡rio. Tente novamente.' });
+      }
+    }
+  };
+
+  return (
+    <div className="cadastro-container">
+      <div className="cadastro-card">
+        <h2>Cadastro de UsuÃ¡rio</h2>
+        <p className="cadastro-subtitle">Informe seus dados para criar a conta</p>
+
+        {mensagemSucesso && <div className="alert-sucesso">{mensagemSucesso}</div>}
+        {erros.servidor && <div className="alert-erro">{erros.servidor}</div>}
+
+        <form onSubmit={cadastrar} className="cadastro-form">
+          <div className="form-group">
+            <label>Nome Completo *</label>
+            <input
+              type="text"
+              name="nome"
+              value={formData.nome}
+              onChange={handleChange}
+              placeholder="Digite seu nome completo"
+              className={erros.nome ? 'input-erro' : ''}
+            />
+            {erros.nome && <span className="msg-erro">{erros.nome}</span>}
+          </div>
+
+          <div className="form-group">
+            <label>Email *</label>
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="seu@email.com"
+              className={erros.email ? 'input-erro' : ''}
+            />
+            {erros.email && <span className="msg-erro">{erros.email}</span>}
+          </div>
+
+          <div className="form-group">
+            <label>Senha *</label>
+            <input
+              type="password"
+              name="senha"
+              value={formData.senha}
+              onChange={handleChange}
+              placeholder="MÃ­nimo 6 caracteres"
+              className={erros.senha ? 'input-erro' : ''}
+            />
+            {erros.senha && <span className="msg-erro">{erros.senha}</span>}
+          </div>
+
+          <div className="form-group">
+            <label>Telefone *</label>
+            <input
+              type="text"
+              name="telefone"
+              value={formData.telefone}
+              onChange={handleChange}
+              placeholder="(99) 99999-9999"
+              maxLength={15}
+              className={erros.telefone ? 'input-erro' : ''}
+            />
+            {erros.telefone && <span className="msg-erro">{erros.telefone}</span>}
+          </div>
+
+          <div className="form-group">
+            <label>Tipo de UsuÃ¡rio *</label>
+            <select name="tipo" value={formData.tipo} onChange={handleChange}>
+              <option value="CLIENTE">Cliente</option>
+              <option value="DONO_RESTAURANTE">Dono de Restaurante</option>
+            </select>
+          </div>
+
+          <input type="hidden" name="dataCadastro" value={formData.dataCadastro} />
+
+          <div className="acoes">
+            <button type="button" className="btn-voltar" onClick={onVoltar}>
+              â† Voltar
+            </button>
+            <button type="submit" className="btn-primary">
+              Cadastrar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+export default CadastroUsuario;
+
+
+===== FILE: E:\larica-frontend\src\components\CardapioRestaurante.tsx =====
+
+// src/components/CardapioRestaurante.tsx
+import React, { useEffect, useState } from 'react';
+import api from '../services/api';
+import './CardapioRestaurante.css';
+
+interface Props {
+  restauranteId: number;
+  nomeRestaurante: string;
+  onVoltar: () => void;
+  usuarioId: number; // âœ… AGORA RECEBE via props
+}
+
+interface Produto {
+  id: number;
+  nome: string;
+  descricao: string;
+  preco: number;
+}
+
+interface ItemCarrinho {
+  id: number;
+  quantidade: number;
+}
+
+const CardapioRestaurante: React.FC<Props> = ({ restauranteId, nomeRestaurante, onVoltar, usuarioId }) => {
+  const [cardapio, setCardapio] = useState<Produto[]>([]);
+  const [carrinho, setCarrinho] = useState<ItemCarrinho[]>([]);
+  const [erro, setErro] = useState<string | null>(null);
+  const [mensagemSucesso, setMensagemSucesso] = useState<string | null>(null);
+  const [carregando, setCarregando] = useState(false);
+
+  useEffect(() => {
+    const carregarCardapio = async () => {
+      try {
+        const response = await api.get(`/produtos/por-restaurante/${restauranteId}`);
+        setCardapio(response.data);
+        setErro(null);
+      } catch (error) {
+        console.error('Erro ao carregar cardÃ¡pio:', error);
+        setErro('Erro ao carregar cardÃ¡pio. Verifique a conexÃ£o ou o ID do restaurante.');
+      }
+    };
+
+    carregarCardapio();
+  }, [restauranteId]);
+
+  const adicionarAoCarrinho = (produtoId: number) => {
+    setCarrinho((prev) => {
+      const existente = prev.find((item) => item.id === produtoId);
+      if (existente) {
+        return prev.map((item) =>
+          item.id === produtoId ? { ...item, quantidade: item.quantidade + 1 } : item
+        );
+      }
+      return [...prev, { id: produtoId, quantidade: 1 }];
+    });
+  };
+
+  const removerDoCarrinho = (produtoId: number) => {
+    setCarrinho((prev) => prev.filter((item) => item.id !== produtoId));
+  };
+
+  const atualizarQuantidade = (produtoId: number, novaQuantidade: number) => {
+    if (novaQuantidade < 1) return;
+    setCarrinho((prev) =>
+      prev.map((item) =>
+        item.id === produtoId ? { ...item, quantidade: novaQuantidade } : item
+      )
+    );
+  };
+
+  const calcularTotal = () => {
+    return carrinho.reduce((total, item) => {
+      const produto = cardapio.find((p) => p.id === item.id);
+      return total + ((produto?.preco || 0) * item.quantidade);
+    }, 0);
+  };
+
+  const fazerPedido = async () => {
+    // âœ… CORREÃ‡ÃƒO: Remove a linha do localStorage e usa o usuarioId das props
+    setCarregando(true);
+    setErro(null);
+    setMensagemSucesso(null);
+
+    try {
+      // 1. Cria o pedido no backend
+      const payload = {
+        usuarioId, // âœ… JÃ¡ vem das props
+        restauranteId,
+        itens: carrinho.map((item) => ({
+          produtoId: item.id,
+          quantidade: item.quantidade,
+        })),
+      };
+
+      const pedidoRes = await api.post('/pedidos', payload);
+      const pedidoId = pedidoRes.data.id;
+
+      // 2. Gera o link de pagamento DINÃ‚MICO
+      const pagamentoRes = await api.post(`/pagamentos/mercadopago/preference/${pedidoId}`);
+      const initPoint = pagamentoRes.data.initPoint;
+
+      // 3. Redireciona para o Mercado Pago
+      window.open(initPoint, '_blank');
+      setCarrinho([]);
+      setMensagemSucesso(`âœ… Pedido #${pedidoId} realizado! Redirecionando para pagamento...`);
+      setTimeout(() => setMensagemSucesso(null), 5000);
+
+    } catch (error: any) {
+      console.error('Erro ao fazer pedido:', error);
+      const mensagem = error?.response?.data?.message || 'Erro ao realizar pedido. Tente novamente.';
+      setErro(mensagem);
+    } finally {
+      setCarregando(false);
+    }
+  };
+
+  return (
+    <div className="cardapio-container">
+      <button className="voltar-btn" onClick={onVoltar}>
+        â† Voltar
+      </button>
+      <h2 className="titulo-cardapio">CardÃ¡pio de {nomeRestaurante}</h2>
+
+      {erro && <div className="erro-cardapio">{erro}</div>}
+      {mensagemSucesso && <div className="mensagem-sucesso">{mensagemSucesso}</div>}
+
+      <div className="cardapio-content">
+        <ul className="cardapio-list">
+          {cardapio.map((produto) => (
+            <li className="cardapio-item" key={produto.id}>
+              <div className="produto-info">
+                <h3>{produto.nome}</h3>
+                <p>{produto.descricao}</p>
+                <span>R$ {produto.preco.toFixed(2)}</span>
+              </div>
+              <button
+                className="adicionar-btn"
+                onClick={() => adicionarAoCarrinho(produto.id)}
+              >
+                Adicionar
+              </button>
+            </li>
+          ))}
+        </ul>
+
+        {carrinho.length > 0 && (
+          <div className="carrinho-section">
+            <h3>Seu Carrinho</h3>
+            <ul className="carrinho-list">
+              {carrinho.map((item) => {
+                const produto = cardapio.find((p) => p.id === item.id);
+                const subtotal = ((produto?.preco || 0) * item.quantidade).toFixed(2);
+                return (
+                  <li key={item.id} className="carrinho-item">
+                    <div className="carrinho-item-info">
+                      <span>{produto?.nome}</span>
+                      <div className="quantidade-control">
+                        <button onClick={() => atualizarQuantidade(item.id, item.quantidade - 1)}>
+                          -
+                        </button>
+                        <span>{item.quantidade}</span>
+                        <button onClick={() => atualizarQuantidade(item.id, item.quantidade + 1)}>
+                          +
+                        </button>
+                      </div>
+                      <span>R$ {subtotal}</span>
+                    </div>
+                    <button
+                      className="remover-btn"
+                      onClick={() => removerDoCarrinho(item.id)}
+                    >
+                      Remover
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+            <div className="carrinho-total">
+              <span>Total:</span>
+              <span>R$ {calcularTotal().toFixed(2)}</span>
+            </div>
+            <button
+              className="finalizar-btn"
+              onClick={fazerPedido}
+              disabled={carregando}
+            >
+              {carregando ? 'Processando...' : 'Finalizar Pedido e Pagar'}
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default CardapioRestaurante;
+
+
+===== FILE: E:\larica-frontend\src\components\Dashboard.tsx =====
+
+import React, { useState } from 'react';
+import ListaRestaurantes from './ListaRestaurantes';
+import HistoricoUsuario from './HistoricoUsuario';
+import './Dashboard.css';
+
+const Dashboard: React.FC = () => {
+  const [abaAtiva, setAbaAtiva] = useState<'restaurantes' | 'historico'>('restaurantes');
+
+  // âœ… Pegar usuarioId do localStorage CORRETAMENTE
+  const userData = localStorage.getItem('user');
+  let usuarioId: number | null = null;
+  
+  if (userData) {
+    try {
+      const user = JSON.parse(userData);
+      usuarioId = user?.id || null;
+    } catch (error) {
+      console.error('Erro ao parsear user data:', error);
+    }
+  }
+
+  if (!usuarioId) {
+    return (
+      <div style={{ padding: '20px', textAlign: 'center' }}>
+        <h2>âŒ Acesso nÃ£o autorizado</h2>
+        <p>VocÃª precisa fazer login para acessar o dashboard.</p>
+        <button 
+          onClick={() => window.location.href = '/login'}
+          style={{ padding: '10px 20px', background: '#007bff', color: 'white', border: 'none', borderRadius: '5px' }}
+        >
+          Fazer Login
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="dashboard-container">
+      {/* âœ…âœ…âœ… ABAS DE NAVEGAÃ‡ÃƒO - AGORA VAI APARECER! */}
+      <div className="dashboard-tabs">
+        <button 
+          className={`tab-button ${abaAtiva === 'restaurantes' ? 'active' : ''}`}
+          onClick={() => setAbaAtiva('restaurantes')}
+        >
+          ðŸª Restaurantes
+        </button>
+        <button 
+          className={`tab-button ${abaAtiva === 'historico' ? 'active' : ''}`}
+          onClick={() => setAbaAtiva('historico')}
+        >
+          ðŸ“œ Meu HistÃ³rico
+        </button>
+      </div>
+
+      {/* âœ…âœ…âœ… CONTEÃšDO DAS ABAS */}
+      <div className="dashboard-content">
+        {abaAtiva === 'restaurantes' ? (
+          <ListaRestaurantes />
+        ) : (
+          <HistoricoUsuario 
+            usuarioId={usuarioId} 
+            onVoltar={() => setAbaAtiva('restaurantes')}
+          />
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default Dashboard;
+
+
+===== FILE: E:\larica-frontend\src\components\DonoLogin.tsx =====
+
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import api from '../services/api';
+import './DonoLogin.css';
+
+const DonoLogin: React.FC = () => {
+  const navigate = useNavigate();
+  const [email, setEmail] = useState('');
+  const [senha, setSenha] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErro(null);
+    setLoading(true);
+
+    try {
+      const response = await api.post('/auth/donos/login', { email, senha });
+      const { token, id, nome, email: donoEmail, telefone } = response.data;
+
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify({
+        id,
+        nome,
+        email: donoEmail,
+        telefone,
+        tipo: 'DONO'
+      }));
+
+      navigate(`/painel-restaurante/${id}`);
+    } catch (err: any) {
+      console.error(err);
+      const status = err?.response?.status;
+      const data = err?.response?.data;
+      setErro(
+        status
+          ? `Erro ${status}: ${typeof data === 'string' ? data : JSON.stringify(data)}`
+          : 'Falha no login. Verifique as credenciais.'
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="loginD-container">
+      <div className="loginD-card">
+        <h2>Login do Dono</h2>
+
+        {erro && <div className="alert-erro">{String(erro)}</div>}
+
+        <form onSubmit={handleSubmit} className="loginD-form">
+          <div className="form-group">
+            <label>E-mail</label>
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="dono@exemplo.com"
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Senha</label>
+            <input
+              type="password"
+              required
+              value={senha}
+              onChange={(e) => setSenha(e.target.value)}
+              placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+            />
+          </div>
+
+          <button type="submit" className="btn-primary" disabled={loading}>
+            {loading ? 'Entrando...' : 'Entrar'}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+export default DonoLogin;
+
+
+===== FILE: E:\larica-frontend\src\components\FinalizarPedido.tsx =====
+
+// src/components/FinalizarPedido.tsx
+import React, { useState } from 'react';
+import api from '../services/api';
+
+interface Produto { id: number; nome: string; preco: number; restauranteId: number; }
+interface ItemCarrinho { produto: Produto; quantidade: number; }
+interface FinalizarPedidoProps { carrinho: ItemCarrinho[]; usuarioId: number; onFinalizado: () => void; }
+
+const FinalizarPedido: React.FC<FinalizarPedidoProps> = ({ carrinho, usuarioId, onFinalizado }) => {
+  const [mensagem, setMensagem] = useState('');
+  const [carregando, setCarregando] = useState(false);
+
+  const calcularTotal = () =>
+    carrinho.reduce((tot, item) => tot + item.produto.preco * item.quantidade, 0);
+
+  const finalizarPedido = async () => {
+    if (carrinho.length === 0) {
+      setMensagem('Seu carrinho estÃ¡ vazio!');
+      return;
+    }
+
+    const restauranteId = carrinho[0].produto.restauranteId;
+    if (carrinho.some(i => i.produto.restauranteId !== restauranteId)) {
+      setMensagem('Todos os itens do pedido devem ser do mesmo restaurante.');
+      return;
+    }
+
+    setCarregando(true);
+    setMensagem('');
+
+    try {
+      // 1. Cria o pedido no backend
+      const payload = {
+        usuarioId, // âœ… JÃ¡ vem via props
+        restauranteId,
+        itens: carrinho.map((i) => ({ produtoId: i.produto.id, quantidade: i.quantidade })),
+      };
+
+      const pedidoRes = await api.post('/pedidos', payload);
+      const pedidoId = pedidoRes.data.id;
+
+      // 2. Gera o link de pagamento REAL
+      const pagamentoRes = await api.post(`/pagamentos/mercadopago/preference/${pedidoId}`);
+      const initPoint = pagamentoRes.data.initPoint;
+
+      // 3. Redireciona para o Mercado Pago
+      window.location.href = initPoint;
+
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.response?.data || err?.message || 'Erro ao finalizar pedido';
+      console.error('âŒ Erro ao criar pedido', err?.response || err);
+      setMensagem(msg);
+    } finally {
+      setCarregando(false);
+    }
+  };
+
+  return (
+    <div className="finalizar-pedido">
+      <div className="resumo-pedido">
+        <h3>Resumo do Pedido</h3>
+        {carrinho.map(item => (
+          <div key={item.produto.id} className="item-pedido">
+            <span>{item.produto.nome}</span>
+            <span>{item.quantidade}x R${item.produto.preco.toFixed(2)}</span>
+          </div>
+        ))}
+        <div className="total-pedido">
+          <strong>Total:</strong>
+          <strong>R${calcularTotal().toFixed(2)}</strong>
+        </div>
+      </div>
+
+      <button onClick={finalizarPedido} disabled={carregando} className="botao-pagamento">
+        {carregando ? 'Processando...' : 'Finalizar Pedido e Pagar'}
+      </button>
+
+      {mensagem && (
+        <p className={mensagem.toLowerCase().includes('sucesso') ? 'sucesso' : 'erro'}>
+          {mensagem}
+        </p>
+      )}
+    </div>
+  );
+};
+
+export default FinalizarPedido;
+
+
+===== FILE: E:\larica-frontend\src\components\HistoricoGeral.tsx =====
+
+import React, { useEffect, useMemo, useState } from 'react';
+import api from '../services/api';
+import styles from './HistoricoPedidos.module.css';
+
+interface ItemPedidoDTO {
+  id: number;
+  nomeProduto: string;
+  quantidade: number;
+  precoUnitario: number | string;
+}
+
+interface HistoricoPedidoDTO {
+  pedidoId: number;
+  nomeRestaurante: string;
+  data: string;
+  status: string;
+  itens: ItemPedidoDTO[];
+}
+
+const HistoricoGeral: React.FC = () => {
+  const [pedidos, setPedidos] = useState<HistoricoPedidoDTO[]>([]);
+  const [erro, setErro] = useState<string | null>(null);
+  const [carregando, setCarregando] = useState(true);
+
+  const pedidosOrdenados = useMemo(() => {
+    return [...pedidos].sort((a, b) => {
+      const da = new Date(a.data).getTime();
+      const db = new Date(b.data).getTime();
+      return db - da || b.pedidoId - a.pedidoId;
+    });
+  }, [pedidos]);
+
+  const calcularTotal = (itens: ItemPedidoDTO[]) =>
+    itens.reduce((tot, item) => {
+      const p = typeof item.precoUnitario === 'string' ? parseFloat(item.precoUnitario) : item.precoUnitario;
+      return tot + (p || 0) * item.quantidade;
+    }, 0);
+
+  const formatarData = (data: string) => {
+    const d = new Date(data);
+    return isNaN(d.getTime()) ? data : d.toLocaleDateString('pt-BR');
+  };
+
+  const formatarStatus = (status: string) => {
+    const s = status.toUpperCase();
+    if (s.includes('AGUARDANDO')) return 'ðŸŸ¡ Aguardando';
+    if (s.includes('EM_PREPARO') || s.includes('PREPARANDO')) return 'ðŸ”µ Em preparo';
+    if (s.includes('PRONTO')) return 'ðŸŸ¢ Pronto';
+    if (s.includes('ENTREGUE') || s.includes('CONCLUIDO')) return 'âœ… Entregue';
+    if (s.includes('CANCELADO') || s.includes('RECUSADO')) return 'ðŸ”´ Cancelado';
+    return status;
+  };
+
+  const getStatusStyle = (status: string) => {
+    const s = status.toUpperCase();
+    if (s.includes('AGUARDANDO')) return styles.statusAguardando;
+    if (s.includes('EM_PREPARO') || s.includes('PREPARANDO')) return styles.statusPreparo;
+    if (s.includes('PRONTO')) return styles.statusPronto;
+    if (s.includes('ENTREGUE') || s.includes('CONCLUIDO')) return styles.statusEntregue;
+    if (s.includes('CANCELADO') || s.includes('RECUSADO')) return styles.statusCancelado;
+    return '';
+  };
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        setCarregando(true);
+        // âœ…âœ…âœ… CORREÃ‡ÃƒO AQUI - remove a URL absoluta
+        const response = await api.get<HistoricoPedidoDTO[]>('/pedidos/todos');
+        setPedidos(response.data || []);
+      } catch (err) {
+        console.error('Erro ao carregar histÃ³rico geral:', err);
+        setErro('Falha ao carregar histÃ³rico geral');
+      } finally {
+        setCarregando(false);
+      }
+    };
+    load();
+  }, []);
+
+  if (carregando) return <div className={styles.loading}>Carregando...</div>;
+  if (erro) return <div className={styles.error}>{erro}</div>;
+  if (!pedidos.length) return <div className={styles.empty}>Nenhum pedido encontrado</div>;
+
+  return (
+    <div className={styles.historicoContainer}>
+      <div className={styles.header}>
+        <button onClick={() => window.history.back()} className={styles.btnVoltar}>â† Voltar</button>
+        <h2>ðŸ“œ HistÃ³rico Geral (Manager)</h2>
+      </div>
+
+      <div className={styles.pedidosGrid}>
+        {pedidosOrdenados.map((pedido) => (
+          <div key={pedido.pedidoId} className={styles.pedidoCard}>
+            <div className={styles.pedidoHeader}>
+              <h3>{pedido.nomeRestaurante} â€” #{pedido.pedidoId}</h3>
+              <span className={`${styles.status} ${getStatusStyle(pedido.status)}`}>
+                {formatarStatus(pedido.status)}
+              </span>
+            </div>
+
+            <div className={styles.infoContainer}>
+              <span className={styles.data}>{formatarData(pedido.data)}</span>
+              <span className={styles.total}>Total: R$ {calcularTotal(pedido.itens).toFixed(2)}</span>
+            </div>
+
+            <ul className={styles.itens}>
+              {pedido.itens.map((item) => {
+                const preco = typeof item.precoUnitario === 'string' ? parseFloat(item.precoUnitario) : item.precoUnitario;
+                return (
+                  <li key={item.id}>
+                    {item.quantidade}Ã— {item.nomeProduto} â€” R$ {preco.toFixed(2)}
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default HistoricoGeral;
+
+
+===== FILE: E:\larica-frontend\src\components\HistoricoPedidos.tsx =====
+
+import React, { useEffect, useState, useMemo } from 'react';
+import api from '../services/api';
+import styles from './HistoricoPedidos.module.css';
+
+interface ItemPedidoDTO {
+  id: number;
+  nomeProduto: string;
+  quantidade: number;
+  precoUnitario: number | string;
+}
+
+interface HistoricoPedidoDTO {
+  pedidoId: number;
+  nomeRestaurante: string;
+  data: string;
+  status: string;
+  itens: ItemPedidoDTO[];
+}
+
+const HistoricoPedidos: React.FC<{ usuarioId: number; onVoltar: () => void }> = ({
+  usuarioId,
+  onVoltar,
+}) => {
+  const [pedidos, setPedidos] = useState<HistoricoPedidoDTO[]>([]);
+  const [erro, setErro] = useState<string | null>(null);
+  const [carregando, setCarregando] = useState(true);
+
+  const pedidosOrdenados = useMemo(() => {
+    return [...pedidos].sort((a, b) => {
+      const dateA = new Date(a.data).getTime();
+      const dateB = new Date(b.data).getTime();
+      return dateB - dateA || b.pedidoId - a.pedidoId;
+    });
+  }, [pedidos]);
+
+  const calcularTotal = (itens: ItemPedidoDTO[]) =>
+    itens.reduce((total, item) => {
+      const preco = typeof item.precoUnitario === 'string'
+        ? parseFloat(item.precoUnitario)
+        : item.precoUnitario;
+      return total + (preco || 0) * item.quantidade;
+    }, 0);
+
+  const formatarData = (data: string) => {
+    const date = new Date(data);
+    return isNaN(date.getTime())
+      ? 'Data invÃ¡lida'
+      : date.toLocaleDateString('pt-BR');
+  };
+
+  const getStatusStyle = (status: string) => {
+    const statusUpper = status.toUpperCase();
+    if (statusUpper.includes('AGUARDANDO')) return styles.statusAguardando;
+    if (statusUpper.includes('EM_PREPARO') || statusUpper.includes('PREPARANDO')) return styles.statusPreparo;
+    if (statusUpper.includes('PRONTO')) return styles.statusPronto;
+    if (statusUpper.includes('ENTREGUE') || statusUpper.includes('CONCLUIDO')) return styles.statusEntregue;
+    if (statusUpper.includes('CANCELADO') || statusUpper.includes('RECUSADO')) return styles.statusCancelado;
+    return '';
+  };
+
+  const formatarStatus = (status: string) => {
+    const statusUpper = status.toUpperCase();
+    if (statusUpper.includes('AGUARDANDO')) return 'ðŸŸ¡ Aguardando';
+    if (statusUpper.includes('EM_PREPARO') || statusUpper.includes('PREPARANDO')) return 'ðŸ”µ Em preparo';
+    if (statusUpper.includes('PRONTO')) return 'ðŸŸ¢ Pronto';
+    if (statusUpper.includes('ENTREGUE') || statusUpper.includes('CONCLUIDO')) return 'âœ… Entregue';
+    if (statusUpper.includes('CANCELADO') || statusUpper.includes('RECUSADO')) return 'ðŸ”´ Cancelado';
+    return status;
+  };
+
+  useEffect(() => {
+    const loadPedidos = async () => {
+      try {
+        setCarregando(true);
+        const { data } = await api.get<HistoricoPedidoDTO[]>(`/pedidos/cliente/${usuarioId}`);
+        setPedidos(data);
+      } catch (error) {
+        console.error('Erro ao buscar pedidos:', error);
+        setErro('Falha ao carregar histÃ³rico');
+      } finally {
+        setCarregando(false);
+      }
+    };
+    loadPedidos();
+  }, [usuarioId]);
+
+  if (carregando) return <div className={styles.loading}>Carregando...</div>;
+  if (erro) return <div className={styles.error}>{erro}</div>;
+  if (!pedidos.length) return <div className={styles.empty}>Nenhum pedido encontrado</div>;
+
+  return (
+    <div className={styles.historicoContainer}>
+      <div className={styles.header}>
+        <button onClick={onVoltar} className={styles.btnVoltar}>â† Voltar</button>
+        <h2>ðŸ“œ HistÃ³rico de Pedidos</h2>
+      </div>
+
+      <div className={styles.pedidosGrid}>
+        {pedidosOrdenados.map((pedido) => (
+          <div key={pedido.pedidoId} className={styles.pedidoCard}>
+            <div className={styles.pedidoHeader}>
+              <h3>{pedido.itens[0]?.nomeProduto || 'Pedido sem nome'}</h3>
+              <span>#{pedido.pedidoId}</span>
+            </div>
+
+            <div className={styles.statusContainer}>
+              <span className={`${styles.status} ${getStatusStyle(pedido.status)}`}>
+                {formatarStatus(pedido.status)}
+              </span>
+            </div>
+
+            <div className={styles.infoContainer}>
+              <span className={styles.data}>{formatarData(pedido.data)}</span>
+              <span className={styles.total}>Total: R$ {calcularTotal(pedido.itens).toFixed(2)}</span>
+            </div>
+
+            <ul className={styles.itens}>
+              {pedido.itens.map((item) => {
+                const preco = typeof item.precoUnitario === 'string'
+                  ? parseFloat(item.precoUnitario)
+                  : item.precoUnitario;
+                return (
+                  <li key={item.id}>
+                    {item.quantidade}Ã— {item.nomeProduto} â€” R$ {preco.toFixed(2)}
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default HistoricoPedidos;
+
+
+===== FILE: E:\larica-frontend\src\components\HistoricoRestaurante.tsx =====
+
+// src/components/HistoricoRestaurante.tsx
+import React, { useEffect, useMemo, useState } from 'react';
+import api from '../services/api';
+import styles from './HistoricoPedidos.module.css';
+
+interface ItemPedidoDTO {
+  id: number;
+  nomeProduto: string;
+  quantidade: number;
+  precoUnitario: number | string;
+}
+
+interface HistoricoPedidoDTO {
+  pedidoId: number;
+  nomeRestaurante: string;
+  data: string; // pode vir "2025-08-05" (YYYY-MM-DD) ou ISO: tratamos ambos
+  status: string;
+  itens: ItemPedidoDTO[];
+}
+
+type Props = {
+  restauranteId: number;
+  onVoltar: () => void;
+};
+
+const HistoricoRestaurante: React.FC<Props> = ({ restauranteId, onVoltar }) => {
+  const [pedidos, setPedidos] = useState<HistoricoPedidoDTO[]>([]);
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState<string | null>(null);
+  const [nomeRestaurante, setNomeRestaurante] = useState<string>('');
+
+  const pedidosOrdenados = useMemo(() => {
+    return [...pedidos].sort((a, b) => {
+      const dateA = new Date(a.data).getTime();
+      const dateB = new Date(b.data).getTime();
+      return dateB - dateA || b.pedidoId - a.pedidoId;
+    });
+  }, [pedidos]);
+
+  const calcularTotal = (itens: ItemPedidoDTO[]) =>
+    itens.reduce((acc, item) => {
+      const preco =
+        typeof item.precoUnitario === 'string'
+          ? parseFloat(item.precoUnitario)
+          : item.precoUnitario;
+      return acc + (preco || 0) * item.quantidade;
+    }, 0);
+
+  const formatarData = (raw: string) => {
+    const d = new Date(raw);
+    if (isNaN(d.getTime())) return raw;
+    return d.toLocaleDateString('pt-BR');
+  };
+
+  const getStatusStyle = (status: string) => {
+    const s = status.toUpperCase();
+    if (s.includes('AGUARDANDO')) return styles.statusAguardando;
+    if (s.includes('EM_PREPARO') || s.includes('PREPARANDO')) return styles.statusPreparo;
+    if (s.includes('PRONTO')) return styles.statusPronto;
+    if (s.includes('ENTREGUE') || s.includes('CONCLUIDO')) return styles.statusEntregue;
+    if (s.includes('CANCELADO') || s.includes('RECUSADO')) return styles.statusCancelado;
+    return '';
+  };
+
+  const formatarStatus = (status: string) => {
+    const s = status.toUpperCase();
+    if (s.includes('AGUARDANDO')) return 'ðŸŸ¡ Aguardando';
+    if (s.includes('EM_PREPARO') || s.includes('PREPARANDO')) return 'ðŸ”µ Em preparo';
+    if (s.includes('PRONTO')) return 'ðŸŸ¢ Pronto';
+    if (s.includes('ENTREGUE') || s.includes('CONCLUIDO')) return 'âœ… Entregue';
+    if (s.includes('CANCELADO') || s.includes('RECUSADO')) return 'ðŸ”´ Cancelado';
+    return status;
+  };
+
+  // Busca nome do restaurante (tenta /api e depois sem /api)
+  const carregarNome = async () => {
+    try {
+      const r1 = await api.get(`/api/restaurantes/${restauranteId}`);
+      setNomeRestaurante(r1.data?.nome || '');
+    } catch {
+      try {
+        const r2 = await api.get(`/restaurantes/${restauranteId}`);
+        setNomeRestaurante(r2.data?.nome || '');
+      } catch (e) {
+        console.error('Falha ao buscar nome do restaurante:', e);
+        setNomeRestaurante('');
+      }
+    }
+  };
+
+  const carregarHistorico = async () => {
+    try {
+      setCarregando(true);
+      const { data } = await api.get<HistoricoPedidoDTO[]>(
+        `/pedidos/restaurante/${restauranteId}`
+      );
+      setPedidos(data || []);
+      setErro(null);
+    } catch (e) {
+      console.error(e);
+      setErro('Falha ao carregar histÃ³rico do restaurante.');
+      setPedidos([]);
+    } finally {
+      setCarregando(false);
+    }
+  };
+
+  useEffect(() => {
+    carregarNome();
+    carregarHistorico();
+  }, [restauranteId]);
+
+  if (carregando) return <div className={styles.loading}>Carregando...</div>;
+  if (erro) return <div className={styles.error}>{erro}</div>;
+
+  return (
+    <div className={styles.historicoContainer}>
+      <div className={styles.header}>
+        <button onClick={onVoltar} className={styles.btnVoltar}>â† Voltar</button>
+        <h2>ðŸ“œ HistÃ³rico â€” {nomeRestaurante || `Restaurante #${restauranteId}`}</h2>
+      </div>
+
+      {!pedidos.length ? (
+        <div className={styles.empty}>Nenhum pedido encontrado</div>
+      ) : (
+        <div className={styles.pedidosGrid}>
+          {pedidosOrdenados.map((pedido) => (
+            <div key={pedido.pedidoId} className={styles.pedidoCard}>
+              <div className={styles.pedidoHeader}>
+                <h3>Pedido #{pedido.pedidoId}</h3>
+                <span>{formatarData(pedido.data)}</span>
+              </div>
+
+              <div className={styles.statusContainer}>
+                <span className={`${styles.status} ${getStatusStyle(pedido.status)}`}>
+                  {formatarStatus(pedido.status)}
+                </span>
+              </div>
+
+              <div className={styles.infoContainer}>
+                <span className={styles.total}>
+                  Total: R$ {calcularTotal(pedido.itens).toFixed(2)}
+                </span>
+              </div>
+
+              <ul className={styles.itens}>
+                {pedido.itens.map((item) => {
+                  const preco =
+                    typeof item.precoUnitario === 'string'
+                      ? parseFloat(item.precoUnitario)
+                      : item.precoUnitario;
+                  return (
+                    <li key={item.id}>
+                      {item.quantidade}Ã— {item.nomeProduto} â€” R$ {preco.toFixed(2)}
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default HistoricoRestaurante;
+
+
+===== FILE: E:\larica-frontend\src\components\HistoricoUsuario.tsx =====
+
+import React, { useEffect, useState } from 'react';
+import api from '../services/api';
+import './HistoricoUsuario.css';
+
+interface ItemPedidoDTO {
+  id: number;
+  nomeProduto: string;
+  quantidade: number;
+  precoUnitario: number | string;
+}
+
+interface HistoricoPedidoDTO {
+  pedidoId: number;
+  nomeRestaurante: string;
+  data: string;
+  status: string;
+  itens: ItemPedidoDTO[];
+}
+
+const HistoricoUsuario: React.FC<{
+  usuarioId: number;
+  onVoltar?: () => void;
+}> = ({ usuarioId, onVoltar }) => {
+  const [pedidos, setPedidos] = useState<HistoricoPedidoDTO[]>([]);
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState<string | null>(null);
+
+  useEffect(() => {
+    const carregarHistorico = async () => {
+      try {
+        setCarregando(true);
+        const res = await api.get<HistoricoPedidoDTO[]>(`/pedidos/cliente/${usuarioId}`);
+        setPedidos(res.data);
+      } catch (error) {
+        console.error('Erro ao buscar histÃ³rico:', error);
+        setErro('Erro ao carregar histÃ³rico.');
+      } finally {
+        setCarregando(false);
+      }
+    };
+    carregarHistorico();
+  }, [usuarioId]);
+
+  const calcularTotal = (itens: ItemPedidoDTO[]) =>
+    itens.reduce((total, item) => {
+      const preco = typeof item.precoUnitario === 'string' ? parseFloat(item.precoUnitario) : item.precoUnitario;
+      return total + (preco || 0) * item.quantidade;
+    }, 0);
+
+  const formatarData = (data: string) => {
+    const date = new Date(data);
+    return date.toLocaleDateString('pt-BR') + ' ' + date.toLocaleTimeString('pt-BR');
+  };
+
+  if (carregando) {
+    return (
+      <div className="historico-container">
+        <p>Carregando histÃ³rico...</p>
+      </div>
+    );
+  }
+
+  if (erro) {
+    return (
+      <div className="historico-container">
+        <div className="historico-empty">{erro}</div>
+      </div>
+    );
+  }
+
+  if (!pedidos.length) {
+    return (
+      <div className="historico-container">
+        {onVoltar && (
+          <div className="historico-header">
+            <button className="btn-voltar" onClick={onVoltar}>â† Voltar</button>
+            <h2>ðŸ“œ Meu HistÃ³rico</h2>
+          </div>
+        )}
+        {!onVoltar && <h2 className="historico-header" style={{ margin: 0 }}>ðŸ“œ Meu HistÃ³rico</h2>}
+
+        <div className="historico-empty">Nenhum pedido encontrado.</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="historico-container">
+      {onVoltar ? (
+        <div className="historico-header">
+          <button className="btn-voltar" onClick={onVoltar}>â† Voltar</button>
+          <h2>ðŸ“œ Meu HistÃ³rico</h2>
+        </div>
+      ) : (
+        <div className="historico-header">
+          <h2>ðŸ“œ Meu HistÃ³rico</h2>
+        </div>
+      )}
+
+      {pedidos.map((pedido) => (
+        <div key={pedido.pedidoId} className="pedido-card">
+          <h3>Pedido #{pedido.pedidoId} â€” {pedido.nomeRestaurante}</h3>
+          <p className="pedido-meta">
+            <strong>Status:</strong> {pedido.status} &nbsp;|&nbsp; <strong>Data:</strong> {formatarData(pedido.data)}
+          </p>
+
+          <ul className="pedido-itens">
+            {pedido.itens.map((item) => {
+              const preco = typeof item.precoUnitario === 'string'
+                ? parseFloat(item.precoUnitario)
+                : item.precoUnitario;
+              return (
+                <li key={item.id}>
+                  <span>{item.quantidade}Ã— {item.nomeProduto}</span>
+                  <span>R$ {preco.toFixed(2)}</span>
+                </li>
+              );
+            })}
+          </ul>
+
+          <div className="pedido-total">
+            <span>Total</span>
+            <span>R$ {calcularTotal(pedido.itens).toFixed(2)}</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+export default HistoricoUsuario;
+
+
+===== FILE: E:\larica-frontend\src\components\InstallPWAButton.tsx =====
+
+// src/components/InstallPWAButton.tsx
+import React, { useMemo, useState } from 'react';
+import usePWAInstall from '../hooks/usePWAInstall';
+
+const InstallPWAButton: React.FC = () => {
+  const { canInstall, install, installed } = usePWAInstall();
+  const [showIOSHelp, setShowIOSHelp] = useState(false);
+
+  // â€”â€”â€” helpers de plataforma â€”â€”â€”
+  const isStandalone = typeof window !== 'undefined'
+    && (window.matchMedia?.('(display-mode: standalone)').matches || (window.navigator as any).standalone === true);
+
+  const isIOS = useMemo(() => {
+    if (typeof navigator === 'undefined') return false;
+    return /iphone|ipad|ipod/i.test(navigator.userAgent);
+  }, []);
+
+  // Safari â€œpuroâ€ no iOS (nÃ£o Chrome/Edge em cima do WebKit)
+  const isSafari = useMemo(() => {
+    if (typeof navigator === 'undefined') return false;
+    const ua = navigator.userAgent;
+    const isMobileSafari = /Safari/i.test(ua) && !/Chrome|CriOS|FxiOS|EdgiOS/i.test(ua);
+    return isMobileSafari;
+  }, []);
+
+  // jÃ¡ instalado? nÃ£o mostra nada
+  if (installed || isStandalone) return null;
+
+  // ANDROID/CHROME (tem prompt): botÃ£o instalar
+  if (canInstall) {
+    return (
+      <button
+        onClick={install}
+        title="Instalar aplicativo"
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 10,
+          padding: '16px 22px',
+          borderRadius: 14,
+          border: '2px solid #ff8c00',
+          background: 'linear-gradient(135deg, #ff8c00, #ff6a00)',
+          color: '#000',
+          fontWeight: 900,
+          fontSize: 18,
+          letterSpacing: '.4px',
+          cursor: 'pointer',
+          boxShadow: '0 16px 34px rgba(255,140,0,.35)'
+        }}
+      >
+        ðŸ“² Instalar App
+      </button>
+    );
+  }
+
+  // iOS/Safari: sem prompt â€” mostra botÃ£o que abre instruÃ§Ãµes
+  if (isIOS && isSafari) {
+    return (
+      <>
+        <button
+          onClick={() => setShowIOSHelp(true)}
+          title="Como instalar no iPhone"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 10,
+            padding: '14px 18px',
+            borderRadius: 12,
+            border: '1px solid #ff8c00',
+            background: 'transparent',
+            color: '#ff8c00',
+            fontWeight: 900,
+            fontSize: 16,
+            letterSpacing: '.3px',
+            cursor: 'pointer',
+            boxShadow: '0 10px 24px rgba(255,140,0,.18)'
+          }}
+        >
+          ðŸ“² Instalar no iPhone
+        </button>
+
+        {showIOSHelp && (
+          <div
+            role="dialog"
+            aria-modal="true"
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(0,0,0,.55)',
+              display: 'grid',
+              placeItems: 'center',
+              zIndex: 9999
+            }}
+            onClick={() => setShowIOSHelp(false)}
+          >
+            <div
+              style={{
+                width: 'min(520px, 92vw)',
+                background: '#0f0f0f',
+                border: '1px solid #ff8c00',
+                borderRadius: 14,
+                boxShadow: '0 22px 44px rgba(0,0,0,.6)',
+                color: '#f5f5f5',
+                padding: 18
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                <h3 style={{ margin: 0, color: '#ff8c00', fontWeight: 900 }}>Instalar no iPhone</h3>
+                <button
+                  onClick={() => setShowIOSHelp(false)}
+                  aria-label="Fechar"
+                  style={{
+                    background: 'transparent',
+                    color: '#ff8c00',
+                    border: 'none',
+                    fontSize: 22,
+                    cursor: 'pointer',
+                    lineHeight: 1
+                  }}
+                >
+                  Ã—
+                </button>
+              </div>
+
+              <ol style={{ margin: '8px 0 0 18px', lineHeight: 1.55 }}>
+                <li>Toque no botÃ£o <strong>Compartilhar</strong> do Safari (Ã­cone de seta para cima).</li>
+                <li>Role a lista e escolha <strong>â€œAdicionar Ã  Tela de InÃ­cioâ€</strong>.</li>
+                <li>Confirme o nome e toque em <strong>Adicionar</strong>.</li>
+              </ol>
+
+              <p style={{ marginTop: 14, color: '#cfcfcf' }}>
+                Depois disso o Larica aparece como um app na sua tela inicial, com abertura em tela cheia e funcionamento offline bÃ¡sico.
+              </p>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 12 }}>
+                <button
+                  onClick={() => setShowIOSHelp(false)}
+                  style={{
+                    padding: '10px 14px',
+                    borderRadius: 10,
+                    border: '1px solid #ff8c00',
+                    background: 'transparent',
+                    color: '#ff8c00',
+                    fontWeight: 800,
+                    cursor: 'pointer'
+                  }}
+                >
+                  Fechar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </>
+    );
+  }
+
+  // outras plataformas sem prompt: nÃ£o exibe nada
+  return null;
+};
+
+export default InstallPWAButton;
+
+
+===== FILE: E:\larica-frontend\src\components\ListaRestaurantes.tsx =====
+
+// src/components/ListaRestaurantes.tsx
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import api from '../services/api';
+import './ListaRestaurantes.css';
+
+interface Restaurante {
+  id: number;
+  nome: string;
+  endereco: string;
+  telefone: string;
+  dono_id?: number;
+  latitude?: number;
+  longitude?: number;
+}
+
+const ListaRestaurantes: React.FC = () => {
+  const [restaurantes, setRestaurantes] = useState<Restaurante[]>([]);
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState<string | null>(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchRestaurantes = async () => {
+      try {
+        setCarregando(true);
+        const response = await api.get('/restaurantes');
+        
+        setRestaurantes(response.data);
+      } catch (error) {
+        console.error('Erro ao buscar restaurantes:', error);
+        if (error instanceof Error) {
+          setErro(error.message);
+        } else {
+          setErro('Erro desconhecido ao carregar restaurantes');
+        }
+      } finally {
+        setCarregando(false);
+      }
+    };
+
+    fetchRestaurantes();
+  }, []);
+
+  const handleVerCardapio = (restauranteId: number) => {
+    navigate(`/cardapio/${restauranteId}`);
+  };
+
+  if (carregando) {
+    return (
+      <div className="lista-restaurantes">
+        <div className="carregando">Carregando restaurantes...</div>
+      </div>
+    );
+  }
+
+  if (erro) {
+    return (
+      <div className="lista-restaurantes">
+        <div className="erro">Erro: {erro}</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="lista-restaurantes">
+      <h2>Restaurantes DisponÃ­veis</h2>
+      
+      <ul className="restaurantes-list">
+        {restaurantes.map(restaurante => (
+          <li key={restaurante.id} className="restaurante-item">
+            <div className="restaurante-info">
+              <h3>{restaurante.nome}</h3>
+              <p>{restaurante.endereco}</p>
+              <p>{restaurante.telefone}</p>
+              <span className="tipo-cozinha">CulinÃ¡ria variada</span>
+            </div>
+            <button 
+              className="ver-cardapio-btn"
+              onClick={() => handleVerCardapio(restaurante.id)}
+            >
+              Ver CardÃ¡pio
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+
+export default ListaRestaurantes;
+
+
+===== FILE: E:\larica-frontend\src\components\PagamentoSucesso.tsx =====
+
+import React, { useEffect, useState } from 'react';
+import { useSearchParams, Link } from 'react-router-dom';
+import './PagamentoSucesso.css';
+
+const PagamentoSucesso: React.FC = () => {
+  const [searchParams] = useSearchParams();
+  const [paymentId, setPaymentId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const payment = searchParams.get('payment_id');
+    setPaymentId(payment);
+
+    // Simular algum processamento
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, [searchParams]);
+
+  if (loading) {
+    return (
+      <div className="pagamento-container">
+        <div className="loading">
+          <div className="spinner"></div>
+          <p>Confirmando seu pagamento...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="pagamento-container">
+      <div className="pagamento-sucesso">
+        <div className="icon">âœ…</div>
+        <h1>Pagamento Aprovado!</h1>
+        <p className="mensagem">Seu pedido foi confirmado e jÃ¡ estamos preparando.</p>
+
+        {paymentId && (
+          <div className="payment-info">
+            <p><strong>ID da TransaÃ§Ã£o:</strong> {paymentId}</p>
+          </div>
+        )}
+
+        <div className="acoes">
+          <Link to="/" className="btn-primario">
+            Voltar para a Loja
+          </Link>
+          <Link to="/pedidos" className="btn-secundario">
+            Ver Meus Pedidos
+          </Link>
+        </div>
+
+        <div className="contato">
+          <p>DÃºvidas? <a href="/contato">Entre em contato</a></p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default PagamentoSucesso;
+
+
+===== FILE: E:\larica-frontend\src\components\PainelRestaurante.tsx =====
+
+// src/components/PainelRestaurante.tsx
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import api from '../services/api';
+import './PainelRestaurante.css';
+import HistoricoRestaurante from './HistoricoRestaurante';
+
+interface ItemPedido {
+  id: number;
+  nomeProduto: string;
+  quantidade: number;
+  precoUnitario: number;
+}
+
+interface Pedido {
+  id: number;
+  data: string;
+  status: string;
+  nomeCliente: string;
+  telefoneCliente: string;
+  itens: ItemPedido[];
+  total: number;
+  restaurante?: {
+    id: number;
+    nome: string;
+    endereco: string;
+    numero: string;
+    bairro: string;
+    cidade: string;
+    cep: string;
+    telefone: string;
+    latitude: number;
+    longitude: number;
+  };
+  cliente?: {
+    nome: string;
+    endereco: string;
+    numero: string;
+    bairro: string;
+    cidade: string;
+    cep: string;
+  };
+}
+
+interface PainelProps {
+  restauranteId: number;
+  onVoltar?: () => void;
+}
+
+const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) => {
+  const [pedidos, setPedidos] = useState<Pedido[]>([]);
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState<string | null>(null);
+
+  const [nomeProd, setNomeProd] = useState('');
+  const [descProd, setDescProd] = useState('');
+  const [precoProd, setPrecoProd] = useState('');
+  const [salvando, setSalvando] = useState(false);
+  const [msgOk, setMsgOk] = useState<string | null>(null);
+  const [msgErro, setMsgErro] = useState<string | null>(null);
+
+  const [nomeRestaurante, setNomeRestaurante] = useState<string>('');
+  const [enderecoRestaurante, setEnderecoRestaurante] = useState<string>('');
+  const [telefoneRestaurante, setTelefoneRestaurante] = useState<string>('');
+
+  const [mostrarHistorico, setMostrarHistorico] = useState(false);
+
+  const navigate = useNavigate();
+
+  const carregarPedidos = async () => {
+    try {
+      const res = await api.get(`/restaurantes/${restauranteId}/pedidos`, {
+        params: { page: 0, size: 10 },
+      });
+
+      const pedidosCompletos = (res.data?.content || res.data || []).map((pedido: any) => ({
+        ...pedido,
+        restaurante: {
+          id: restauranteId,
+          nome: nomeRestaurante,
+          endereco: enderecoRestaurante,
+          telefone: telefoneRestaurante
+        }
+      }));
+
+      setPedidos(pedidosCompletos);
+      setErro(null);
+    } catch (err: any) {
+      const status = err?.response?.status;
+      setErro(
+        status === 404
+          ? 'Restaurante nÃ£o encontrado. Verifique o ID utilizado.'
+          : 'Erro ao carregar pedidos. Tente novamente.'
+      );
+    } finally {
+      setCarregando(false);
+    }
+  };
+
+  const carregarDadosRestaurante = async () => {
+    try {
+      const r = await api.get(`/restaurantes/${restauranteId}`);
+      setNomeRestaurante(r.data?.nome || '');
+      setEnderecoRestaurante(r.data?.endereco || '');
+      setTelefoneRestaurante(r.data?.telefone || '');
+    } catch (err) {
+      console.error('Erro ao buscar restaurante:', err);
+      setNomeRestaurante('');
+      setEnderecoRestaurante('');
+      setTelefoneRestaurante('');
+    }
+  };
+
+  useEffect(() => {
+    carregarDadosRestaurante().then(() => {
+      carregarPedidos();
+    });
+  }, [restauranteId]);
+
+  const atualizarStatus = async (pedidoId: number, novoStatus: string) => {
+    await api.patch(
+      `/restaurantes/${restauranteId}/pedidos/${pedidoId}/status`,
+      null,
+      { params: { status: novoStatus } }
+    );
+  };
+
+  const coopStorageKey = (id: number) => `coop_whats_${id}`;
+  const limparNaoDigitos = (s: string) => s.replace(/\D+/g, '');
+
+  const normalizarNumero = (raw: string) => {
+    let n = limparNaoDigitos(raw);
+    if (!n.startsWith('55') && (n.length === 10 || n.length === 11)) {
+      n = '55' + n;
+    }
+    return n;
+  };
+
+  const obterOuConfigurarCooperativa = (): string | null => {
+    const key = coopStorageKey(restauranteId);
+    const atual = localStorage.getItem(key);
+    if (atual) return atual;
+
+    const informado = window.prompt(
+      'Informe o WhatsApp da cooperativa/motoboy (com DDI/DDD). Ex.: 5584XXXXXXXXX'
+    );
+    if (!informado) return null;
+
+    const numero = normalizarNumero(informado);
+    if (!/^55\d{10,13}$/.test(numero)) {
+      alert('NÃºmero invÃ¡lido. Use DDI 55 + DDD + nÃºmero.');
+      return null;
+    }
+    localStorage.setItem(key, numero);
+    return numero;
+  };
+
+  const configurarCooperativa = () => {
+    const key = coopStorageKey(restauranteId);
+    const atual = localStorage.getItem(key) || '';
+    const informado = window.prompt(
+      'Definir/alterar WhatsApp da cooperativa (com DDI/DDD).',
+      atual
+    );
+    if (!informado) return;
+    const numero = normalizarNumero(informado);
+    if (!/^55\d{10,13}$/.test(numero)) {
+      alert('NÃºmero invÃ¡lido. Use DDI 55 + DDD + nÃºmero.');
+      return;
+    }
+    localStorage.setItem(key, numero);
+    alert('NÃºmero salvo com sucesso!');
+  };
+
+  // ========= helpers de link da rota (BACKEND EXPLÃCITO) =========
+  const API_BASE = 'https://api-larica.neemindev.com/api';
+
+  const linkRota = (pedidoId: number) =>
+    `${API_BASE}/entregador/pedido/${pedidoId}/rota`;
+
+  const linkRotaHtml = (pedidoId: number) =>
+    `${API_BASE}/entregador/pedido/${pedidoId}/rota-html`;
+
+  // ðŸ“ž CHAMAR MEU ENTREGADOR (contato direto)
+  const chamarMeuEntregador = (pedido: Pedido) => {
+    const numero = obterOuConfigurarCooperativa();
+    if (!numero) return;
+
+    const nomeRest = pedido.restaurante?.nome || nomeRestaurante || 'Restaurante';
+    // Se algum aparelho/webview nÃ£o seguir 302, troque para linkRotaHtml(pedido.id)
+    const urlRota = linkRota(pedido.id);
+
+    const mensagem =
+      `ðŸšš *LARICA - ENTREGA DISPONÃVEL* ðŸšš\n\n` +
+      `*Pedido:* #${pedido.id}\n` +
+      `*Restaurante:* ${nomeRest}\n\n` +
+      `ðŸ“ *ACESSE O MAPA COMPLETO:*\n` +
+      `${urlRota}\n\n` +
+      `ðŸ’° *Valor sugerido:* R$ 15,00\n` +
+      `â° *Prazo:* 30 minutos`;
+
+    window.open(`https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`, '_blank');
+  };
+
+  // ðŸ“¢ POSTAR NO GRUPO (Web WhatsApp)
+  const postarNoGrupoWhatsApp = (pedido: Pedido) => {
+    const nomeRest = pedido.restaurante?.nome || nomeRestaurante || 'Restaurante';
+    const urlRota = linkRota(pedido.id);
+
+    const mensagem =
+      `ðŸšš *LARICA - ENTREGA DISPONÃVEL* ðŸšš\n\n` +
+      `*Pedido:* #${pedido.id}\n` +
+      `*Restaurante:* ${nomeRest}\n\n` +
+      `ðŸ“ *ACESSE O MAPA COMPLETO:*\n` +
+      `${urlRota}\n\n` +
+      `âš ï¸ *QUEM PEGAR COMENTA NO GRUPO!*`;
+
+    window.open(`https://web.whatsapp.com/send?text=${encodeURIComponent(mensagem)}`, '_blank');
+  };
+
+  const handleAceitar = async (pedido: Pedido) => {
+    try {
+      await atualizarStatus(pedido.id, 'EM_PREPARO');
+      await carregarPedidos();
+    } catch {
+      setErro('Erro ao aceitar o pedido.');
+    }
+  };
+
+  const handleRecusar = async (pedidoId: number) => {
+    try {
+      await atualizarStatus(pedidoId, 'CANCELADO');
+      await carregarPedidos();
+    } catch {
+      setErro('Erro ao atualizar status do pedido.');
+    }
+  };
+
+  const marcarEntregue = async (pedidoId: number) => {
+    try {
+      await atualizarStatus(pedidoId, 'ENTREGUE');
+      await carregarPedidos();
+    } catch {
+      setErro('Erro ao atualizar status do pedido.');
+    }
+  };
+
+  const getStatusClass = (status: string) => {
+    const s = status?.toUpperCase?.() || '';
+    if (s === 'AGUARDANDO') return 'status-aguardando';
+    if (s === 'EM_PREPARO' || s === 'PREPARANDO') return 'status-preparo';
+    if (s === 'PRONTO') return 'status-pronto';
+    if (s === 'ENTREGUE') return 'status-entregue';
+    if (s === 'CANCELADO' || s === 'RECUSADO') return 'status-cancelado';
+    return '';
+  };
+
+  const criarProduto = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setMsgOk(null);
+    setMsgErro(null);
+
+    if (!nomeProd.trim() || !descProd.trim() || !precoProd.trim()) {
+      setMsgErro('Preencha nome, descriÃ§Ã£o e preÃ§o.');
+      return;
+    }
+
+    const precoNumber = Number(precoProd.replace(',', '.'));
+    if (Number.isNaN(precoNumber) || precoNumber < 0) {
+      setMsgErro('Informe um preÃ§o vÃ¡lido (ex.: 28.90).');
+      return;
+    }
+
+    setSalvando(true);
+    try {
+      await api.post(`/produtos/por-restaurante/${restauranteId}`, {
+        nome: nomeProd.trim(),
+        descricao: descProd.trim(),
+        preco: precoNumber,
+      });
+
+      setMsgOk('âœ… Produto cadastrado com sucesso!');
+      setNomeProd('');
+      setDescProd('');
+      setPrecoProd('');
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || 'Erro ao cadastrar produto.';
+      setMsgErro(`âŒ ${msg}`);
+    } finally {
+      setSalvando(false);
+      setTimeout(() => {
+        setMsgErro(null);
+        setMsgOk(null);
+      }, 4000);
+    }
+  };
+
+  if (mostrarHistorico) {
+    return (
+      <div className="painel-container">
+        <HistoricoRestaurante
+          restauranteId={restauranteId}
+          onVoltar={() => setMostrarHistorico(false)}
+        />
+      </div>
+    );
+  }
+
+  if (carregando) {
+    return (
+      <div className="loading-container">
+        <div className="spinner" />
+        <p>Carregando pedidos...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="painel-container">
+      <button
+        onClick={() => (onVoltar ? onVoltar() : navigate(-1))}
+        className="btn-voltar"
+      >
+        &larr; Voltar
+      </button>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+        <h2 className="painel-nome-restaurante" style={{ margin: 0 }}>
+          {nomeRestaurante || `Restaurante #${restauranteId}`}
+        </h2>
+        <button
+          className="btn-historico"
+          onClick={() => setMostrarHistorico(true)}
+          title="Ver histÃ³rico por restaurante"
+        >
+          ðŸ“œ Ver histÃ³rico
+        </button>
+        <button
+          className="btn-secundario"
+          onClick={configurarCooperativa}
+          title="Definir/alterar WhatsApp da cooperativa"
+        >
+          âš™ï¸ Configurar Whats da cooperativa
+        </button>
+      </div>
+
+      <p className="painel-subtitulo">Usando ID: {restauranteId}</p>
+
+      {msgOk && <div className="alert sucesso">{msgOk}</div>}
+      {msgErro && <div className="alert erro">{msgErro}</div>}
+      {erro && <div className="alert erro">{erro}</div>}
+
+      <div className="novo-produto-card">
+        <h2>Novo produto</h2>
+        <form onSubmit={criarProduto} className="novo-produto-form">
+          <div>
+            <label>Nome</label>
+            <input value={nomeProd} onChange={(e) => setNomeProd(e.target.value)} required />
+          </div>
+          <div className="grid-2">
+            <div>
+              <label>DescriÃ§Ã£o</label>
+              <input value={descProd} onChange={(e) => setDescProd(e.target.value)} required />
+            </div>
+            <div>
+              <label>PreÃ§o (R$)</label>
+              <input
+                type="number"
+                inputMode="decimal"
+                min="0"
+                step="0.01"
+                value={precoProd}
+                onChange={(e) => setPrecoProd(e.target.value)}
+                required
+              />
+            </div>
+          </div>
+          <div className="acoes">
+            <button
+              type="button"
+              className="btn-secundario"
+              onClick={() => {
+                setNomeProd('');
+                setDescProd('');
+                setPrecoProd('');
+                setMsgErro(null);
+                setMsgOk(null);
+              }}
+              disabled={salvando}
+            >
+              Cancelar
+            </button>
+            <button type="submit" className="btn-primario" disabled={salvando}>
+              {salvando ? 'Salvando...' : 'Cadastrar'}
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <div className="pedidos-lista">
+        {pedidos.length === 0 ? (
+          <div className="sem-pedidos">
+            <p>Nenhum pedido encontrado.</p>
+          </div>
+        ) : (
+          pedidos.map((pedido) => {
+            const statusUp = (pedido.status || '').toUpperCase();
+            const podeChamarEntregador = statusUp === 'EM_PREPARO' || statusUp === 'PRONTO';
+
+            return (
+              <div key={pedido.id} className="pedido-card">
+                <div className="pedido-header">
+                  <h3>Pedido #{pedido.id}</h3>
+                  <span className={`status-badge ${getStatusClass(pedido.status)}`}>
+                    {pedido.status}
+                  </span>
+                </div>
+
+                <div className="pedido-info">
+                  <p><strong>Data:</strong> {new Date(pedido.data).toLocaleString()}</p>
+                  <p><strong>Cliente:</strong> {pedido.nomeCliente}</p>
+                  <p><strong>Telefone:</strong> {pedido.telefoneCliente}</p>
+                  <p><strong>Total:</strong> R$ {pedido.total.toFixed(2)}</p>
+                </div>
+
+                <div className="itens-container">
+                  <h4>Itens:</h4>
+                  <ul className="itens-lista">
+                    {pedido.itens.map((item) => (
+                      <li key={item.id}>
+                        <span className="item-quantidade">{item.quantidade}x</span>
+                        <span className="item-nome">{item.nomeProduto}</span>
+                        <span className="item-preco">
+                          R$ {(item.quantidade * item.precoUnitario).toFixed(2)}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="acoes-pedido" style={{ gap: 8 }}>
+                  {(statusUp === 'AGUARDANDO') && (
+                    <>
+                      <button
+                        onClick={() => handleAceitar(pedido)}
+                        className="btn-aceitar"
+                      >
+                        Aceitar Pedido
+                      </button>
+                      <button
+                        onClick={() => handleRecusar(pedido.id)}
+                        className="btn-recusar"
+                      >
+                        Recusar Pedido
+                      </button>
+                    </>
+                  )}
+
+                  {podeChamarEntregador && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+                      <button
+                        onClick={() => chamarMeuEntregador(pedido)}
+                        className="btn-primario"
+                        title="Chamar meu entregador prÃ³prio"
+                      >
+                        ðŸ“ž Chamar Meu Entregador
+                      </button>
+
+                      <button
+                        onClick={() => postarNoGrupoWhatsApp(pedido)}
+                        className="btn-secundario"
+                        title="Postar no grupo de entregadores"
+                      >
+                        ðŸ“¢ Chamar Grupo de Entregadores
+                      </button>
+                    </div>
+                  )}
+
+                  {(statusUp === 'EM_PREPARO' || statusUp === 'PRONTO') && (
+                    <button
+                      onClick={() => marcarEntregue(pedido.id)}
+                      className="btn-entregue"
+                    >
+                      Marcar como Entregue
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default PainelRestaurante;
+
+
+===== FILE: E:\larica-frontend\src\components\RestaurantesProximos.tsx =====
+
+// src/components/RestaurantesProximos.tsx
+import React, { useEffect, useState } from 'react';
+import api from '../services/api';
+import './RestaurantesProximos.css';
+
+
+
+interface Restaurante {
+  id: number;
+  nome: string;
+  endereco: string;
+  telefone: string;
+}
+
+const RestaurantesProximos: React.FC = () => {
+  const [restaurantes, setRestaurantes] = useState<Restaurante[]>([]);
+  const [carregando, setCarregando] = useState(true);
+  const [lat, setLat] = useState('-5.80');
+  const [lng, setLng] = useState('-35.21');
+  const [raioKm, setRaioKm] = useState(4);
+
+  const buscarRestaurantes = () => {
+    setCarregando(true);
+    api.get('/restaurantes/proximos', {
+      params: { lat, lng, raioKm }
+    })
+      .then((res) => setRestaurantes(res.data))
+      .catch((err) => console.error('Erro ao buscar restaurantes prÃ³ximos:', err))
+      .finally(() => setCarregando(false));
+  };
+
+  useEffect(() => {
+    buscarRestaurantes();
+  }, []);
+
+  return (
+    <div style={{ padding: '20px' }}>
+      <h2>ðŸ“ Restaurantes PrÃ³ximos</h2>
+
+      <div style={{ marginBottom: '20px' }}>
+        <label>Latitude: </label>
+        <input value={lat} onChange={e => setLat(e.target.value)} />
+        <label style={{ marginLeft: '10px' }}>Longitude: </label>
+        <input value={lng} onChange={e => setLng(e.target.value)} />
+        <label style={{ marginLeft: '10px' }}>Raio (km): </label>
+        <input
+          type="number"
+          value={raioKm}
+          onChange={e => setRaioKm(Number(e.target.value))}
+          style={{ width: '60px' }}
+        />
+        <button
+          onClick={buscarRestaurantes}
+          style={{
+            marginLeft: '10px',
+            padding: '6px 12px',
+            background: '#007bff',
+            color: 'white',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: 'pointer'
+          }}
+        >
+          Buscar
+        </button>
+      </div>
+
+      {carregando ? (
+        <p>ðŸ”„ Buscando restaurantes...</p>
+      ) : restaurantes.length === 0 ? (
+        <p>ðŸ˜¢ Nenhum restaurante encontrado nesse raio.</p>
+      ) : (
+        <ul style={{ listStyle: 'none', padding: 0 }}>
+          {restaurantes.map((r) => (
+            <li
+              key={r.id}
+              style={{
+                border: '1px solid #ddd',
+                borderRadius: '8px',
+                padding: '12px',
+                marginBottom: '10px'
+              }}
+            >
+              <h3>{r.nome}</h3>
+              <p>ðŸ“ {r.endereco}</p>
+              <p>ðŸ“ž {r.telefone}</p>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+};
+
+export default RestaurantesProximos;
+
+
+===== FILE: E:\larica-frontend\src\components\TelaEntregador.tsx =====
+
+// src/components/TelaEntregador.tsx
+import React, { useState, useEffect } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import api from '../services/api';
+import './TelaEntregador.css';
+
+interface PedidoEntregador {
+  pedidoId: number;
+  status: string;
+  enderecoRestaurante: string;
+  latRestaurante: number;
+  lngRestaurante: number;
+  enderecoCliente: string;
+  latCliente: number;
+  lngCliente: number;
+}
+
+const TelaEntregador: React.FC = () => {
+  const { pedidoId } = useParams<{ pedidoId: string }>();
+  const [pedido, setPedido] = useState<PedidoEntregador | null>(null);
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState('');
+
+  const carregarPedido = async () => {
+    if (!pedidoId) {
+      setErro('ID do pedido invÃ¡lido');
+      setCarregando(false);
+      return;
+    }
+    try {
+      setCarregando(true);
+      const response = await api.get<PedidoEntregador>(`/api/entregador/pedido/${pedidoId}`);
+      setPedido(response.data);
+      setErro('');
+    } catch (e) {
+      console.error('Erro ao carregar pedido:', e);
+      setErro('Pedido nÃ£o encontrado ou erro ao carregar');
+    } finally {
+      setCarregando(false);
+    }
+  };
+
+  useEffect(() => {
+    carregarPedido();
+  }, [pedidoId]);
+
+  const abrirGoogleMapsRestaurante = () => {
+    if (pedido) {
+      const url = `https://www.google.com/maps/dir/?api=1&destination=${pedido.latRestaurante},${pedido.lngRestaurante}`;
+      window.open(url, '_blank');
+    }
+  };
+
+  const abrirGoogleMapsCliente = () => {
+    if (pedido && pedido.latCliente && pedido.lngCliente) {
+      const url = `https://www.google.com/maps/dir/?api=1&destination=${pedido.latCliente},${pedido.lngCliente}`;
+      window.open(url, '_blank');
+    }
+  };
+
+  if (carregando) {
+    return <div className="container">Carregando pedido #{pedidoId}...</div>;
+  }
+
+  if (erro || !pedido) {
+    return (
+      <div className="container">
+        <div className="erro">{erro || 'Pedido nÃ£o encontrado'}</div>
+        <Link to="/" className="btn-voltar">Voltar</Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container-entregador">
+      <header className="header-entregador">
+        <h1>ðŸ“¦ Pedido #{pedido.pedidoId}</h1>
+        <div className={`status ${pedido.status.toLowerCase().replace(' ', '-')}`}>
+          Status: {pedido.status}
+        </div>
+      </header>
+
+      <div className="card">
+        <h2>ðŸª Restaurante</h2>
+        <p>EndereÃ§o: {pedido.enderecoRestaurante}</p>
+        <button className="btn-navegar" onClick={abrirGoogleMapsRestaurante}>
+          ðŸ—ºï¸ Navegar atÃ© o Restaurante
+        </button>
+      </div>
+
+      <div className="card">
+        <h2>ðŸ‘¤ Cliente</h2>
+        <p>EndereÃ§o: {pedido.enderecoCliente}</p>
+        <button className="btn-navegar" onClick={abrirGoogleMapsCliente}>
+          ðŸ—ºï¸ Navegar atÃ© o Cliente
+        </button>
+      </div>
+
+      <div className="acoes">
+        <button className="btn-atualizar" onClick={carregarPedido}>
+          ðŸ”„ Atualizar Status
+        </button>
+        <Link to="/" className="btn-voltar">Voltar para InÃ­cio</Link>
+      </div>
+
+      <div className="card debug">
+        <h3>ðŸ”§ Dados Recebidos (Debug)</h3>
+        <pre>{JSON.stringify(pedido, null, 2)}</pre>
+      </div>
+    </div>
+  );
+};
+
+export default TelaEntregador;
+
+
+===== FILE: E:\larica-frontend\src\components\UsuarioLogin.tsx =====
+
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import api from '../services/api';
+import './UsuarioLogin.css';
+
+const UsuarioLogin: React.FC = () => {
+  const navigate = useNavigate();
+  const [email, setEmail] = useState('');
+  const [senha, setSenha] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErro(null);
+    setLoading(true);
+
+    try {
+      const response = await api.post('/auth/usuarios/login', { email, senha });
+
+      // âœ… SALVA TOKEN E DADOS DO USUÃRIO (em vez de sÃ³ o ID)
+      const { token, id, nome, email: userEmail } = response.data;
+
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify({
+        id,
+        nome,
+        email: userEmail,
+        tipo: 'CLIENTE'
+      }));
+
+      navigate('/dashboard');
+    } catch (err: any) {
+      console.error('Erro no login:', err);
+      setErro(
+        err.response?.data?.message ||
+        'Falha no login. Verifique seu e-mail e senha.'
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="login-container">
+      <div className="login-card">
+        <h2>ðŸ” Login do Cliente</h2>
+        <p className="subtitle">Acesse para fazer pedidos</p>
+
+        {erro && (
+          <div className="alert erro">
+            {erro}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="login-form">
+          <div className="form-group">
+            <label>E-mail</label>
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="cliente@exemplo.com"
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Senha</label>
+            <input
+              type="password"
+              required
+              value={senha}
+              onChange={(e) => setSenha(e.target.value)}
+              placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+            />
+          </div>
+
+          <button type="submit" disabled={loading} className="login-button">
+            {loading ? 'Entrando...' : 'Entrar'}
+          </button>
+        </form>
+
+        <div className="links">
+          <a href="/cadastro">NÃ£o tem conta? Cadastre-se</a>
+          <a href="/recuperar-senha">Esqueceu a senha?</a>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default UsuarioLogin;
+
+
+===== FILE: E:\larica-frontend\src\components\VerificarUsuario.tsx =====
+
+// src/components/VerificarUsuario.tsx
+import React, { useCallback, useEffect, useState } from 'react';
+import api from '../services/api';
+
+type BackendDebug = {
+  username?: string;
+  userId?: number;
+  roles?: string[];
+  tokenValid?: boolean;
+  tokenPreview?: string;
+  clientIp?: string;
+  userAgent?: string;
+  error?: string;
+};
+
+const Badge: React.FC<{ ok?: boolean; text: string }> = ({ ok, text }) => (
+  <span
+    style={{
+      display: 'inline-block',
+      padding: '4px 10px',
+      borderRadius: 999,
+      fontSize: 12,
+      fontWeight: 700,
+      background: ok === undefined ? '#e9ecef' : ok ? '#e8f5e8' : '#ffeaea',
+      color: ok === undefined ? '#495057' : ok ? '#2e7d32' : '#c62828',
+      border: `1px solid ${ok === undefined ? '#ced4da' : ok ? '#a5d6a7' : '#ef9a9a'}`,
+      marginLeft: 8,
+    }}
+  >
+    {text}
+  </span>
+);
+
+const Card: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
+  <div
+    style={{
+      padding: 16,
+      marginBottom: 16,
+      background: '#fff',
+      borderRadius: 10,
+      border: '1px solid #ddd',
+      boxShadow: '0 1px 2px rgba(0,0,0,.04)',
+    }}
+  >
+    <h4 style={{ margin: '0 0 10px 0' }}>{title}</h4>
+    {children}
+  </div>
+);
+
+const VerificarUsuario: React.FC = () => {
+  const [data, setData] = useState<BackendDebug | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const fetchInfo = useCallback(async () => {
+    setLoading(true);
+    try {
+      // baseURL do api jÃ¡ inclui o prefixo (ex.: /api)
+      const res = await api.get('/debug/token-info');
+      setData(res.data as BackendDebug);
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.error ||
+        err?.response?.data ||
+        err?.message ||
+        'Falha ao buscar /debug/token-info';
+      setData({ error: msg });
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchInfo();
+  }, [fetchInfo]);
+
+  const copyJson = async () => {
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(data ?? {}, null, 2));
+      alert('Copiado pro clipboard âœ…');
+    } catch {
+      alert('NÃ£o consegui copiar ðŸ˜ž');
+    }
+  };
+
+  // statusOk vira true quando nÃ£o hÃ¡ erro e (tokenValid Ã© true ou indefinido)
+  const statusOk: boolean | undefined = data
+    ? !data.error && (data.tokenValid === undefined || data.tokenValid === true)
+    : undefined;
+
+  return (
+    <div style={{ padding: 20, background: '#f5f5f5', borderRadius: 10, margin: 20 }}>
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
+        <h3 style={{ margin: 0 }}>ðŸ” Debug do Token (Backend)</h3>
+        <Badge
+          ok={statusOk ?? undefined}
+          text={
+            statusOk === true
+              ? 'OK'
+              : data?.error || data?.tokenValid === false
+              ? 'PROBLEMA'
+              : 'â€”'
+          }
+        />
+      </div>
+
+      <Card title="Resultado do /debug/token-info">
+        {loading ? (
+          <p>â³ Carregandoâ€¦</p>
+        ) : (
+          <div style={{ lineHeight: 1.6 }}>
+            <p>
+              <strong>UsuÃ¡rio:</strong> {data?.username ?? 'â€”'}
+            </p>
+            <p>
+              <strong>User ID:</strong> {data?.userId ?? 'â€”'}
+            </p>
+            <p>
+              <strong>Roles:</strong> {data?.roles?.join(', ') || 'â€”'}
+            </p>
+            <p>
+              <strong>Token vÃ¡lido:</strong>{' '}
+              {data?.tokenValid === undefined ? 'â€”' : data?.tokenValid ? 'âœ… SIM' : 'âŒ NÃƒO'}
+            </p>
+            <p>
+              <strong>Token preview:</strong> {data?.tokenPreview ?? 'â€”'}
+            </p>
+            <p>
+              <strong>Client IP:</strong> {data?.clientIp ?? 'â€”'}
+            </p>
+            <p style={{ wordBreak: 'break-word' }}>
+              <strong>User-Agent:</strong> {data?.userAgent ?? 'â€”'}
+            </p>
+            {data?.error && (
+              <p style={{ color: '#c62828' }}>
+                <strong>Erro:</strong> {data.error}
+              </p>
+            )}
+
+            <div style={{ marginTop: 10, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <button
+                onClick={fetchInfo}
+                disabled={loading}
+                style={{
+                  padding: '8px 14px',
+                  background: '#007bff',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: 6,
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  fontWeight: 700,
+                }}
+              >
+                {loading ? 'ðŸ”„ Atualizandoâ€¦' : 'ðŸ”„ Atualizar'}
+              </button>
+              <button
+                onClick={copyJson}
+                style={{
+                  padding: '8px 14px',
+                  background: '#6c757d',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: 6,
+                  cursor: 'pointer',
+                  fontWeight: 700,
+                }}
+              >
+                ðŸ“‹ Copiar JSON
+              </button>
+            </div>
+          </div>
+        )}
+      </Card>
+
+      <Card title="Payload cru (para inspeÃ§Ã£o)">
+        <pre
+          style={{
+            background: '#f8f9fa',
+            padding: 12,
+            borderRadius: 8,
+            overflow: 'auto',
+            fontSize: 12,
+            margin: 0,
+          }}
+        >
+{JSON.stringify(data ?? {}, null, 2)}
+        </pre>
+      </Card>
+
+      <div
+        style={{
+          marginTop: 8,
+          padding: 10,
+          background: '#fff3cd',
+          borderRadius: 8,
+          border: '1px solid #ffeaa7',
+          fontSize: 13,
+          lineHeight: 1.5,
+        }}
+      >
+        Este painel mostra exatamente o retorno de <code>/debug/token-info</code> (o{' '}
+        <code>api</code> jÃ¡ injeta o <code>Authorization</code>).
+      </div>
+    </div>
+  );
+};
+
+export default VerificarUsuario;
+
+
+===== FILE: E:\larica-frontend\src\hooks\usePWAInstall.ts =====
+
+import { useEffect, useState } from 'react';
+
+type BIPEvent = Event & { prompt: () => Promise<void>; userChoice: Promise<{ outcome: 'accepted'|'dismissed' }> };
+
+export default function usePWAInstall() {
+  const [deferred, setDeferred] = useState<BIPEvent | null>(null);
+  const [installed, setInstalled] = useState(false);
+
+  useEffect(() => {
+    const onBIP = (e: Event) => {
+      e.preventDefault();
+      setDeferred(e as BIPEvent);
+    };
+    const onInstalled = () => setInstalled(true);
+
+    window.addEventListener('beforeinstallprompt', onBIP);
+    window.addEventListener('appinstalled', onInstalled);
+    return () => {
+      window.removeEventListener('beforeinstallprompt', onBIP);
+      window.removeEventListener('appinstalled', onInstalled);
+    };
+  }, []);
+
+  const canInstall = !!deferred && !installed;
+
+  const install = async () => {
+    if (!deferred) return;
+    await deferred.prompt();
+    await deferred.userChoice; // opcional, pode checar outcome
+    // apÃ³s o prompt, alguns navegadores â€œconsomemâ€ o evento
+    // entÃ£o escondemos o botÃ£o
+    setDeferred(null);
+  };
+
+  return { canInstall, install, installed };
+}
+
+
+===== FILE: E:\larica-frontend\src\index.tsx =====
+
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+import './index.css';
+import App from './pages/App';
+import { register } from './service-worker-registration'; // <-- ADICIONE ESTA LINHA
+
+const container = document.getElementById('root');
+const root = createRoot(container!);
+root.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+
+// registra o service worker para PWA
+register(); // <-- ADICIONE ESTA LINHA
+
+
+===== FILE: E:\larica-frontend\src\interfaces\restaurante.ts =====
+
+export interface Restaurante {
+  id: number;
+  nome: string;
+  endereco: string;
+  telefone: string;
+}
+
+
+===== FILE: E:\larica-frontend\src\pages\App.tsx =====
+
+// src/pages/App.tsx
+import React, { useEffect, useMemo, useState } from 'react';
+import { BrowserRouter as Router, Route, Routes, Link, useParams } from 'react-router-dom';
+
+import HomePage from '../pages/HomePage';
+import ListaRestaurantes from '../components/ListaRestaurantes';
+import CadastroUsuario from '../components/CadastroUsuario';
+import PainelRestaurante from '../components/PainelRestaurante';
+import DonoLogin from '../components/DonoLogin';
+import CadastroDono from '../components/CadastroDono';
+import CardapioRestaurante from '../components/CardapioRestaurante';
+import UsuarioLogin from '../components/UsuarioLogin';
+import HistoricoUsuario from '../components/HistoricoUsuario';
+import HistoricoGeral from '../components/HistoricoGeral';
+import VerificarUsuario from '../components/VerificarUsuario';
+import TelaEntregador from '../components/TelaEntregador';
+import InstallPWAButton from '../components/InstallPWAButton';
+
+import './App.css';
+
+/** Detecta se estÃ¡ rodando em modo PWA (standalone) */
+const getStandalone = () =>
+  (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
+  // iOS Safari
+  (window as any).navigator?.standalone === true;
+
+const useIsStandalone = () => {
+  const [standalone, setStandalone] = useState<boolean>(getStandalone());
+
+  useEffect(() => {
+    const mql = window.matchMedia('(display-mode: standalone)');
+    const handler = () => setStandalone(getStandalone());
+    if (mql && 'addEventListener' in mql) {
+      mql.addEventListener('change', handler);
+    } else if (mql && 'addListener' in mql) {
+      // fallback antigo
+      // @ts-ignore
+      mql.addListener(handler);
+    }
+    window.addEventListener('appinstalled', handler);
+    window.addEventListener('visibilitychange', handler);
+    return () => {
+      if (mql && 'removeEventListener' in mql) {
+        mql.removeEventListener('change', handler);
+      } else if (mql && 'removeListener' in mql) {
+        // @ts-ignore
+        mql.removeListener(handler);
+      }
+      window.removeEventListener('appinstalled', handler);
+      window.removeEventListener('visibilitychange', handler);
+    };
+  }, []);
+
+  return standalone;
+};
+
+/** Considera â€œcliente logadoâ€ se existir user no localStorage */
+const useClienteLogado = () => {
+  const [logged, setLogged] = useState<boolean>(() => !!localStorage.getItem('user'));
+  useEffect(() => {
+    const onStorage = () => setLogged(!!localStorage.getItem('user'));
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
+  return logged;
+};
+
+const PainelWrapper: React.FC = () => {
+  const { restauranteId } = useParams<{ restauranteId: string }>();
+  const id = Number(restauranteId);
+  return <PainelRestaurante restauranteId={id} onVoltar={() => window.history.back()} />;
+};
+
+const CardapioWrapper: React.FC = () => {
+  const { restauranteId } = useParams<{ restauranteId: string }>();
+
+  const userData = localStorage.getItem('user');
+
+  if (!userData) {
+    console.error('ðŸš¨ ERRO: Nenhum usuÃ¡rio logado!');
+    return (
+      <div style={{ padding: '20px', textAlign: 'center' }}>
+        <h2>âŒ Acesso nÃ£o autorizado</h2>
+        <p>VocÃª precisa fazer login para acessar o cardÃ¡pio.</p>
+        <button
+          onClick={() => (window.location.href = '/login')}
+          style={{ padding: '10px 20px', background: '#007bff', color: 'white', border: 'none', borderRadius: '5px' }}
+        >
+          Fazer Login
+        </button>
+      </div>
+    );
+  }
+
+  try {
+    const user = JSON.parse(userData);
+    const usuarioId = user?.id;
+
+    if (!usuarioId) {
+      throw new Error('ID do usuÃ¡rio nÃ£o encontrado');
+    }
+
+    const id = Number(restauranteId ?? 1);
+    return (
+      <CardapioRestaurante
+        restauranteId={id}
+        nomeRestaurante={`Restaurante #${id}`}
+        onVoltar={() => window.history.back()}
+        usuarioId={usuarioId}
+      />
+    );
+  } catch (error) {
+    console.error('âŒ Erro ao processar dados do usuÃ¡rio:', error);
+    return (
+      <div style={{ padding: '20px', textAlign: 'center' }}>
+        <h2>âŒ Erro nos dados do usuÃ¡rio</h2>
+        <p>Os dados de login estÃ£o corrompidos. FaÃ§a login novamente.</p>
+        <button
+          onClick={() => {
+            localStorage.clear();
+            window.location.href = '/login';
+          }}
+          style={{ padding: '10px 20px', background: '#dc3545', color: 'white', border: 'none', borderRadius: '5px' }}
+        >
+          Fazer Login Novamente
+        </button>
+      </div>
+    );
+  }
+};
+
+const HistoricoUsuarioWrapper: React.FC = () => {
+  const userData = localStorage.getItem('user');
+
+  if (!userData) {
+    return (
+      <div style={{ padding: '20px', textAlign: 'center' }}>
+        <h2>âŒ Acesso nÃ£o autorizado</h2>
+        <p>VocÃª precisa fazer login para ver o histÃ³rico.</p>
+        <button
+          onClick={() => (window.location.href = '/login')}
+          style={{ padding: '10px 20px', background: '#007bff', color: 'white', border: 'none', borderRadius: '5px' }}
+        >
+          Fazer Login
+        </button>
+      </div>
+    );
+  }
+
+  try {
+    const user = JSON.parse(userData);
+    const usuarioId = user?.id;
+
+    if (!usuarioId) {
+      throw new Error('ID do usuÃ¡rio nÃ£o encontrado');
+    }
+
+    return <HistoricoUsuario usuarioId={usuarioId} onVoltar={() => window.history.back()} />;
+  } catch (error) {
+    console.error('Erro ao processar dados do usuÃ¡rio:', error);
+    return (
+      <div style={{ padding: '20px', textAlign: 'center' }}>
+        <h2>âŒ Erro nos dados do usuÃ¡rio</h2>
+        <p>Os dados de login estÃ£o corrompidos. FaÃ§a login novamente.</p>
+        <button
+          onClick={() => {
+            localStorage.clear();
+            window.location.href = '/login';
+          }}
+          style={{ padding: '10px 20px', background: '#dc3545', color: 'white', border: 'none', borderRadius: '5px' }}
+        >
+          Fazer Login Novamente
+        </button>
+      </div>
+    );
+  }
+};
+
+const HistoricoGeralWrapper: React.FC = () => <HistoricoGeral />;
+
+const App: React.FC = () => {
+  const [mostrarCadastro, setMostrarCadastro] = useState(false);
+  const handleVoltar = () => setMostrarCadastro(false);
+
+  const isStandalone = useIsStandalone();
+  const clienteLogado = useClienteLogado();
+
+  // navbar para WEB (nÃ£o-standalone)
+  const WebNavbar = useMemo(
+    () => (
+      <nav className="navbar">
+        <Link to="/" className="nav-link">ðŸ  Home</Link>
+        <Link to="/cadastro" className="nav-link">ðŸ‘¤ Cadastro Cliente</Link>
+        <Link to="/cadastro-dono" className="nav-link">ðŸª Cadastro Dono</Link>
+        <Link to="/painel-restaurante" className="nav-link">ðŸ½ï¸ Painel Restaurante</Link>
+        <Link to="/login-dono" className="nav-link">ðŸ” Login Dono</Link>
+        <Link to="/login" className="nav-link">ðŸ”“ Login Cliente</Link>
+        <Link to="/historico-usuario" className="nav-link">ðŸ“‹ Meu HistÃ³rico</Link>
+        <Link to="/historico-geral" className="nav-link">â‰¡ HistÃ³rico Geral</Link>
+        <Link to="/debug-usuario" className="nav-link">ðŸ” Debug</Link>
+        {/* botÃ£o instalar sÃ³ na web */}
+        <InstallPWAButton />
+      </nav>
+    ),
+    []
+  );
+
+  // navbar para PWA (standalone)
+  const PwaNavbar = useMemo(() => {
+    if (!clienteLogado) return null; // PWA sem login â†’ sem navbar
+    return (
+      <nav className="navbar">
+        <Link to="/historico-usuario" className="nav-link">ðŸ“‹ Meu HistÃ³rico</Link>
+      </nav>
+    );
+  }, [clienteLogado]);
+
+  return (
+    <Router>
+      {/* Navbar condicional */}
+      {isStandalone ? PwaNavbar : WebNavbar}
+
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+
+        {/* Cliente */}
+        <Route path="/login" element={<UsuarioLogin />} />
+        <Route path="/cadastro" element={<CadastroUsuario onVoltar={handleVoltar} />} />
+        <Route path="/dashboard" element={<ListaRestaurantes />} />
+        <Route path="/cardapio/:restauranteId" element={<CardapioWrapper />} />
+        <Route path="/historico-usuario" element={<HistoricoUsuarioWrapper />} />
+
+        {/* Dono */}
+        <Route path="/login-dono" element={<DonoLogin />} />
+        <Route path="/cadastro-dono" element={<CadastroDono />} />
+        <Route path="/painel-restaurante" element={<PainelRestaurante restauranteId={4} onVoltar={handleVoltar} />} />
+        <Route path="/painel-restaurante/:restauranteId" element={<PainelWrapper />} />
+
+        {/* Lista geral */}
+        <Route path="/restaurantes" element={<ListaRestaurantes />} />
+
+        {/* Manager */}
+        <Route path="/historico-geral" element={<HistoricoGeralWrapper />} />
+
+        {/* Debug */}
+        <Route path="/debug-usuario" element={<VerificarUsuario />} />
+
+        {/* âœ… Rota do entregador */}
+        <Route path="/entregador/pedido/:pedidoId" element={<TelaEntregador />} />
+      </Routes>
+    </Router>
+  );
+};
+
+export default App;
+
+
+
+===== FILE: E:\larica-frontend\src\pages\HomePage.tsx =====
+
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import './HomePage.css';
+
+// â¬‡ï¸ importa a logo (ajusta o path se usar outra pasta)
+import laricaLogo from '../assets/larica-logo.png';
+
+const HomePage: React.FC = () => {
+  const navigate = useNavigate();
+
+  return (
+    <div className="home-container">
+      <div className="home-content">
+        {/* HERO COM LOGO */}
+        <div className="home-hero">
+          <img
+            src={laricaLogo}
+            alt="LARICA food - logo"
+            className="home-logo"
+            loading="eager"
+            decoding="async"
+          />
+          {/* MantÃ©m o h1 para SEO/acessibilidade, mas visual vem da logo */}
+          <h1 className="home-title"></h1>
+          <p className="home-subtitle"></p>
+        </div>
+
+        <div className="home-buttons">
+          <button
+            onClick={() => navigate('/login')}
+            className="home-btn home-btn-primary"
+          >
+            ðŸ‘¤ Cliente
+          </button>
+
+          <button
+            onClick={() => navigate('/login-dono')}
+            className="home-btn home-btn-primary"
+          >
+            ðŸ½ï¸ Restaurante
+          </button>
+
+          <div className="home-divider"></div>
+
+          <button
+            onClick={() => navigate('/cadastro')}
+            className="home-btn home-btn-secondary"
+          >
+            âž• Cadastrar Cliente
+          </button>
+
+          <button
+            onClick={() => navigate('/cadastro-dono')}
+            className="home-btn home-btn-secondary"
+          >
+            ðŸª Cadastrar Dono + Restaurante
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default HomePage;
+
+
+===== FILE: E:\larica-frontend\src\react-app-env.d.ts =====
+
+/// <reference types="react-scripts" />
+
+
+===== FILE: E:\larica-frontend\src\reportWebVitals.ts =====
+
+import { ReportHandler } from 'web-vitals';
+
+const reportWebVitals = (onPerfEntry?: ReportHandler) => {
+  if (onPerfEntry && onPerfEntry instanceof Function) {
+    import('web-vitals').then(({ getCLS, getFID, getFCP, getLCP, getTTFB }) => {
+      getCLS(onPerfEntry);
+      getFID(onPerfEntry);
+      getFCP(onPerfEntry);
+      getLCP(onPerfEntry);
+      getTTFB(onPerfEntry);
+    });
+  }
+};
+
+export default reportWebVitals;
+
+
+===== FILE: E:\larica-frontend\src\services\api.ts =====
+
+import axios, { AxiosError, AxiosRequestConfig } from 'axios';
+
+const BASE =
+  (typeof window !== 'undefined' && (window as any).__API_BASE_URL__) ||
+  (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_API_BASE_URL) ||
+  process.env.REACT_APP_API_BASE_URL ||
+  'https://api-larica.neemindev.com/api'; // âœ… ADD https:// e /api
+
+const api = axios.create({
+  baseURL: BASE,
+  timeout: 10000,
+  headers: { 'Content-Type': 'application/json' },
+  withCredentials: false,
+});
+
+// âœ… INTERCEPTOR PARA ADICIONAR TOKEN AUTOMATICAMENTE
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// âœ… INTERCEPTOR PARA TRATAR TOKEN EXPIRADO
+api.interceptors.response.use(
+  (response) => response,
+  (error: AxiosError) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = '/login';
+    }
+
+    // MantÃ©m o logging original de erro
+    const cfg = (error.config || {}) as AxiosRequestConfig;
+    const finalUrl = `${api.defaults.baseURL || ''}${cfg.url || ''}`;
+    console.error('Erro na requisiÃ§Ã£o:', {
+      method: cfg.method,
+      url: finalUrl,
+      status: error.response?.status,
+      data: error.response?.data,
+    });
+
+    return Promise.reject(error);
+  }
+);
+
+export default api;
+
+/** helper opcional */
+export const loginDono = (email: string, senha: string) =>
+  api.post('/auth/donos/login', { email, senha });
+
+
+===== FILE: E:\larica-frontend\src\service-worker-registration.ts =====
+
+export function register() {
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker
+        .register('/service-worker.js')
+        .catch(err => console.error('SW registration failed:', err));
+    });
+  }
+}
+
+export function unregister() {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.ready.then(reg => reg.unregister());
+  }
+}
+
+
