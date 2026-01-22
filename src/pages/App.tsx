@@ -1,16 +1,23 @@
-// src/pages/App.tsx - VERSÃO CORRIGIDA
 import React, { useEffect, useMemo, useState } from 'react';
-import { BrowserRouter as Router, Route, Routes, Link, useParams } from 'react-router-dom';
+import {
+  BrowserRouter as Router,
+  Route,
+  Routes,
+  Link,
+  useParams,
+  Navigate
+} from 'react-router-dom';
 
 import api from '../services/api';
-import HomePage from '../pages/HomePage';
+
+import HomePage from './HomePage';
 import ListaRestaurantes from '../components/ListaRestaurantes';
 import CadastroUsuario from '../components/CadastroUsuario';
-import PainelRestaurante from '../components/PainelRestaurante';
-import DonoLogin from '../components/DonoLogin';
 import CadastroDono from '../components/CadastroDono';
-import CardapioRestaurante from '../components/CardapioRestaurante';
 import UsuarioLogin from '../components/UsuarioLogin';
+import DonoLogin from '../components/DonoLogin';
+import PainelRestaurante from '../components/PainelRestaurante';
+import CardapioRestaurante from '../components/CardapioRestaurante';
 import HistoricoUsuario from '../components/HistoricoUsuario';
 import HistoricoGeral from '../components/HistoricoGeral';
 import VerificarUsuario from '../components/VerificarUsuario';
@@ -19,193 +26,91 @@ import InstallPWAButton from '../components/InstallPWAButton';
 
 import './App.css';
 
-/** Detecta se está rodando em modo PWA (standalone) - VERSÃO SIMPLIFICADA */
+/* =========================
+   Helpers
+========================= */
+
 const useIsStandalone = () => {
-  const [standalone, setStandalone] = useState<boolean>(false);
+  const [standalone, setStandalone] = useState(false);
 
   useEffect(() => {
-    // Verifica se está em modo standalone
-    const checkStandalone = () => {
-      const isStandalone = 
-        (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
-        (window.navigator as any).standalone === true;
-      setStandalone(isStandalone);
+    const check = () => {
+      setStandalone(
+        window.matchMedia('(display-mode: standalone)').matches ||
+          (window.navigator as any).standalone === true
+      );
     };
-
-    checkStandalone();
-    
-    // Listener simplificado
-    const mql = window.matchMedia('(display-mode: standalone)');
-    const handler = () => checkStandalone();
-    
-    // Usa addEventListener moderno
-    if (mql.addEventListener) {
-      mql.addEventListener('change', handler);
-    }
-    
-    window.addEventListener('appinstalled', handler);
-    
-    return () => {
-      if (mql.removeEventListener) {
-        mql.removeEventListener('change', handler);
-      }
-      window.removeEventListener('appinstalled', handler);
-    };
+    check();
+    window.addEventListener('appinstalled', check);
+    return () => window.removeEventListener('appinstalled', check);
   }, []);
 
   return standalone;
 };
 
-/** Considera "cliente logado" se existir user no localStorage */
-const useClienteLogado = () => {
-  const [logged, setLogged] = useState<boolean>(() => !!localStorage.getItem('user'));
-  useEffect(() => {
-    const onStorage = () => setLogged(!!localStorage.getItem('user'));
-    window.addEventListener('storage', onStorage);
-    return () => window.removeEventListener('storage', onStorage);
-  }, []);
-  return logged;
+const getUser = () => {
+  try {
+    const raw = localStorage.getItem('user');
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
 };
 
+/* =========================
+   Wrappers
+========================= */
+
 const PainelWrapper: React.FC = () => {
-  const { restauranteId } = useParams<{ restauranteId: string }>();
-  const id = Number(restauranteId);
-  return <PainelRestaurante restauranteId={id} onVoltar={() => window.history.back()} />;
+  const user = getUser();
+
+  if (!user || user.tipo !== 'DONO' || !user.restauranteId) {
+    return <Navigate to="/login-dono" replace />;
+  }
+
+  return <PainelRestaurante restauranteId={user.restauranteId} />;
 };
 
 const CardapioWrapper: React.FC = () => {
   const { restauranteId } = useParams<{ restauranteId: string }>();
-  const [nomeRestaurante, setNomeRestaurante] = useState('');
+  const user = getUser();
 
-  useEffect(() => {
-    if (restauranteId) {
-      api.get(`/restaurantes/${restauranteId}`)
-        .then(res => setNomeRestaurante(res.data.nome))
-        .catch(() => setNomeRestaurante(`Restaurante #${restauranteId}`));
-    }
-  }, [restauranteId]);
+  if (!user?.id) return <Navigate to="/login" replace />;
 
-  const userData = localStorage.getItem('user');
+  const id = Number(restauranteId);
 
-  if (!userData) {
-    return (
-      <div style={{ padding: '20px', textAlign: 'center' }}>
-        <h2>❌ Acesso não autorizado</h2>
-        <p>Você precisa fazer login para acessar o cardápio.</p>
-        <button
-          onClick={() => (window.location.href = '/login')}
-          style={{ padding: '10px 20px', background: '#007bff', color: 'white', border: 'none', borderRadius: '5px' }}
-        >
-          Fazer Login
-        </button>
-      </div>
-    );
-  }
-
-  try {
-    const user = JSON.parse(userData);
-    const usuarioId = user?.id;
-
-    if (!usuarioId) {
-      throw new Error('ID do usuário não encontrado');
-    }
-
-    const id = Number(restauranteId ?? 1);
-    return (
-      <CardapioRestaurante
-        restauranteId={id}
-        nomeRestaurante={nomeRestaurante || `Restaurante #${id}`}
-        onVoltar={() => window.history.back()}
-        usuarioId={usuarioId}
-      />
-    );
-  } catch (error) {
-    console.error('❌ Erro ao processar dados do usuário:', error);
-    return (
-      <div style={{ padding: '20px', textAlign: 'center' }}>
-        <h2>❌ Erro nos dados do usuário</h2>
-        <p>Os dados de login estão corrompidos. Faça login novamente.</p>
-        <button
-          onClick={() => {
-            localStorage.clear();
-            window.location.href = '/login';
-          }}
-          style={{ padding: '10px 20px', background: '#dc3545', color: 'white', border: 'none', borderRadius: '5px' }}
-        >
-          Fazer Login Novamente
-        </button>
-      </div>
-    );
-  }
+  return (
+    <CardapioRestaurante
+      restauranteId={id}
+      usuarioId={user.id}
+      nomeRestaurante={`Restaurante #${id}`}
+      onVoltar={() => window.history.back()}
+    />
+  );
 };
 
 const HistoricoUsuarioWrapper: React.FC = () => {
-  const userData = localStorage.getItem('user');
-
-  if (!userData) {
-    return (
-      <div style={{ padding: '20px', textAlign: 'center' }}>
-        <h2>❌ Acesso não autorizado</h2>
-        <p>Você precisa fazer login para ver o histórico.</p>
-        <button
-          onClick={() => (window.location.href = '/login')}
-          style={{ padding: '10px 20px', background: '#007bff', color: 'white', border: 'none', borderRadius: '5px' }}
-        >
-          Fazer Login
-        </button>
-      </div>
-    );
-  }
-
-  try {
-    const user = JSON.parse(userData);
-    const usuarioId = user?.id;
-
-    if (!usuarioId) {
-      throw new Error('ID do usuário não encontrado');
-    }
-
-    return <HistoricoUsuario usuarioId={usuarioId} onVoltar={() => window.history.back()} />;
-  } catch (error) {
-    console.error('Erro ao processar dados do usuário:', error);
-    return (
-      <div style={{ padding: '20px', textAlign: 'center' }}>
-        <h2>❌ Erro nos dados do usuário</h2>
-        <p>Os dados de login estão corrompidos. Faça login novamente.</p>
-        <button
-          onClick={() => {
-            localStorage.clear();
-            window.location.href = '/login';
-          }}
-          style={{ padding: '10px 20px', background: '#dc3545', color: 'white', border: 'none', borderRadius: '5px' }}
-        >
-          Fazer Login Novamente
-        </button>
-      </div>
-    );
-  }
+  const user = getUser();
+  if (!user?.id) return <Navigate to="/login" replace />;
+  return <HistoricoUsuario usuarioId={user.id} onVoltar={() => window.history.back()} />;
 };
 
-const HistoricoGeralWrapper: React.FC = () => <HistoricoGeral />;
+/* =========================
+   App
+========================= */
 
 const App: React.FC = () => {
-  const [mostrarCadastro, setMostrarCadastro] = useState(false);
-  const handleVoltar = () => setMostrarCadastro(false);
-
   const isStandalone = useIsStandalone();
-  const clienteLogado = useClienteLogado();
+  const user = getUser();
 
-  // navbar para WEB (não-standalone)
   const WebNavbar = useMemo(
     () => (
       <nav className="navbar">
         <Link to="/" className="nav-link">🏠 Home</Link>
+        <Link to="/login" className="nav-link">🔓 Login Cliente</Link>
+        <Link to="/login-dono" className="nav-link">🍽️ Login Restaurante</Link>
         <Link to="/cadastro" className="nav-link">👤 Cadastro Cliente</Link>
         <Link to="/cadastro-dono" className="nav-link">🏪 Cadastro Dono</Link>
-        <Link to="/painel-restaurante/1" className="nav-link">🍽️ Painel Restaurante (ID 1)</Link>
-        <Link to="/login-dono" className="nav-link">🔐 Login Dono</Link>
-        <Link to="/login" className="nav-link">🔓 Login Cliente</Link>
-        <Link to="/historico-usuario" className="nav-link">📋 Meu Histórico</Link>
         <Link to="/historico-geral" className="nav-link">≡ Histórico Geral</Link>
         <Link to="/debug-usuario" className="nav-link">🔍 Debug</Link>
         <InstallPWAButton />
@@ -214,15 +119,17 @@ const App: React.FC = () => {
     []
   );
 
-  // navbar para PWA (standalone)
   const PwaNavbar = useMemo(() => {
-    if (!clienteLogado) return null;
-    return (
-      <nav className="navbar">
-        <Link to="/historico-usuario" className="nav-link">📋 Meu Histórico</Link>
-      </nav>
-    );
-  }, [clienteLogado]);
+    if (!user) return null;
+    if (user.tipo === 'CLIENTE') {
+      return (
+        <nav className="navbar">
+          <Link to="/historico-usuario" className="nav-link">📋 Meu Histórico</Link>
+        </nav>
+      );
+    }
+    return null;
+  }, [user]);
 
   return (
     <Router>
@@ -233,7 +140,7 @@ const App: React.FC = () => {
 
         {/* Cliente */}
         <Route path="/login" element={<UsuarioLogin />} />
-        <Route path="/cadastro" element={<CadastroUsuario onVoltar={handleVoltar} />} />
+        <Route path="/cadastro" element={<CadastroUsuario onVoltar={() => {}} />} />
         <Route path="/dashboard" element={<ListaRestaurantes />} />
         <Route path="/cardapio/:restauranteId" element={<CardapioWrapper />} />
         <Route path="/historico-usuario" element={<HistoricoUsuarioWrapper />} />
@@ -241,13 +148,10 @@ const App: React.FC = () => {
         {/* Dono */}
         <Route path="/login-dono" element={<DonoLogin />} />
         <Route path="/cadastro-dono" element={<CadastroDono />} />
-        <Route path="/painel-restaurante/:restauranteId" element={<PainelWrapper />} />
-
-        {/* Lista geral */}
-        <Route path="/restaurantes" element={<ListaRestaurantes />} />
+        <Route path="/painel-restaurante" element={<PainelWrapper />} />
 
         {/* Manager */}
-        <Route path="/historico-geral" element={<HistoricoGeralWrapper />} />
+        <Route path="/historico-geral" element={<HistoricoGeral />} />
 
         {/* Debug */}
         <Route path="/debug-usuario" element={<VerificarUsuario />} />
