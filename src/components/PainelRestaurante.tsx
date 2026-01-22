@@ -1,6 +1,6 @@
 // src/components/PainelRestaurante.tsx
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import api from '../services/api';
 import './PainelRestaurante.css';
 import HistoricoRestaurante from './HistoricoRestaurante';
@@ -43,11 +43,14 @@ interface Pedido {
 }
 
 interface PainelProps {
-  restauranteId: number;
+  restauranteId?: number;
   onVoltar?: () => void;
 }
 
 const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) => {
+  const params = useParams<{ restauranteId: string }>();
+  const restauranteIdFinal = restauranteId ?? Number(params.restauranteId);
+
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
@@ -69,14 +72,14 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
 
   const carregarPedidos = async () => {
     try {
-      const res = await api.get(`/restaurantes/${restauranteId}/pedidos`, {
+      const res = await api.get(`/restaurantes/${restauranteIdFinal}/pedidos`, {
         params: { page: 0, size: 10 },
       });
 
       const pedidosCompletos = (res.data?.content || res.data || []).map((pedido: any) => ({
         ...pedido,
         restaurante: {
-          id: restauranteId,
+          id: restauranteIdFinal,
           nome: nomeRestaurante,
           endereco: enderecoRestaurante,
           telefone: telefoneRestaurante
@@ -99,7 +102,7 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
 
   const carregarDadosRestaurante = async () => {
     try {
-      const r = await api.get(`/restaurantes/${restauranteId}`);
+      const r = await api.get(`/restaurantes/${restauranteIdFinal}`);
       setNomeRestaurante(r.data?.nome || '');
       setEnderecoRestaurante(r.data?.endereco || '');
       setTelefoneRestaurante(r.data?.telefone || '');
@@ -112,14 +115,16 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
   };
 
   useEffect(() => {
+    if (!restauranteIdFinal || Number.isNaN(restauranteIdFinal)) return;
     carregarDadosRestaurante().then(() => {
       carregarPedidos();
     });
-  }, [restauranteId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [restauranteIdFinal]);
 
   const atualizarStatus = async (pedidoId: number, novoStatus: string) => {
     await api.patch(
-      `/restaurantes/${restauranteId}/pedidos/${pedidoId}/status`,
+      `/restaurantes/${restauranteIdFinal}/pedidos/${pedidoId}/status`,
       null,
       { params: { status: novoStatus } }
     );
@@ -137,7 +142,7 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
   };
 
   const obterOuConfigurarCooperativa = (): string | null => {
-    const key = coopStorageKey(restauranteId);
+    const key = coopStorageKey(restauranteIdFinal);
     const atual = localStorage.getItem(key);
     if (atual) return atual;
 
@@ -156,7 +161,7 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
   };
 
   const configurarCooperativa = () => {
-    const key = coopStorageKey(restauranteId);
+    const key = coopStorageKey(restauranteIdFinal);
     const atual = localStorage.getItem(key) || '';
     const informado = window.prompt(
       'Definir/alterar WhatsApp da cooperativa (com DDI/DDD).',
@@ -273,7 +278,7 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
 
     setSalvando(true);
     try {
-      await api.post(`/produtos/por-restaurante/${restauranteId}`, {
+      await api.post(`/produtos/por-restaurante/${restauranteIdFinal}`, {
         nome: nomeProd.trim(),
         descricao: descProd.trim(),
         preco: precoNumber,
@@ -299,7 +304,7 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
     return (
       <div className="painel-container">
         <HistoricoRestaurante
-          restauranteId={restauranteId}
+          restauranteId={restauranteIdFinal}
           onVoltar={() => setMostrarHistorico(false)}
         />
       </div>
@@ -326,7 +331,7 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
         <h2 className="painel-nome-restaurante" style={{ margin: 0 }}>
-          {nomeRestaurante || `Restaurante #${restauranteId}`}
+          {nomeRestaurante || `Restaurante #${restauranteIdFinal}`}
         </h2>
         <button
           className="btn-historico"
@@ -344,7 +349,7 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
         </button>
       </div>
 
-      <p className="painel-subtitulo">Usando ID: {restauranteId}</p>
+      <p className="painel-subtitulo">Usando ID: {restauranteIdFinal}</p>
 
       {msgOk && <div className="alert sucesso">{msgOk}</div>}
       {msgErro && <div className="alert erro">{msgErro}</div>}
