@@ -1,5 +1,5 @@
-// src/components/DonoLogin.tsx
-import React, { useState } from 'react';
+// src/components/DonoLogin.tsx - VERSÃO QUE VAI FUNCIONAR
+import React, { useState, useEffect } from 'react'; // ✅ ADICIONA useEffect
 import api from '../services/api';
 import PainelRestaurante from './PainelRestaurante';
 import './DonoLogin.css';
@@ -11,6 +11,23 @@ const DonoLogin: React.FC = () => {
   const [erro, setErro] = useState<string | null>(null);
   const [restauranteId, setRestauranteId] = useState<number | null>(null);
   const [nomeDono, setNomeDono] = useState<string>('');
+
+  // ✅ VERIFICA SE JÁ ESTÁ LOGADO AO CARREGAR
+  useEffect(() => {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        if (user.tipo === 'DONO' && user.restauranteId) {
+          console.log('🔍 Usuário já logado encontrado:', user);
+          setRestauranteId(user.restauranteId);
+          setNomeDono(user.nome);
+        }
+      } catch (e) {
+        console.error('Erro ao parsear user:', e);
+      }
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,16 +48,24 @@ const DonoLogin: React.FC = () => {
       
       // Salva no localStorage
       localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify({ 
+      const userData = { 
         tipo: 'DONO', 
         nome, 
         restauranteId,
-        id: restauranteId // Para compatibilidade
-      }));
+        id: restauranteId
+      };
+      localStorage.setItem('user', JSON.stringify(userData));
       
-      // Atualiza estado para mostrar painel
+      console.log('💾 Salvo no localStorage:', userData);
+      
+      // ✅ FORÇA A ATUALIZAÇÃO DO ESTADO
       setNomeDono(nome);
       setRestauranteId(restauranteId);
+      
+      // ✅ FORÇA RE-RENDER EXPLÍCITO
+      setTimeout(() => {
+        window.dispatchEvent(new Event('storage'));
+      }, 100);
       
     } catch (err: any) {
       console.error('❌ Erro no login:', err);
@@ -72,8 +97,10 @@ const DonoLogin: React.FC = () => {
     }
   };
 
-  // 🔥 SE LOGOU COM SUCESSO → MOSTRA O PAINEL
+  // ✅ SE LOGOU → MOSTRA PAINEL
   if (restauranteId) {
+    console.log('🎯 Renderizando PainelRestaurante com ID:', restauranteId);
+    
     return (
       <div style={{ padding: '16px' }}>
         <div style={{ 
@@ -91,7 +118,8 @@ const DonoLogin: React.FC = () => {
               localStorage.removeItem('token');
               localStorage.removeItem('user');
               setRestauranteId(null);
-              window.location.reload();
+              setNomeDono('');
+              window.location.href = '/login-dono';
             }}
             style={{
               padding: '8px 16px',
@@ -106,27 +134,19 @@ const DonoLogin: React.FC = () => {
           </button>
         </div>
         
-        {/* CHAMA O PAINEL RESTAURANTE COMPLETO */}
         <PainelRestaurante restauranteId={restauranteId} />
       </div>
     );
   }
 
-  // 🔒 TELA DE LOGIN (SE NÃO ESTIVER LOGADO)
+  // 🔒 TELA DE LOGIN
   return (
     <div className="loginD-container">
       <div className="loginD-card">
         <h2>Login do Dono</h2>
         
         {erro && (
-          <div className="alert-erro" style={{ 
-            color: '#721c24', 
-            backgroundColor: '#f8d7da',
-            border: '1px solid #f5c6cb',
-            padding: '12px', 
-            borderRadius: '5px',
-            marginBottom: '16px'
-          }}>
+          <div className="alert-erro">
             ⚠️ {erro}
           </div>
         )}
@@ -140,7 +160,6 @@ const DonoLogin: React.FC = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="pizzaria.dovale@email.com"
-              style={{ padding: '10px', fontSize: '16px', width: '100%' }}
             />
           </div>
           
@@ -152,39 +171,47 @@ const DonoLogin: React.FC = () => {
               value={senha}
               onChange={(e) => setSenha(e.target.value)}
               placeholder="••••••••"
-              style={{ padding: '10px', fontSize: '16px', width: '100%' }}
             />
           </div>
           
-          <button 
-            type="submit" 
-            disabled={loading} 
-            style={{ 
-              padding: '12px', 
-              fontSize: '16px',
-              background: loading ? '#ccc' : '#007bff',
-              color: 'white',
-              border: 'none',
-              borderRadius: '5px',
-              cursor: loading ? 'not-allowed' : 'pointer',
-              width: '100%',
-              marginTop: '10px'
-            }}
-          >
+          <button type="submit" disabled={loading}>
             {loading ? 'Entrando...' : 'Entrar'}
           </button>
         </form>
         
+        {/* ✅ BOTÃO DE DEBUG FORTE */}
         <div style={{ marginTop: '20px', textAlign: 'center' }}>
-          <p style={{ fontSize: '14px', color: '#666' }}>
-            Não tem conta?{' '}
-            <a 
-              href="/cadastro-dono" 
-              style={{ color: '#007bff', textDecoration: 'none' }}
-            >
-              Cadastre seu restaurante
-            </a>
-          </p>
+          <button
+            onClick={() => {
+              console.log('🔍 DEBUG COMPLETO:');
+              console.log('- localStorage user:', localStorage.getItem('user'));
+              console.log('- localStorage token:', localStorage.getItem('token'));
+              console.log('- Estado restauranteId:', restauranteId);
+              console.log('- Estado nomeDono:', nomeDono);
+              
+              // Testa forçar o painel
+              const userStr = localStorage.getItem('user');
+              if (userStr) {
+                const user = JSON.parse(userStr);
+                if (user.restauranteId) {
+                  alert(`DEBUG: Usuário ${user.nome} com restauranteId ${user.restauranteId} encontrado! Forçando painel...`);
+                  setRestauranteId(user.restauranteId);
+                  setNomeDono(user.nome);
+                }
+              }
+            }}
+            style={{
+              padding: '8px 16px',
+              background: '#6c757d',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '14px'
+            }}
+          >
+            🐛 Debug Estado
+          </button>
         </div>
       </div>
     </div>
