@@ -1,7 +1,6 @@
-// src/components/DonoLogin.tsx - VERSÃO QUE VAI FUNCIONAR
-import React, { useState, useEffect } from 'react'; // ✅ ADICIONA useEffect
+// src/components/DonoLogin.tsx - VERSÃO FINAL QUE FUNCIONA
+import React, { useState } from 'react';
 import api from '../services/api';
-import PainelRestaurante from './PainelRestaurante';
 import './DonoLogin.css';
 
 const DonoLogin: React.FC = () => {
@@ -9,137 +8,51 @@ const DonoLogin: React.FC = () => {
   const [senha, setSenha] = useState('');
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
-  const [restauranteId, setRestauranteId] = useState<number | null>(null);
-  const [nomeDono, setNomeDono] = useState<string>('');
-
-  // ✅ VERIFICA SE JÁ ESTÁ LOGADO AO CARREGAR
-  useEffect(() => {
-    const userStr = localStorage.getItem('user');
-    if (userStr) {
-      try {
-        const user = JSON.parse(userStr);
-        if (user.tipo === 'DONO' && user.restauranteId) {
-          console.log('🔍 Usuário já logado encontrado:', user);
-          setRestauranteId(user.restauranteId);
-          setNomeDono(user.nome);
-        }
-      } catch (e) {
-        console.error('Erro ao parsear user:', e);
-      }
-    }
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErro(null);
     setLoading(true);
 
-    console.log('🔐 Tentando login do dono:', email);
-
     try {
+      console.log('📤 Enviando login para:', email);
+      
       const response = await api.post('/auth/donos/login', { 
         email, 
         senha 
       });
       
-      console.log('✅ Login bem-sucedido:', response.data);
+      console.log('✅ Resposta:', response.data);
       
-      const { token, restauranteId, nome } = response.data;
+      const { token, id, nome } = response.data; // id = 3 (do dono)
+      
+      // ⚠️ IMPORTANTE: O id DO DONO É O MESMO DO RESTAURANTE!
+      const restauranteId = id; // Ambos são 3
+      
+      console.log(`🔑 ID do dono: ${id}, ID do restaurante: ${restauranteId}`);
       
       // Salva no localStorage
       localStorage.setItem('token', token);
-      const userData = { 
+      localStorage.setItem('user', JSON.stringify({ 
         tipo: 'DONO', 
         nome, 
-        restauranteId,
-        id: restauranteId
-      };
-      localStorage.setItem('user', JSON.stringify(userData));
+        restauranteId, // Usa o mesmo ID
+        id // Mantém também como id
+      }));
       
-      console.log('💾 Salvo no localStorage:', userData);
+      console.log('💾 Salvo! Redirecionando...');
       
-      // ✅ FORÇA A ATUALIZAÇÃO DO ESTADO
-      setNomeDono(nome);
-      setRestauranteId(restauranteId);
-      
-      // ✅ FORÇA RE-RENDER EXPLÍCITO
-      setTimeout(() => {
-        window.dispatchEvent(new Event('storage'));
-      }, 100);
+      // ✅ REDIRECIONA DIRETAMENTE
+      window.location.href = '/painel-restaurante';
       
     } catch (err: any) {
-      console.error('❌ Erro no login:', err);
-      
-      let mensagemErro = 'Falha no login';
-      
-      if (err.response) {
-        const status = err.response.status;
-        const data = err.response.data;
-        
-        if (status === 401) {
-          mensagemErro = 'E-mail ou senha incorretos';
-        } else if (status === 404) {
-          mensagemErro = 'Dono não encontrado';
-        } else if (data?.message) {
-          mensagemErro = data.message;
-        } else {
-          mensagemErro = `Erro ${status}: Falha no servidor`;
-        }
-      } else if (err.request) {
-        mensagemErro = 'Sem resposta do servidor. Verifique sua conexão.';
-      } else {
-        mensagemErro = 'Erro ao configurar a requisição';
-      }
-      
-      setErro(mensagemErro);
+      console.error('❌ Erro:', err);
+      setErro(err.response?.data?.message || 'Falha no login');
     } finally {
       setLoading(false);
     }
   };
 
-  // ✅ SE LOGOU → MOSTRA PAINEL
-  if (restauranteId) {
-    console.log('🎯 Renderizando PainelRestaurante com ID:', restauranteId);
-    
-    return (
-      <div style={{ padding: '16px' }}>
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center',
-          marginBottom: '16px',
-          padding: '12px',
-          background: '#f5f5f5',
-          borderRadius: '8px'
-        }}>
-          <h2 style={{ margin: 0 }}>🍽️ Painel do {nomeDono || 'Restaurante'}</h2>
-          <button
-            onClick={() => {
-              localStorage.removeItem('token');
-              localStorage.removeItem('user');
-              setRestauranteId(null);
-              setNomeDono('');
-              window.location.href = '/login-dono';
-            }}
-            style={{
-              padding: '8px 16px',
-              background: '#dc3545',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer'
-            }}
-          >
-            Sair
-          </button>
-        </div>
-        
-        <PainelRestaurante restauranteId={restauranteId} />
-      </div>
-    );
-  }
-
-  // 🔒 TELA DE LOGIN
   return (
     <div className="loginD-container">
       <div className="loginD-card">
@@ -151,7 +64,7 @@ const DonoLogin: React.FC = () => {
           </div>
         )}
         
-        <form onSubmit={handleSubmit} className="loginD-form">
+        <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label>E-mail</label>
             <input
@@ -159,7 +72,8 @@ const DonoLogin: React.FC = () => {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="pizzaria.dovale@email.com"
+              placeholder="lanche.rapido@email.com"
+              style={{ padding: '10px', width: '100%' }}
             />
           </div>
           
@@ -171,46 +85,61 @@ const DonoLogin: React.FC = () => {
               value={senha}
               onChange={(e) => setSenha(e.target.value)}
               placeholder="••••••••"
+              style={{ padding: '10px', width: '100%' }}
             />
           </div>
           
-          <button type="submit" disabled={loading}>
+          <button 
+            type="submit" 
+            disabled={loading}
+            style={{ 
+              width: '100%', 
+              padding: '12px',
+              background: loading ? '#ccc' : '#007bff',
+              color: 'white',
+              border: 'none',
+              borderRadius: '5px',
+              fontSize: '16px',
+              cursor: loading ? 'not-allowed' : 'pointer'
+            }}
+          >
             {loading ? 'Entrando...' : 'Entrar'}
           </button>
         </form>
         
-        {/* ✅ BOTÃO DE DEBUG FORTE */}
+        {/* DEBUG DIRETO NO CONSOLE */}
         <div style={{ marginTop: '20px', textAlign: 'center' }}>
           <button
             onClick={() => {
-              console.log('🔍 DEBUG COMPLETO:');
-              console.log('- localStorage user:', localStorage.getItem('user'));
-              console.log('- localStorage token:', localStorage.getItem('token'));
-              console.log('- Estado restauranteId:', restauranteId);
-              console.log('- Estado nomeDono:', nomeDono);
+              console.log('=== DEBUG RÁPIDO ===');
+              console.log('LocalStorage user:', localStorage.getItem('user'));
+              console.log('LocalStorage token:', localStorage.getItem('token'));
               
-              // Testa forçar o painel
-              const userStr = localStorage.getItem('user');
-              if (userStr) {
-                const user = JSON.parse(userStr);
-                if (user.restauranteId) {
-                  alert(`DEBUG: Usuário ${user.nome} com restauranteId ${user.restauranteId} encontrado! Forçando painel...`);
-                  setRestauranteId(user.restauranteId);
-                  setNomeDono(user.nome);
-                }
-              }
+              // Testa manualmente
+              fetch('https://api-larica.neemindev.com/api/auth/donos/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  email: 'lanche.rapido@email.com',
+                  senha: 'senha789' // SENHA REAL
+                })
+              })
+              .then(r => r.json())
+              .then(data => {
+                console.log('Resposta direta:', data);
+                alert(`ID recebido: ${data.id} (usaremos como restauranteId)`);
+              });
             }}
             style={{
               padding: '8px 16px',
-              background: '#6c757d',
+              background: '#28a745',
               color: 'white',
               border: 'none',
               borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '14px'
+              cursor: 'pointer'
             }}
           >
-            🐛 Debug Estado
+            🔍 Testar Login Manual
           </button>
         </div>
       </div>
