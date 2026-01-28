@@ -1,106 +1,257 @@
-/* src/pages/HomePage.css - TEMA PRETO/LARANJA */
+/* src/pages/HomePage.css - AGORA VAI PORRA! */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --laranja-principal: #FF6B35;
+  --laranja-claro: #FF8B35;
+  --preto: #000000;
+  --cinza-escuro: #111111;
+  --cinza: #CCCCCC;
+  --branco: #FFFFFF;
+}
+
 .home {
   min-height: 100vh;
-  background: #000000;
-  color: #FF6B35;
+  background: var(--preto);
+  color: var(--laranja-principal);
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 20px;
+  justify-content: center; /* CENTRALIZA VERTICAL */
+  align-items: center; /* CENTRALIZA HORIZONTAL */
+  padding: 40px 20px;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   text-align: center;
+  width: 100%;
+  overflow-x: hidden; /* EVITA SCROLL HORIZONTAL */
 }
 
+/* LOGO - CENTRALIZADA DE VERDADE */
 .home-logo {
-  max-width: 250px;
+  max-width: 300px;
+  width: 80%;
   height: auto;
-  margin-bottom: 40px;
-  filter: drop-shadow(0 0 15px rgba(255, 107, 53, 0.5));
+  margin: 0 auto 50px auto; /* AUTO NAS LATERAIS PARA CENTRALIZAR */
+  display: block; /* GARANTE QUE É BLOCO */
+  filter: drop-shadow(0 0 20px rgba(255, 107, 53, 0.7));
+  animation: pulse 2s infinite;
 }
 
+/* CONTAINER DOS BOTÕES - CENTRALIZADO */
 .home-actions {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  max-width: 400px;
+  align-items: center; /* CENTRALIZA OS BOTÕES */
+  gap: 25px;
   width: 100%;
+  max-width: 500px;
+  margin: 0 auto; /* CENTRALIZA O CONTAINER */
 }
 
+/* BOTÕES GRANDES PRA CARALHO */
 .btn {
-  padding: 18px 24px;
+  width: 100%;
+  min-width: 280px;
+  max-width: 450px;
+  padding: 22px 30px;
   border: none;
-  border-radius: 12px;
-  font-size: 1.2rem;
-  font-weight: bold;
+  border-radius: 15px;
+  font-size: 1.3rem;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.3s ease;
   font-family: inherit;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin: 0 auto; /* CENTRALIZA O BOTÃO */
 }
 
+/* BOTÕES PRINCIPAIS */
 .btn.primary {
-  background: linear-gradient(135deg, #FF6B35 0%, #FF8B35 100%);
-  color: #000000;
-  box-shadow: 0 5px 20px rgba(255, 107, 53, 0.4);
+  background: linear-gradient(135deg, var(--laranja-principal) 0%, var(--laranja-claro) 100%);
+  color: var(--preto);
+  box-shadow: 0 8px 30px rgba(255, 107, 53, 0.5);
 }
 
 .btn.primary:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 25px rgba(255, 107, 53, 0.6);
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 15px 40px rgba(255, 107, 53, 0.8);
 }
 
+/* BOTÕES SECUNDÁRIOS */
 .btn.secondary {
   background: transparent;
-  color: #FF6B35;
-  border: 2px solid #FF6B35;
+  color: var(--laranja-principal);
+  border: 3px solid var(--laranja-principal);
 }
 
 .btn.secondary:hover {
-  background: rgba(255, 107, 53, 0.1);
-  transform: translateY(-3px);
+  background: rgba(255, 107, 53, 0.15);
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 10px 25px rgba(255, 107, 53, 0.4);
 }
 
-/* Título opcional (se quiser adicionar) */
-.home-title {
-  font-size: 2.8rem;
-  margin: 0 0 10px 0;
-  color: #FF6B35;
-  text-shadow: 0 0 15px rgba(255, 107, 53, 0.4);
-  animation: glow 3s infinite;
+/* ANIMAÇÃO DA LOGO */
+@keyframes pulse {
+  0%, 100% {
+    filter: drop-shadow(0 0 15px rgba(255, 107, 53, 0.5));
+  }
+  50% {
+    filter: drop-shadow(0 0 25px rgba(255, 107, 53, 0.9));
+  }
 }
 
-.home-subtitle {
-  font-size: 1.3rem;
-  color: #CCCCCC;
-  opacity: 0.9;
-  margin-bottom: 40px;
-  line-height: 1.5;
+/* ==================== */
+/* RESPONSIVIDADE DE VERDADE */
+/* ==================== */
+
+/* DESKTOP GRANDE */
+@media (min-width: 1200px) {
+  .home {
+    padding: 60px;
+  }
+  
+  .home-logo {
+    max-width: 350px;
+  }
+  
+  .btn {
+    max-width: 500px;
+    font-size: 1.4rem;
+    padding: 25px 35px;
+  }
 }
 
-/* RESPONSIVO */
+/* TABLET (768px - 1199px) */
+@media (max-width: 1199px) and (min-width: 769px) {
+  .home {
+    padding: 40px 30px;
+  }
+  
+  .home-logo {
+    max-width: 250px;
+    margin-bottom: 40px;
+  }
+  
+  .home-actions {
+    max-width: 450px;
+  }
+  
+  .btn {
+    padding: 20px 25px;
+    font-size: 1.2rem;
+  }
+}
+
+/* CELULAR (até 768px) - AQUI QUE TÁ O PROBLEMA */
 @media (max-width: 768px) {
   .home {
-    padding: 10px;
+    padding: 30px 15px;
+    justify-content: flex-start;
+    padding-top: 60px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .home-logo {
+    max-width: 220px;
+    width: 70%;
+    margin: 0 auto 40px auto;
+    display: block;
+  }
+  
+  .home-actions {
+    max-width: 100%;
+    width: 100%;
+    padding: 0 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+  
+  .btn {
+    width: 100%;
+    max-width: 350px;
+    padding: 20px 15px;
+    font-size: 1.1rem;
+    margin: 0 auto;
+    display: flex;
+    justify-content: center;
+  }
+}
+
+/* CELULAR PEQUENO (até 480px) */
+@media (max-width: 480px) {
+  .home {
+    padding: 20px 10px;
+    padding-top: 40px;
   }
   
   .home-logo {
     max-width: 180px;
+    width: 65%;
     margin-bottom: 30px;
   }
   
-  .home-title {
-    font-size: 2.2rem;
-  }
-  
-  .home-subtitle {
-    font-size: 1.1rem;
-    margin-bottom: 30px;
+  .home-actions {
+    gap: 15px;
+    padding: 0 5px;
   }
   
   .btn {
-    padding: 16px 20px;
-    font-size: 1.1rem;
+    max-width: 100%;
+    padding: 18px 12px;
+    font-size: 1rem;
+    min-height: 55px;
+  }
+  
+  /* AJUSTA TEXTO DOS BOTÕES */
+  .btn span {
+    font-size: 0.95rem;
+  }
+}
+
+/* CELULAR MUITO PEQUENO (até 360px) */
+@media (max-width: 360px) {
+  .home {
+    padding: 15px 8px;
+    padding-top: 30px;
+  }
+  
+  .home-logo {
+    max-width: 150px;
+  }
+  
+  .btn {
+    padding: 16px 10px;
+    font-size: 0.9rem;
+  }
+  
+  .btn span {
+    font-size: 0.85rem;
+  }
+}
+
+/* GARANTIR QUE TUDO FICA CENTRALIZADO MESMO EM ALTURAS BAIXAS */
+@media (max-height: 700px) {
+  .home {
+    padding-top: 40px;
+    justify-content: flex-start;
+  }
+  
+  .home-logo {
+    margin-bottom: 30px;
+    max-width: 200px;
   }
   
   .home-actions {
@@ -108,33 +259,42 @@
   }
 }
 
-/* ANIMAÇÃO DE GLOW */
-@keyframes glow {
-  0%, 100% {
-    text-shadow: 0 0 5px rgba(255, 107, 53, 0.5),
-                 0 0 10px rgba(255, 107, 53, 0.3);
-  }
-  50% {
-    text-shadow: 0 0 15px rgba(255, 107, 53, 0.8),
-                 0 0 20px rgba(255, 107, 53, 0.4),
-                 0 0 25px rgba(255, 107, 53, 0.2);
-  }
-}
-
-/* SCROLLBAR PERSONALIZADA */
+/* SCROLLBAR */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #111111;
+  background: var(--cinza-escuro);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #FF6B35;
-  border-radius: 4px;
+  background: var(--laranja-principal);
+  border-radius: 5px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #FF8B35;
+  background: var(--laranja-claro);
+}
+
+/* ANIMAÇÃO DE ENTRADA */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.home-logo,
+.home-actions {
+  animation: fadeIn 0.8s ease-out;
+}
+
+.home-actions {
+  animation-delay: 0.3s;
+  animation-fill-mode: both;
 }
