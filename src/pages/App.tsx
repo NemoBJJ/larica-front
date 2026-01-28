@@ -8,8 +8,6 @@ import {
   Navigate
 } from 'react-router-dom';
 
-import api from '../services/api';
-
 import HomePage from './HomePage';
 import ListaRestaurantes from '../components/ListaRestaurantes';
 import CadastroUsuario from '../components/CadastroUsuario';
@@ -30,6 +28,15 @@ import './App.css';
    Helpers
 ========================= */
 
+const getUser = () => {
+  try {
+    const raw = localStorage.getItem('user');
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
+
 const useIsStandalone = () => {
   const [standalone, setStandalone] = useState(false);
 
@@ -46,15 +53,6 @@ const useIsStandalone = () => {
   }, []);
 
   return standalone;
-};
-
-const getUser = () => {
-  try {
-    const raw = localStorage.getItem('user');
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
 };
 
 /* =========================
@@ -75,15 +73,15 @@ const CardapioWrapper: React.FC = () => {
   const { restauranteId } = useParams<{ restauranteId: string }>();
   const user = getUser();
 
-  if (!user?.id) return <Navigate to="/login" replace />;
-
-  const id = Number(restauranteId);
+  if (!user || user.tipo !== 'CLIENTE' || !user.id) {
+    return <Navigate to="/login" replace />;
+  }
 
   return (
     <CardapioRestaurante
-      restauranteId={id}
+      restauranteId={Number(restauranteId)}
       usuarioId={user.id}
-      nomeRestaurante={`Restaurante #${id}`}
+      nomeRestaurante={`Restaurante #${restauranteId}`}
       onVoltar={() => window.history.back()}
     />
   );
@@ -91,8 +89,17 @@ const CardapioWrapper: React.FC = () => {
 
 const HistoricoUsuarioWrapper: React.FC = () => {
   const user = getUser();
-  if (!user?.id) return <Navigate to="/login" replace />;
-  return <HistoricoUsuario usuarioId={user.id} onVoltar={() => window.history.back()} />;
+
+  if (!user || user.tipo !== 'CLIENTE' || !user.id) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return (
+    <HistoricoUsuario
+      usuarioId={user.id}
+      onVoltar={() => window.history.back()}
+    />
+  );
 };
 
 /* =========================
@@ -101,7 +108,15 @@ const HistoricoUsuarioWrapper: React.FC = () => {
 
 const App: React.FC = () => {
   const isStandalone = useIsStandalone();
-  const user = getUser();
+
+  // 🔥 ESTADO REATIVO DO USUÁRIO
+  const [user, setUser] = useState<any>(() => getUser());
+
+  useEffect(() => {
+    const syncUser = () => setUser(getUser());
+    window.addEventListener('storage', syncUser);
+    return () => window.removeEventListener('storage', syncUser);
+  }, []);
 
   const WebNavbar = useMemo(
     () => (
@@ -121,13 +136,17 @@ const App: React.FC = () => {
 
   const PwaNavbar = useMemo(() => {
     if (!user) return null;
+
     if (user.tipo === 'CLIENTE') {
       return (
         <nav className="navbar">
-          <Link to="/historico-usuario" className="nav-link">📋 Meu Histórico</Link>
+          <Link to="/historico-usuario" className="nav-link">
+            📋 Meu Histórico
+          </Link>
         </nav>
       );
     }
+
     return null;
   }, [user]);
 

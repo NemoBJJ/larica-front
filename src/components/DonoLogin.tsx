@@ -1,16 +1,15 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
-import PainelRestaurante from './PainelRestaurante';
 import './DonoLogin.css';
 
 const DonoLogin: React.FC = () => {
+  const navigate = useNavigate();
+
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
-
-  const [restauranteId, setRestauranteId] = useState<number | null>(null);
-  const [nomeDono, setNomeDono] = useState<string>('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,14 +20,20 @@ const DonoLogin: React.FC = () => {
       const response = await api.post('/auth/donos/login', { email, senha });
       const { token, restauranteId, nome } = response.data;
 
+      // ✅ salva sessão do dono
       localStorage.setItem('token', token);
       localStorage.setItem(
         'user',
-        JSON.stringify({ tipo: 'DONO', nome, restauranteId })
+        JSON.stringify({
+          tipo: 'DONO',
+          nome,
+          restauranteId
+        })
       );
 
-      setNomeDono(nome);
-      setRestauranteId(restauranteId);
+      // ✅ REDIRECIONA PARA O PAINEL
+      navigate('/painel-restaurante', { replace: true });
+
     } catch (err: any) {
       const status = err?.response?.status;
       setErro(
@@ -41,30 +46,6 @@ const DonoLogin: React.FC = () => {
     }
   };
 
-  // 🔥 SE LOGOU → PAINEL COMPLETO DO RESTAURANTE
-  if (restauranteId) {
-    return (
-      <div>
-        <div style={{ padding: 16, display: 'flex', justifyContent: 'space-between' }}>
-          <h2>🍽️ Painel do {nomeDono}</h2>
-          <button
-            onClick={() => {
-              localStorage.removeItem('token');
-              localStorage.removeItem('user');
-              setRestauranteId(null);
-            }}
-          >
-            Sair
-          </button>
-        </div>
-
-        {/* 🔥 AQUI ESTÁ O SEGREDO */}
-        <PainelRestaurante restauranteId={restauranteId} />
-      </div>
-    );
-  }
-
-  // 🔒 TELA DE LOGIN
   return (
     <div className="loginD-container">
       <div className="loginD-card">
@@ -74,8 +55,9 @@ const DonoLogin: React.FC = () => {
 
         <form onSubmit={handleSubmit} className="loginD-form">
           <div className="form-group">
-            <label>E-mail</label>
+            <label htmlFor="email">E-mail</label>
             <input
+              id="email"
               type="email"
               required
               value={email}
@@ -84,8 +66,9 @@ const DonoLogin: React.FC = () => {
           </div>
 
           <div className="form-group">
-            <label>Senha</label>
+            <label htmlFor="senha">Senha</label>
             <input
+              id="senha"
               type="password"
               required
               value={senha}
