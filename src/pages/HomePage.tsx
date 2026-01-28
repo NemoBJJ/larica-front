@@ -1,80 +1,11 @@
-import React, { useState, useEffect } from 'react';
+// src/pages/HomePage.tsx - VERSÃO COMPLETA COM LOGO NO RODAPÉ
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import './HomePage.css';
 import laricaLogo from '../assets/larica-logo.png';
 
-// Declaração do tipo para beforeinstallprompt event
-declare global {
-  interface WindowEventMap {
-    beforeinstallprompt: BeforeInstallPromptEvent;
-  }
-}
-
-interface BeforeInstallPromptEvent extends Event {
-  readonly platforms: string[];
-  readonly userChoice: Promise<{
-    outcome: 'accepted' | 'dismissed';
-    platform: string;
-  }>;
-  prompt(): Promise<void>;
-}
-
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [showInstallButton, setShowInstallButton] = useState(false);
-  const [isIOS, setIsIOS] = useState(false);
-  const [isStandalone, setIsStandalone] = useState(false);
-
-  useEffect(() => {
-    // Verifica se o app já está instalado
-    if (window.matchMedia('(display-mode: standalone)').matches || 
-        (window.navigator as any).standalone) {
-      setIsStandalone(true);
-    }
-
-    // Detecta iOS
-    const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
-    setIsIOS(isIOSDevice);
-
-    // Event listener para instalação PWA
-    const handleBeforeInstallPrompt = (e: BeforeInstallPromptEvent) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-      setShowInstallButton(true);
-    };
-
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    };
-  }, []);
-
-  const handleInstallClick = async () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === 'accepted') {
-        setShowInstallButton(false);
-      }
-      setDeferredPrompt(null);
-    }
-  };
-
-  const handleShareClick = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: 'LARICA Food Delivery',
-        text: 'Baixe o app LARICA para pedir comida de forma rápida e fácil!',
-        url: window.location.href,
-      });
-    } else {
-      // Fallback: copiar link
-      navigator.clipboard.writeText(window.location.href);
-      alert('Link copiado! Compartilhe com seus amigos!');
-    }
-  };
 
   return (
     <div className="home-container">
@@ -87,122 +18,209 @@ const HomePage: React.FC = () => {
             className="home-logo" 
             loading="eager" 
             decoding="async" 
+            style={{
+              maxWidth: '180px',
+              filter: 'drop-shadow(0 0 10px rgba(255, 107, 53, 0.5))'
+            }}
           />
-          <h1 className="home-title">🍔 LARICA Food Delivery</h1>
-          <p className="home-subtitle">Seu delivery favorito a um clique de distância</p>
-          
-          {/* Badge de App */}
-          <div className="app-badge">
-            📱 <strong>APP NATIVO EXPERIENCE</strong>
-          </div>
+          <h1 className="home-title" style={{
+            color: '#FF6B35',
+            fontSize: '2.5rem',
+            margin: '20px 0 10px 0',
+            textShadow: '0 0 10px rgba(255, 107, 53, 0.3)'
+          }}>
+            🍔 LARICA Food Delivery
+          </h1>
+          <p className="home-subtitle" style={{
+            color: '#CCCCCC',
+            fontSize: '1.2rem',
+            marginBottom: '40px'
+          }}>
+            Seu delivery favorito a um clique de distância
+          </p>
         </div>
 
-        <div className="home-buttons">
-          {/* ... seus botões existentes ... */}
-
-          {/* BOTÃO DE INSTALAR APP */}
-          {showInstallButton && !isStandalone && (
-            <button 
-              onClick={handleInstallClick}
-              className="home-btn home-btn-install"
-              style={{
-                background: 'linear-gradient(135deg, #4CAF50, #2E7D32)',
-                color: 'white',
-                animation: 'pulse 2s infinite',
-                marginTop: '10px'
-              }}
-            >
-              ⬇️ INSTALAR APP NO CELULAR
-            </button>
-          )}
-
-          {/* INSTRUÇÕES PARA iOS */}
-          {isIOS && !isStandalone && (
-            <div className="ios-instructions">
-              <p style={{ color: '#ff8c00', fontSize: '0.9rem', margin: '10px 0' }}>
-                📱 Para instalar no iPhone/iPad:
-              </p>
-              <ol style={{ 
-                textAlign: 'left', 
-                fontSize: '0.8rem', 
-                color: '#ccc',
-                paddingLeft: '20px',
-                margin: '10px 20px'
-              }}>
-                <li>Clique no botão "Compartilhar"</li>
-                <li>Role para baixo e selecione "Adicionar à Tela de Início"</li>
-                <li>Clique em "Adicionar" no canto superior direito</li>
-              </ol>
-            </div>
-          )}
-
-          {/* BOTÃO DE COMPARTILHAR */}
+        <div className="home-buttons" style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '15px',
+          alignItems: 'center',
+          maxWidth: '400px',
+          margin: '0 auto'
+        }}>
+          {/* BOTÕES PRINCIPAIS */}
           <button 
-            onClick={handleShareClick}
-            className="home-btn home-btn-secondary"
-            style={{ marginTop: '10px' }}
+            onClick={() => navigate('/login')} 
+            className="home-btn home-btn-primary"
+            style={{
+              width: '100%',
+              padding: '16px',
+              background: 'linear-gradient(135deg, #FF6B35 0%, #FF8B35 100%)',
+              color: '#000000',
+              border: '2px solid #FF6B35',
+              borderRadius: '50px',
+              fontSize: '1.1rem',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              boxShadow: '0 5px 15px rgba(255, 107, 53, 0.4)',
+              transition: 'all 0.3s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-3px)';
+              e.currentTarget.style.boxShadow = '0 8px 25px rgba(255, 107, 53, 0.6)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 5px 15px rgba(255, 107, 53, 0.4)';
+            }}
           >
-            📤 Compartilhar App com Amigos
+            👤 ENTRAR COMO CLIENTE
+          </button>
+          
+          <button 
+            onClick={() => navigate('/login-dono')} 
+            className="home-btn home-btn-primary"
+            style={{
+              width: '100%',
+              padding: '16px',
+              background: 'transparent',
+              color: '#FF6B35',
+              border: '2px solid #FF6B35',
+              borderRadius: '50px',
+              fontSize: '1.1rem',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 107, 53, 0.1)';
+              e.currentTarget.style.transform = 'translateY(-3px)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'transparent';
+              e.currentTarget.style.transform = 'translateY(0)';
+            }}
+          >
+            🍽️ ENTRAR COMO RESTAURANTE
           </button>
 
-          {/* DIVISOR */}
-          <div className="home-divider"></div>
-
-          {/* ... resto dos botões ... */}
+          <div className="home-divider" style={{
+            width: '100%',
+            borderTop: '1px solid rgba(255, 107, 53, 0.3)',
+            margin: '25px 0',
+            position: 'relative'
+          }}>
+            <span style={{
+              position: 'absolute',
+              top: '-12px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              background: '#000000',
+              color: '#FF6B35',
+              padding: '0 15px',
+              fontSize: '0.9rem'
+            }}>
+              ou
+            </span>
+          </div>
+          
+          {/* BOTÕES SECUNDÁRIOS */}
+          <button 
+            onClick={() => navigate('/cadastro')} 
+            className="home-btn home-btn-secondary"
+            style={{
+              width: '100%',
+              padding: '14px',
+              background: 'rgba(255, 107, 53, 0.05)',
+              color: '#FF6B35',
+              border: '1px solid rgba(255, 107, 53, 0.2)',
+              borderRadius: '8px',
+              fontSize: '1rem',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 107, 53, 0.1)';
+              e.currentTarget.style.borderColor = '#FF6B35';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 107, 53, 0.05)';
+              e.currentTarget.style.borderColor = 'rgba(255, 107, 53, 0.2)';
+            }}
+          >
+            👤 Cadastrar como Cliente
+          </button>
+          
+          <button 
+            onClick={() => navigate('/cadastro-dono')} 
+            className="home-btn home-btn-secondary"
+            style={{
+              width: '100%',
+              padding: '14px',
+              background: 'rgba(255, 107, 53, 0.05)',
+              color: '#FF6B35',
+              border: '1px solid rgba(255, 107, 53, 0.2)',
+              borderRadius: '8px',
+              fontSize: '1rem',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 107, 53, 0.1)';
+              e.currentTarget.style.borderColor = '#FF6B35';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 107, 53, 0.05)';
+              e.currentTarget.style.borderColor = 'rgba(255, 107, 53, 0.2)';
+            }}
+          >
+            🏪 Cadastrar Restaurante
+          </button>
+          
+          {/* LINK PARA LANDING PAGE */}
+          <button 
+            onClick={() => navigate('/landing')}
+            style={{
+              width: '100%',
+              padding: '12px',
+              background: 'transparent',
+              color: '#FFFFFF',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '0.9rem',
+              cursor: 'pointer',
+              marginTop: '10px',
+              opacity: 0.8,
+              transition: 'all 0.3s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.opacity = '1';
+              e.currentTarget.style.color = '#FF6B35';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.opacity = '0.8';
+              e.currentTarget.style.color = '#FFFFFF';
+            }}
+          >
+            🎬 Conhecer mais sobre a plataforma →
+          </button>
         </div>
 
-        {/* RODAPÉ COM ÍCONES DE APP STORE */}
+        {/* ✅ RODAPÉ COM LOGO */}
         <div className="home-footer">
-          {/* ... conteúdo existente do footer ... */}
+          <div style={{ marginBottom: '20px' }}>
+            <img 
+              src={laricaLogo}
+              alt="LARICA Food Delivery" 
+              className="home-footer-logo"
+            />
+            <p className="home-footer-tagline">Sua fome, nossa entrega</p>
+          </div>
           
-          {/* LINKS PARA APP STORES */}
-          <div className="app-store-links">
-            <p style={{ color: '#ccc', marginBottom: '15px' }}>Disponível também em:</p>
-            <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
-              <button 
-                className="store-btn"
-                style={{
-                  background: '#000',
-                  border: '1px solid #333',
-                  padding: '10px 20px',
-                  borderRadius: '8px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  color: '#fff',
-                  cursor: 'pointer'
-                }}
-                onClick={() => window.open('https://apps.apple.com', '_blank')}
-              >
-                <span style={{ fontSize: '24px' }}>🍎</span>
-                <div style={{ textAlign: 'left' }}>
-                  <div style={{ fontSize: '0.7rem' }}>Download on the</div>
-                  <div style={{ fontWeight: 'bold' }}>App Store</div>
-                </div>
-              </button>
-              
-              <button 
-                className="store-btn"
-                style={{
-                  background: '#000',
-                  border: '1px solid #333',
-                  padding: '10px 20px',
-                  borderRadius: '8px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  color: '#fff',
-                  cursor: 'pointer'
-                }}
-                onClick={() => window.open('https://play.google.com', '_blank')}
-              >
-                <span style={{ fontSize: '24px' }}>🤖</span>
-                <div style={{ textAlign: 'left' }}>
-                  <div style={{ fontSize: '0.7rem' }}>GET IT ON</div>
-                  <div style={{ fontWeight: 'bold' }}>Google Play</div>
-                </div>
-              </button>
-            </div>
+          <div className="home-footer-info">
+            <p>© 2024 LARICA Food Delivery - Todos os direitos reservados</p>
+            <p>📱 App disponível para iOS e Android</p>
+            <p>📍 Natal - RN, Brasil</p>
           </div>
         </div>
       </div>
