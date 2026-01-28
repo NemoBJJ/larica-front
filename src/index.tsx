@@ -13,4 +13,4 @@ root.render(
 );
 
 // registra o service worker para PWA
-register(); // <-- ADICIONE ESTA LINHA
+unregister(); // <-- ADICIONE ESTA LINHA
