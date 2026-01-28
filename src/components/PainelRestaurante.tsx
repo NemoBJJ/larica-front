@@ -24,21 +24,7 @@ interface Pedido {
     id: number;
     nome: string;
     endereco: string;
-    numero: string;
-    bairro: string;
-    cidade: string;
-    cep: string;
     telefone: string;
-    latitude: number;
-    longitude: number;
-  };
-  cliente?: {
-    nome: string;
-    endereco: string;
-    numero: string;
-    bairro: string;
-    cidade: string;
-    cep: string;
   };
 }
 
@@ -70,31 +56,58 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
 
   const navigate = useNavigate();
 
+  // 🚀 CARREGA PEDIDOS USANDO ENDPOINT DO HISTÓRICO (QUE FUNCIONA)
   const carregarPedidos = async () => {
+    console.log(`🔍 Buscando pedidos para restaurante ${restauranteIdFinal}`);
+    
     try {
-      const res = await api.get(`/restaurantes/${restauranteIdFinal}/pedidos`, {
-        params: { page: 0, size: 10 },
+      // USA ENDPOINT DO HISTÓRICO QUE JÁ FUNCIONA
+      const response = await api.get(`/pedidos/restaurante/${restauranteIdFinal}`);
+      
+      console.log('✅ Dados recebidos:', response.data);
+      
+      // Converte formato do histórico para formato do painel
+      const pedidosConvertidos = (response.data || []).map((pedidoHist: any) => {
+        // Calcula total
+        const total = pedidoHist.itens.reduce((soma: number, item: any) => {
+          const preco = typeof item.precoUnitario === 'string'
+            ? parseFloat(item.precoUnitario)
+            : item.precoUnitario || 0;
+          return soma + (preco * item.quantidade);
+        }, 0);
+        
+        return {
+          id: pedidoHist.pedidoId, // ⚠️ USA pedidoId, NÃO id
+          data: pedidoHist.data.includes('T') ? pedidoHist.data : `${pedidoHist.data}T12:00:00`,
+          status: pedidoHist.status,
+          nomeCliente: 'Cliente', // Histórico não tem nome do cliente
+          telefoneCliente: '',
+          itens: pedidoHist.itens.map((item: any) => ({
+            id: item.id,
+            nomeProduto: item.nomeProduto,
+            quantidade: item.quantidade,
+            precoUnitario: typeof item.precoUnitario === 'string'
+              ? parseFloat(item.precoUnitario)
+              : item.precoUnitario
+          })),
+          total: total,
+          restaurante: {
+            id: restauranteIdFinal,
+            nome: nomeRestaurante,
+            endereco: enderecoRestaurante,
+            telefone: telefoneRestaurante
+          }
+        };
       });
-
-      const pedidosCompletos = (res.data?.content || res.data || []).map((pedido: any) => ({
-        ...pedido,
-        restaurante: {
-          id: restauranteIdFinal,
-          nome: nomeRestaurante,
-          endereco: enderecoRestaurante,
-          telefone: telefoneRestaurante
-        }
-      }));
-
-      setPedidos(pedidosCompletos);
+      
+      console.log(`🎯 ${pedidosConvertidos.length} pedidos carregados`);
+      setPedidos(pedidosConvertidos);
       setErro(null);
+      
     } catch (err: any) {
-      const status = err?.response?.status;
-      setErro(
-        status === 404
-          ? 'Restaurante não encontrado. Verifique o ID utilizado.'
-          : 'Erro ao carregar pedidos. Tente novamente.'
-      );
+      console.error('❌ Erro ao carregar pedidos:', err);
+      setErro('Erro ao carregar pedidos. Tente novamente.');
+      setPedidos([]);
     } finally {
       setCarregando(false);
     }
@@ -115,19 +128,33 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
   };
 
   useEffect(() => {
-    if (!restauranteIdFinal || Number.isNaN(restauranteIdFinal)) return;
-    carregarDadosRestaurante().then(() => {
-      carregarPedidos();
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (!restauranteIdFinal || Number.isNaN(restauranteIdFinal)) {
+      setErro('ID do restaurante inválido');
+      setCarregando(false);
+      return;
+    }
+    
+    const carregarTudo = async () => {
+      await carregarDadosRestaurante();
+      await carregarPedidos();
+    };
+    
+    carregarTudo();
   }, [restauranteIdFinal]);
 
   const atualizarStatus = async (pedidoId: number, novoStatus: string) => {
-    await api.patch(
-      `/restaurantes/${restauranteIdFinal}/pedidos/${pedidoId}/status`,
-      null,
-      { params: { status: novoStatus } }
-    );
+    try {
+      await api.patch(
+        `/restaurantes/${restauranteIdFinal}/pedidos/${pedidoId}/status`,
+        null,
+        { params: { status: novoStatus } }
+      );
+      // Recarrega pedidos após atualização
+      await carregarPedidos();
+    } catch (err) {
+      console.error('Erro ao atualizar status:', err);
+      setErro('Erro ao atualizar status do pedido');
+    }
   };
 
   const coopStorageKey = (id: number) => `coop_whats_${id}`;
@@ -177,7 +204,6 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
     alert('Número salvo com sucesso!');
   };
 
-  // ========= helpers de link da rota (BACKEND EXPLÍCITO) =========
   const API_BASE = 'https://api-larica.neemindev.com/api';
 
   const linkRota = (pedidoId: number) =>
@@ -186,13 +212,11 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
   const linkRotaHtml = (pedidoId: number) =>
     `${API_BASE}/entregador/pedido/${pedidoId}/rota-html`;
 
-  // 📞 CHAMAR MEU ENTREGADOR (contato direto)
   const chamarMeuEntregador = (pedido: Pedido) => {
     const numero = obterOuConfigurarCooperativa();
     if (!numero) return;
 
     const nomeRest = pedido.restaurante?.nome || nomeRestaurante || 'Restaurante';
-    // Se algum aparelho/webview não seguir 302, troque para linkRotaHtml(pedido.id)
     const urlRota = linkRota(pedido.id);
 
     const mensagem =
@@ -207,7 +231,6 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
     window.open(`https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`, '_blank');
   };
 
-  // 📢 POSTAR NO GRUPO (Web WhatsApp)
   const postarNoGrupoWhatsApp = (pedido: Pedido) => {
     const nomeRest = pedido.restaurante?.nome || nomeRestaurante || 'Restaurante';
     const urlRota = linkRota(pedido.id);
@@ -226,7 +249,6 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
   const handleAceitar = async (pedido: Pedido) => {
     try {
       await atualizarStatus(pedido.id, 'EM_PREPARO');
-      await carregarPedidos();
     } catch {
       setErro('Erro ao aceitar o pedido.');
     }
@@ -235,18 +257,16 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
   const handleRecusar = async (pedidoId: number) => {
     try {
       await atualizarStatus(pedidoId, 'CANCELADO');
-      await carregarPedidos();
     } catch {
-      setErro('Erro ao atualizar status do pedido.');
+      setErro('Erro ao recusar pedido.');
     }
   };
 
   const marcarEntregue = async (pedidoId: number) => {
     try {
       await atualizarStatus(pedidoId, 'ENTREGUE');
-      await carregarPedidos();
     } catch {
-      setErro('Erro ao atualizar status do pedido.');
+      setErro('Erro ao marcar como entregue.');
     }
   };
 
@@ -424,7 +444,6 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
                 <div className="pedido-info">
                   <p><strong>Data:</strong> {new Date(pedido.data).toLocaleString()}</p>
                   <p><strong>Cliente:</strong> {pedido.nomeCliente}</p>
-                  <p><strong>Telefone:</strong> {pedido.telefoneCliente}</p>
                   <p><strong>Total:</strong> R$ {pedido.total.toFixed(2)}</p>
                 </div>
 
