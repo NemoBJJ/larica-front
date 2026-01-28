@@ -1,111 +1,62 @@
-.home-container {
-  background-color: #000; /* Fundo preto */
-  min-height: 100vh;
-  display: flex;
+/* Estilo para botão de instalação */
+.home-btn-install {
+  background: linear-gradient(135deg, #4CAF50, #2E7D32) !important;
+  color: white !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.home-btn-install::after {
+  content: '✨';
+  position: absolute;
+  right: 10px;
+  animation: sparkle 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+@keyframes sparkle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Badge de App */
+.app-badge {
+  background: rgba(255, 140, 0, 0.1);
+  border: 1px solid #ff8c00;
+  border-radius: 20px;
+  padding: 8px 16px;
+  margin-top: 10px;
+  font-size: 0.9rem;
+  color: #ff8c00;
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  padding: 20px;
+  gap: 8px;
 }
 
-.home-content {
-  text-align: center;
-  max-width: 720px;
-  width: 100%;
-  padding: 40px 20px;
-  margin: 0 auto;
+/* Instruções iOS */
+.ios-instructions {
+  background: rgba(0, 0, 0, 0.3);
+  border-left: 3px solid #ff8c00;
+  padding: 15px;
+  margin: 15px 0;
+  border-radius: 0 8px 8px 0;
 }
 
-/* —— HERO —— */
-.home-hero {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 14px;
-  margin-bottom: 28px;
+/* Links de App Store */
+.app-store-links {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 140, 0, 0.2);
 }
 
-/* Logo grande com “pixelated” e glow */
-.home-logo {
-  width: min(420px, 80vw);
-  height: auto;
-  image-rendering: pixelated;
-  filter: drop-shadow(0 0 24px rgba(255, 140, 0, 0.25));
-  transition: transform .2s ease, filter .2s ease;
-}
-.home-logo:hover {
-  transform: translateY(-2px) scale(1.01);
-  filter: drop-shadow(0 0 28px rgba(255, 140, 0, 0.35));
-}
-
-.home-title {
-  font-size: 2.1rem;
-  color: #ff8c00; /* Laranja */
-  margin: 0;
-  text-shadow: 0 2px 10px rgba(255, 140, 0, 0.25);
-  letter-spacing: .5px;
-}
-
-.home-subtitle {
-  font-size: 1.05rem;
-  color: #cfcfcf; /* Cinza claro */
-  margin: 0 0 10px 0;
-  opacity: .95;
-}
-
-/* —— Botões —— */
-.home-buttons {
-  display: grid;
-  gap: 20px;
-}
-
-.home-btn {
-  padding: 16px 24px;
-  font-size: 16px;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
-  font-weight: 800;
-  transition: all 0.25s ease;
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
-}
-
-.home-btn-primary {
-  background: linear-gradient(135deg, #ff8c00, #ff6a00); /* Gradiente laranja */
-  color: #000; /* Texto preto */
-  box-shadow: 0 4px 15px rgba(255, 140, 0, 0.35);
-}
-.home-btn-primary:hover {
+.store-btn:hover {
+  background: rgba(255, 140, 0, 0.1) !important;
+  border-color: #ff8c00 !important;
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(255, 140, 0, 0.45);
-}
-
-.home-btn-secondary {
-  background: rgba(255, 140, 0, 0.12); /* Fundo laranja claro */
-  color: #ff8c00; /* Texto laranja */
-  border: 2px solid #ff8c00; /* Borda laranja */
-}
-.home-btn-secondary:hover {
-  background: rgba(255, 140, 0, 0.22);
-  transform: translateY(-2px);
-}
-
-.home-divider {
-  height: 1px;
-  background: linear-gradient(90deg, transparent, #ff8c00, transparent);
-  margin: 6px 0 2px 0;
-  opacity: 0.5;
-}
-
-/* —— Responsividade —— */
-@media (max-width: 768px) {
-  .home-content { padding: 24px 16px; }
-  .home-title { font-size: 1.8rem; }
-  .home-subtitle { font-size: .95rem; }
-  .home-btn { padding: 14px 20px; font-size: 14px; }
-}
-
-@media (max-width: 480px) {
-  .home-buttons { gap: 14px; }
-  .home-divider { margin: 16px 0; }
+  transition: all 0.3s ease;
 }
