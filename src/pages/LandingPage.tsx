@@ -1,4 +1,4 @@
-// src/pages/LandingPage.tsx - VERSÃO FINAL
+// src/pages/LandingPage.tsx - VERSÃO FINAL COM UM BOTÃO
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import './LandingPage.css';
@@ -20,8 +20,8 @@ const LandingPage: React.FC = () => {
           />
         </div>
         
-        <h1 className="landing-title">🍔 LARICA Food Delivery</h1>
-        <p className="landing-subtitle">O SEU App de Delivery Mais Completo</p>
+        <h1 className="landing-title">🍔 LARICA FOOD</h1>
+        <p className="landing-subtitle">bateu comeu</p>
         
         {/* VÍDEO DE DIVULGAÇÃO */}
         <div className="video-container">
@@ -30,53 +30,52 @@ const LandingPage: React.FC = () => {
               width="100%" 
               height="400"
               src="https://www.youtube.com/embed/SEU_VIDEO_AQUI" 
-              title="Demonstração LARICA - Sistema de Delivery" 
+              title="Food Delivery" 
               frameBorder="0" 
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
               allowFullScreen
             />
-            <p className="video-caption">🎬 Assista à demonstração do sistema</p>
+            <p className="video-caption"></p>
           </div>
         </div>
         
-        {/* CALL TO ACTION - BOTÕES PARA CLIENTE E DONO */}
+        {/* APENAS UM BOTÃO QUE LEVA PARA A HOME PAGE PRINCIPAL */}
         <div className="landing-cta">
-          {/* BOTÃO PRINCIPAL PARA DONO */}
           <button 
-            onClick={() => navigate('/cadastro-dono')}
+            onClick={() => window.location.href = 'https://larica.neemindev.com/'}
             className="btn-landing btn-primary"
-          >
-            🍽️ INSTALE AGORA E CONCORRA A R$ 1.000,00
-          </button>
-          
-          {/* BOTÃO PARA CLIENTE */}
-          <button 
-            onClick={() => navigate('/cadastro')}
-            className="btn-landing btn-secondary"
             style={{
-              backgroundColor: 'transparent',
-              color: '#FF6B35',
-              border: '2px solid #FF6B35',
-              marginTop: '15px'
+              background: 'linear-gradient(135deg, #FF6B35 0%, #FF8B35 100%)',
+              color: '#000',
+              border: 'none',
+              padding: '22px 40px',
+              fontSize: '1.4rem',
+              fontWeight: 'bold',
+              borderRadius: '15px',
+              cursor: 'pointer',
+              transition: 'all 0.3s',
+              boxShadow: '0 10px 30px rgba(255, 107, 53, 0.5)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '15px',
+              margin: '0 auto',
+              maxWidth: '500px',
+              width: '100%'
             }}
           >
-            👤 SOU CLIENTE - CADASTRE-SE GRATUITAMENTE
+            🚀 ACESSAR LARICA FOOD
           </button>
           
-          {/* BOTÃO DE VOLTAR */}
-          <button 
-            onClick={() => navigate('/')}
-            className="btn-landing btn-tertiary"
-            style={{
-              backgroundColor: 'rgba(255, 107, 53, 0.1)',
-              color: '#FFFFFF',
-              border: '1px solid rgba(255, 107, 53, 0.3)',
-              marginTop: '15px',
-              fontSize: '0.9rem'
-            }}
-          >
-            ← Voltar para Home Simples
-          </button>
+          <p className="cta-note" style={{
+            textAlign: 'center',
+            marginTop: '20px',
+            color: '#FF6B35',
+            fontSize: '1.1rem'
+          }}>
+            📱  celular: <br />
+            💻  WEB
+          </p>
         </div>
       </div>
 
@@ -85,7 +84,7 @@ const LandingPage: React.FC = () => {
         <div className="offer-badge">🔥 PROMOÇÃO DE LANÇAMENTO</div>
         <h2>✨ 30 DIAS GRÁTIS PARA O SEU DELIVERY</h2>
         <p className="offer-description">
-          Cadastre seu restaurante agora e ganhe 30 dias gratuitos + chance de ganhar R$ 1.000,00 em dinheiro!
+          Cadastre-se AGORA, TENHA 30 dias gratuitos e Concorra a R$ 1.000,00 em dinheiro!
         </p>
       </div>
 
@@ -95,7 +94,7 @@ const LandingPage: React.FC = () => {
           <div className="feature-card">
             <div className="feature-icon">📱</div>
             <h3>App para Clientes</h3>
-            <p>Indique um amigo restaurante e concorra a R$ 1.000,00</p>
+            <p>Indique um amigo e concorra a R$ 1.000,00</p>
           </div>
           
           <div className="feature-card">
@@ -114,7 +113,7 @@ const LandingPage: React.FC = () => {
             <div className="feature-icon">🚚</div>
             <h3>Rota para Entregador</h3>
             <p>Link do mapa restaurante/cliente pronto para WhatsApp</p>
-            <small>*Durante a promoção: use seu próprio entregador</small>
+            <small>*Durante o Lançamento, Apenas Restaurantes com entregadores</small>
           </div>
           
           <div className="feature-card">
@@ -138,7 +137,7 @@ const LandingPage: React.FC = () => {
           <div className="benefits-list">
             <div className="benefit-item">
               <span className="check-icon">✅</span>
-              <span>30 dias de cardápio gratuito + marketing por nossa conta</span>
+              <span>30 dias de cardápio gratuito + marketing por nossa conta, depois APENAS 3% POR PEDIDO</span>
             </div>
             <div className="benefit-item">
               <span className="check-icon">✅</span>
@@ -168,10 +167,29 @@ const LandingPage: React.FC = () => {
           
           <div className="cta-container">
             <button 
-              onClick={() => navigate('/cadastro-dono')}
+              onClick={() => window.location.href = 'https://larica.neemindev.com/'}
               className="btn-landing btn-cta"
+              style={{
+                background: 'linear-gradient(135deg, #FF6B35 0%, #FF8B35 100%)',
+                color: '#000',
+                border: 'none',
+                padding: '20px 35px',
+                fontSize: '1.3rem',
+                fontWeight: 'bold',
+                borderRadius: '12px',
+                cursor: 'pointer',
+                transition: 'all 0.3s',
+                boxShadow: '0 8px 25px rgba(255, 107, 53, 0.5)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '12px',
+                margin: '0 auto',
+                maxWidth: '400px',
+                width: '100%'
+              }}
             >
-              🚀 QUERO ME CADASTRAR GRATUITAMENTE
+              🚀 ACESSAR LARICA FOOD
             </button>
             <p className="cta-note">Aproveite a promoção de lançamento!</p>
           </div>
@@ -190,21 +208,28 @@ const LandingPage: React.FC = () => {
         </div>
         
         <div className="footer-info">
-          <p>© 2024 LARICA Food Delivery - Todos os direitos reservados</p>
+          <p>© 2024 LARICA Food Delivery - Todos os direitos reservados a NEMO SYSTEMS LTDA</p>
           <p>📱 App disponível para iOS e Android</p>
-          <p>📧 Contato: contato@larica.com | 📞 (84) 99999-9999</p>
+          <p>📧 Contato: contato@larica.com | 📞 (91) 998744-6061</p>
           <p>📍 Natal - RN, Brasil</p>
         </div>
         
         <div className="footer-actions">
-          <button onClick={() => navigate('/cadastro')} className="footer-btn">
-            👤 Sou Cliente - Cadastrar
-          </button>
-          <button onClick={() => navigate('/cadastro-dono')} className="footer-btn">
-            🍽️ Sou Restaurante - Cadastrar
-          </button>
-          <button onClick={() => navigate('/')} className="footer-btn">
-            🏠 Página Inicial
+          <button 
+            onClick={() => window.location.href = 'https://larica.neemindev.com/'}
+            className="footer-btn"
+            style={{
+              background: 'rgba(255, 107, 53, 0.1)',
+              color: '#FF6B35',
+              border: '2px solid #FF6B35',
+              padding: '15px 25px',
+              borderRadius: '10px',
+              cursor: 'pointer',
+              transition: 'all 0.3s',
+              fontWeight: 'bold'
+            }}
+          >
+            🚀 ACESSAR LARICA FOOD
           </button>
         </div>
         
