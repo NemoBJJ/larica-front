@@ -24,7 +24,7 @@
   margin-bottom: 28px;
 }
 
-/* Logo grande com "pixelated" e glow */
+/* Logo grande com “pixelated” e glow */
 .home-logo {
   width: min(420px, 80vw);
   height: auto;
@@ -52,21 +52,6 @@
   opacity: .95;
 }
 
-/* Badge de App */
-.app-badge {
-  background: rgba(255, 140, 0, 0.1);
-  border: 1px solid #ff8c00;
-  border-radius: 20px;
-  padding: 8px 16px;
-  margin-top: 10px;
-  font-size: 0.9rem;
-  color: #ff8c00;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  white-space: nowrap;
-}
-
 /* —— Botões —— */
 .home-buttons {
   display: grid;
@@ -83,7 +68,6 @@
   transition: all 0.25s ease;
   text-transform: uppercase;
   letter-spacing: 0.6px;
-  width: 100%;
 }
 
 .home-btn-primary {
@@ -106,18 +90,6 @@
   transform: translateY(-2px);
 }
 
-.home-btn-install {
-  background: linear-gradient(135deg, #4CAF50, #2E7D32) !important;
-  color: white !important;
-  position: relative;
-  overflow: hidden;
-}
-
-.home-btn-install:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.45);
-}
-
 .home-divider {
   height: 1px;
   background: linear-gradient(90deg, transparent, #ff8c00, transparent);
@@ -125,176 +97,15 @@
   opacity: 0.5;
 }
 
-/* Instruções iOS */
-.ios-instructions {
-  background: rgba(0, 0, 0, 0.3);
-  border-left: 3px solid #ff8c00;
-  padding: 15px;
-  margin: 15px 0;
-  border-radius: 0 8px 8px 0;
-  text-align: left;
-}
-
-.ios-instructions p {
-  color: #ff8c00;
-  font-size: 0.9rem;
-  margin: 10px 0 5px 0;
-}
-
-.ios-instructions ol {
-  font-size: 0.8rem;
-  color: #ccc;
-  padding-left: 20px;
-  margin: 0;
-  line-height: 1.4;
-}
-
-/* Links de App Store */
-.app-store-links {
-  margin-top: 30px;
-  padding-top: 20px;
-  border-top: 1px solid rgba(255, 140, 0, 0.2);
-}
-
-.store-buttons-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 15px;
-  justify-content: center;
-  margin-top: 15px;
-}
-
-.store-btn {
-  background: #000;
-  border: 1px solid #333;
-  padding: 10px 15px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: #fff;
-  cursor: pointer;
-  min-width: 140px;
-  transition: all 0.3s ease;
-  flex: 1;
-  max-width: 200px;
-}
-
-.store-btn:hover {
-  background: rgba(255, 140, 0, 0.1);
-  border-color: #ff8c00;
-  transform: translateY(-2px);
-}
-
-.store-btn-content {
-  text-align: left;
-  flex-grow: 1;
-}
-
-.store-btn .store-label {
-  font-size: 0.7rem;
-  opacity: 0.8;
-}
-
-.store-btn .store-name {
-  font-weight: bold;
-  font-size: 0.9rem;
-}
-
 /* —— Responsividade —— */
 @media (max-width: 768px) {
-  .home-content { 
-    padding: 24px 16px; 
-  }
-  
-  .home-title { 
-    font-size: 1.8rem; 
-  }
-  
-  .home-subtitle { 
-    font-size: .95rem; 
-  }
-  
-  .home-btn { 
-    padding: 14px 20px; 
-    font-size: 14px; 
-  }
-  
-  .app-badge {
-    font-size: 0.8rem;
-    padding: 6px 12px;
-  }
-  
-  .store-buttons-container {
-    flex-direction: column;
-    align-items: center;
-  }
-  
-  .store-btn {
-    width: 100%;
-    max-width: 250px;
-    justify-content: center;
-  }
+  .home-content { padding: 24px 16px; }
+  .home-title { font-size: 1.8rem; }
+  .home-subtitle { font-size: .95rem; }
+  .home-btn { padding: 14px 20px; font-size: 14px; }
 }
 
 @media (max-width: 480px) {
-  .home-buttons { 
-    gap: 14px; 
-  }
-  
-  .home-divider { 
-    margin: 16px 0; 
-  }
-  
-  .home-title {
-    font-size: 1.6rem;
-  }
-  
-  .home-subtitle {
-    font-size: 0.85rem;
-  }
-  
-  .home-btn {
-    padding: 12px 16px;
-    font-size: 13px;
-  }
-  
-  .ios-instructions {
-    padding: 12px;
-    font-size: 0.75rem;
-  }
-  
-  .app-store-links p {
-    font-size: 0.85rem;
-  }
-}
-
-/* Animações */
-@keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
-}
-
-.pulse-animation {
-  animation: pulse 2s infinite;
-}
-
-/* Para telas muito pequenas (mobile antigo) */
-@media (max-width: 320px) {
-  .home-container {
-    padding: 10px;
-  }
-  
-  .home-content {
-    padding: 20px 10px;
-  }
-  
-  .home-logo {
-    width: 90vw;
-  }
-  
-  .store-btn {
-    padding: 8px 12px;
-  }
+  .home-buttons { gap: 14px; }
+  .home-divider { margin: 16px 0; }
 }
