@@ -21,7 +21,7 @@ const LandingPage: React.FC = () => {
         </div>
         
         <h1 className="landing-title">🍔 LARICA FOOD</h1>
-        <p className="landing-subtitle">bateu comeu</p>
+        <p className="landing-subtitle"> Bateu comeu</p>
         
         {/* VÍDEO DE DIVULGAÇÃO */}
         <div className="video-container">
@@ -189,9 +189,9 @@ const LandingPage: React.FC = () => {
                 width: '100%'
               }}
             >
-              🚀 ACESSAR LARICA FOOD
+              🚀 INSTALAR AGORA 
             </button>
-            <p className="cta-note">Aproveite a promoção de lançamento!</p>
+            <p className="cta-note">Aproveite 30 dias grátis , Depois 3% por pedido!</p>
           </div>
         </div>
       </div>
@@ -204,7 +204,7 @@ const LandingPage: React.FC = () => {
             alt="LARICA Food Delivery" 
             className="footer-logo"
           />
-          <p className="footer-tagline">Sua fome, nossa entrega</p>
+          <p className="footer-tagline">A Larica é sua, O Rango é nosso</p>
         </div>
         
         <div className="footer-info">
@@ -229,7 +229,7 @@ const LandingPage: React.FC = () => {
               fontWeight: 'bold'
             }}
           >
-            🚀 ACESSAR LARICA FOOD
+            🚀 INSTALAR AGORA !
           </button>
         </div>
         
