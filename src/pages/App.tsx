@@ -1,4 +1,4 @@
-// src/pages/App.tsx
+// src/pages/App.tsx - ATUALIZADO COM LANDING PAGE
 import React, { useEffect, useMemo, useState } from 'react';
 import { 
   BrowserRouter as Router, 
@@ -10,6 +10,7 @@ import {
 } from 'react-router-dom';
 import api from '../services/api';
 import HomePage from './HomePage';
+import LandingPage from './LandingPage'; // ✅ NOVA IMPORT
 import ListaRestaurantes from '../components/ListaRestaurantes';
 import CadastroUsuario from '../components/CadastroUsuario';
 import CadastroDono from '../components/CadastroDono';
@@ -114,6 +115,7 @@ const App: React.FC = () => {
     () => (
       <nav className="navbar">
         <Link to="/" className="nav-link">🏠 Home</Link>
+        <Link to="/landing" className="nav-link">🎬 Landing Page</Link> {/* ✅ NOVO LINK */}
         <Link to="/login" className="nav-link">🔓 Login Cliente</Link>
         <Link to="/login-dono" className="nav-link">🍽️ Login Restaurante</Link>
         <Link to="/cadastro" className="nav-link">👤 Cadastro Cliente</Link>
@@ -203,6 +205,9 @@ const App: React.FC = () => {
       <Routes>
         {/* Página Inicial */}
         <Route path="/" element={<HomePage />} />
+        
+        {/* Landing Page com Vídeo */}
+        <Route path="/landing" element={<LandingPage />} /> {/* ✅ NOVA ROTA */}
         
         {/* Cliente */}
         <Route path="/login" element={<UsuarioLogin />} />
