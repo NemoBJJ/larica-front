@@ -1,4 +1,4 @@
-/* src/pages/HomePage.css - SEM TEXTO FANTASMA */
+/* src/pages/HomePage.css - COM BOTÃO INSTALAR */
 * {
   margin: 0;
   padding: 0;
@@ -12,6 +12,8 @@
   --cinza-escuro: #111111;
   --cinza: #CCCCCC;
   --branco: #FFFFFF;
+  --verde-install: #10b981;
+  --verde-install-escuro: #059669;
 }
 
 .home {
@@ -97,6 +99,44 @@
   box-shadow: 0 10px 25px rgba(255, 107, 53, 0.4);
 }
 
+/* BOTÃO INSTALAR APP - VERDE */
+.btn.install-btn {
+  background: linear-gradient(135deg, var(--verde-install) 0%, var(--verde-install-escuro) 100%);
+  color: var(--preto);
+  box-shadow: 0 8px 30px rgba(16, 185, 129, 0.5);
+  animation: pulse-green 2s infinite;
+}
+
+.btn.install-btn:hover {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 15px 40px rgba(16, 185, 129, 0.8);
+  background: linear-gradient(135deg, var(--verde-install-escuro) 0%, #047857 100%);
+}
+
+/* INSTRUÇÕES iOS */
+.ios-instructions {
+  background: rgba(255, 107, 53, 0.1);
+  border-radius: 12px;
+  padding: 15px;
+  margin-top: 10px;
+  border: 1px solid rgba(255, 107, 53, 0.3);
+  max-width: 450px;
+  width: 100%;
+  text-align: center;
+  animation: fadeIn 0.5s ease-out;
+}
+
+.ios-instructions p {
+  color: var(--laranja-principal);
+  font-size: 0.95rem;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.ios-instructions strong {
+  color: var(--branco);
+}
+
 /* ANIMAÇÃO DA LOGO */
 @keyframes pulse {
   0%, 100% {
@@ -104,6 +144,16 @@
   }
   50% {
     filter: drop-shadow(0 0 25px rgba(255, 107, 53, 0.9));
+  }
+}
+
+/* ANIMAÇÃO BOTÃO INSTALAR */
+@keyframes pulse-green {
+  0%, 100% {
+    box-shadow: 0 8px 30px rgba(16, 185, 129, 0.5);
+  }
+  50% {
+    box-shadow: 0 8px 35px rgba(16, 185, 129, 0.8);
   }
 }
 
@@ -125,6 +175,11 @@
     max-width: 500px;
     padding: 25px 35px;
   }
+  
+  .ios-instructions {
+    max-width: 500px;
+    padding: 18px;
+  }
 }
 
 /* TABLET */
@@ -140,6 +195,15 @@
   
   .btn {
     padding: 20px 25px;
+  }
+  
+  .ios-instructions {
+    max-width: 450px;
+    padding: 14px;
+  }
+  
+  .ios-instructions p {
+    font-size: 0.9rem;
   }
 }
 
@@ -167,6 +231,20 @@
     padding: 20px 15px;
     font-size: 1.1rem;
   }
+  
+  .btn.install-btn {
+    margin-top: 5px;
+  }
+  
+  .ios-instructions {
+    max-width: 350px;
+    padding: 12px;
+    margin-top: 5px;
+  }
+  
+  .ios-instructions p {
+    font-size: 0.85rem;
+  }
 }
 
 /* CELULAR PEQUENO */
@@ -188,6 +266,16 @@
   .btn {
     padding: 18px 12px;
     font-size: 1rem;
+  }
+  
+  .ios-instructions {
+    max-width: 100%;
+    padding: 10px;
+    margin-top: 0;
+  }
+  
+  .ios-instructions p {
+    font-size: 0.8rem;
   }
 }
 
