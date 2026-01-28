@@ -1,103 +1,57 @@
-/* src/pages/HomePage.css - TEMA PRETO/LARANJA */
-.home-container {
+/* src/pages/HomePage.css */
+
+.home {
   min-height: 100vh;
-  background: #000000; /* FUNDO PRETO */
-  color: #FF6B35; /* COR PRINCIPAL LARANJA */
+  background: #000;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
+  gap: 25px;
   padding: 20px;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
-.home-content {
-  text-align: center;
-  max-width: 500px;
-  width: 100%;
-  padding: 40px 20px;
-  background: rgba(255, 107, 53, 0.03);
-  border-radius: 20px;
-  border: 1px solid rgba(255, 107, 53, 0.1);
-  box-shadow: 0 10px 40px rgba(255, 107, 53, 0.1);
-}
-
-.home-hero {
-  margin-bottom: 40px;
 }
 
 .home-logo {
-  max-width: 200px;
-  height: auto;
+  width: 220px;
   margin-bottom: 20px;
-  filter: drop-shadow(0 0 15px rgba(255, 107, 53, 0.5));
+  filter: drop-shadow(0 0 18px rgba(255, 107, 53, 0.6));
 }
 
-.home-title {
-  font-size: 2.8rem;
-  margin: 20px 0 10px 0;
-  color: #FF6B35;
-  text-shadow: 0 0 15px rgba(255, 107, 53, 0.4);
-  animation: glow 3s infinite;
+.home-actions {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
 }
 
-.home-subtitle {
-  font-size: 1.3rem;
-  color: #CCCCCC;
-  opacity: 0.9;
-  margin-bottom: 40px;
-  line-height: 1.5;
+.btn {
+  width: 100%;
+  padding: 16px;
+  border-radius: 50px;
+  font-size: 1.05rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-/* RESPONSIVO */
-@media (max-width: 768px) {
-  .home-container {
-    padding: 10px;
-  }
-  
-  .home-content {
-    padding: 30px 15px;
-  }
-  
-  .home-logo {
-    max-width: 150px;
-  }
-  
-  .home-title {
-    font-size: 2.2rem;
-  }
-  
-  .home-subtitle {
-    font-size: 1.1rem;
-  }
+.btn.primary {
+  background: linear-gradient(135deg, #ff6b35, #ff8b35);
+  border: none;
+  color: #000;
+  box-shadow: 0 5px 20px rgba(255, 107, 53, 0.5);
 }
 
-/* ANIMAÇÃO DE GLOW */
-@keyframes glow {
-  0%, 100% {
-    text-shadow: 0 0 5px rgba(255, 107, 53, 0.5),
-                 0 0 10px rgba(255, 107, 53, 0.3);
-  }
-  50% {
-    text-shadow: 0 0 15px rgba(255, 107, 53, 0.8),
-                 0 0 20px rgba(255, 107, 53, 0.4),
-                 0 0 25px rgba(255, 107, 53, 0.2);
-  }
+.btn.primary:hover {
+  transform: translateY(-2px);
 }
 
-/* SCROLLBAR PERSONALIZADA */
-::-webkit-scrollbar {
-  width: 8px;
+.btn.secondary {
+  background: transparent;
+  border: 1px solid #ff6b35;
+  color: #ff6b35;
 }
 
-::-webkit-scrollbar-track {
-  background: #111111;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #FF6B35;
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #FF8B35;
+.btn.secondary:hover {
+  background: rgba(255, 107, 53, 0.1);
 }
