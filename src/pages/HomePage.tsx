@@ -13,8 +13,7 @@ const HomePage: React.FC = () => {
         <div className="home-hero">
           <img src={laricaLogo} alt="Larica Food" className="home-logo" />
           <h1 className="home-title">Larica Food</h1>
-          <p className="home-subtitle">
-            O melhor delivery de comida da região
+          <p className="home-subtitle">       
           </p>
         </div>
 
