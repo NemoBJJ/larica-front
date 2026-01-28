@@ -1,37 +1,55 @@
-/* E:\larica-frontend\src\pages\LandingPage.css */
+/* E:\larica-frontend\src\pages\LandingPage.css - TEMA PRETO/LARANJA */
 .landing-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: #000000; /* FUNDO PRETO */
+  color: #FF6B35; /* COR PRINCIPAL LARANJA */
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-image: radial-gradient(circle at 20% 80%, rgba(255, 107, 53, 0.1) 0%, transparent 20%),
+                    radial-gradient(circle at 80% 20%, rgba(255, 107, 53, 0.1) 0%, transparent 20%);
 }
 
 .landing-hero {
   text-align: center;
-  padding: 60px 20px;
+  padding: 40px 20px;
   max-width: 1200px;
   margin: 0 auto;
+  border-bottom: 2px solid #FF6B35;
+}
+
+.landing-logo-container {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.landing-logo {
+  max-width: 180px;
+  height: auto;
+  filter: drop-shadow(0 0 10px rgba(255, 107, 53, 0.5));
 }
 
 .landing-title {
-  font-size: 3.5rem;
-  margin-bottom: 20px;
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+  font-size: 3rem;
+  margin-bottom: 10px;
+  color: #FF6B35;
+  text-shadow: 0 0 10px rgba(255, 107, 53, 0.5);
+  letter-spacing: 1px;
 }
 
 .landing-subtitle {
   font-size: 1.5rem;
-  margin-bottom: 40px;
+  margin-bottom: 30px;
+  color: #FFFFFF; /* BRANCO PARA CONTRASTE */
   opacity: 0.9;
 }
 
 .video-container {
-  margin: 40px auto;
+  margin: 30px auto;
   max-width: 800px;
-  background: rgba(0,0,0,0.3);
-  padding: 20px;
-  border-radius: 15px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  background: rgba(255, 107, 53, 0.1);
+  padding: 15px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 107, 53, 0.3);
+  box-shadow: 0 5px 20px rgba(255, 107, 53, 0.2);
 }
 
 .video-wrapper {
@@ -47,17 +65,19 @@
   left: 0;
   width: 100%;
   height: 100%;
-  border-radius: 10px;
+  border-radius: 8px;
+  border: 1px solid #FF6B35;
 }
 
 .video-caption {
-  margin-top: 15px;
-  font-size: 1.1rem;
+  margin-top: 10px;
+  font-size: 1rem;
+  color: #FFFFFF;
   opacity: 0.8;
 }
 
 .landing-cta {
-  margin-top: 40px;
+  margin-top: 30px;
   display: flex;
   flex-direction: column;
   gap: 15px;
@@ -65,183 +85,417 @@
 }
 
 .btn-landing {
-  padding: 18px 40px;
-  font-size: 1.2rem;
+  padding: 16px 35px;
+  font-size: 1.1rem;
   border: none;
   border-radius: 50px;
   cursor: pointer;
   transition: all 0.3s ease;
   font-weight: bold;
   min-width: 300px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .btn-primary {
-  background: #FF6B35;
-  color: white;
+  background: linear-gradient(135deg, #FF6B35 0%, #FF8B35 100%);
+  color: #000000; /* TEXTO PRETO PARA CONTRASTE */
   box-shadow: 0 5px 15px rgba(255, 107, 53, 0.4);
+  border: 2px solid #FF6B35;
 }
 
 .btn-primary:hover {
-  background: #FF8B35;
+  background: linear-gradient(135deg, #FF8B35 0%, #FFA535 100%);
   transform: translateY(-3px);
-  box-shadow: 0 8px 20px rgba(255, 107, 53, 0.6);
+  box-shadow: 0 8px 25px rgba(255, 107, 53, 0.6);
+  color: #000000;
 }
 
 .btn-secondary {
-  background: rgba(255,255,255,0.2);
-  color: white;
-  border: 2px solid white;
+  background: transparent;
+  color: #FF6B35;
+  border: 2px solid #FF6B35;
 }
 
 .btn-secondary:hover {
-  background: rgba(255,255,255,0.3);
+  background: rgba(255, 107, 53, 0.1);
 }
 
 .btn-cta {
-  background: #00C851;
-  color: white;
-  font-size: 1.3rem;
-  padding: 20px 50px;
+  background: linear-gradient(135deg, #FF6B35 0%, #E5562B 100%);
+  color: #000000;
+  font-size: 1.2rem;
+  padding: 18px 45px;
+  border: 2px solid #FF6B35;
+  box-shadow: 0 0 20px rgba(255, 107, 53, 0.5);
 }
 
 .btn-cta:hover {
-  background: #00E85E;
+  background: linear-gradient(135deg, #FF8B35 0%, #FF6B35 100%);
   transform: scale(1.05);
+  box-shadow: 0 0 30px rgba(255, 107, 53, 0.7);
 }
 
+/* OFERTA ESPECIAL */
+.offer-section {
+  text-align: center;
+  padding: 40px 20px;
+  background: linear-gradient(135deg, rgba(255, 107, 53, 0.1) 0%, rgba(255, 107, 53, 0.05) 100%);
+  color: #FF6B35;
+  margin: 30px auto;
+  max-width: 1000px;
+  border-radius: 15px;
+  border: 1px solid rgba(255, 107, 53, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.offer-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, #FF6B35, transparent);
+}
+
+.offer-badge {
+  display: inline-block;
+  background: #FF6B35;
+  color: #000000;
+  padding: 8px 20px;
+  border-radius: 20px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  text-transform: uppercase;
+  font-size: 0.9rem;
+  letter-spacing: 1px;
+  animation: neonPulse 2s infinite;
+}
+
+.offer-section h2 {
+  font-size: 2.2rem;
+  margin-bottom: 15px;
+  color: #FF6B35;
+  text-shadow: 0 0 10px rgba(255, 107, 53, 0.3);
+}
+
+.offer-description {
+  font-size: 1.2rem;
+  max-width: 800px;
+  margin: 15px auto;
+  line-height: 1.6;
+  color: #FFFFFF;
+  opacity: 0.9;
+}
+
+/* FEATURES SECTION */
 .features-section {
-  background: white;
-  color: #333;
-  padding: 80px 20px;
+  background: #111111; /* FUNDO UM POUCO MAIS CLARO */
+  padding: 60px 20px;
+  border-top: 1px solid rgba(255, 107, 53, 0.2);
+  border-bottom: 1px solid rgba(255, 107, 53, 0.2);
 }
 
 .features-section h2 {
   text-align: center;
-  font-size: 2.5rem;
-  margin-bottom: 50px;
-  color: #333;
+  font-size: 2.2rem;
+  margin-bottom: 40px;
+  color: #FF6B35;
 }
 
 .features-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 30px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 25px;
   max-width: 1200px;
   margin: 0 auto;
 }
 
 .feature-card {
-  background: #f8f9fa;
-  padding: 30px;
-  border-radius: 15px;
+  background: rgba(255, 107, 53, 0.05);
+  padding: 25px;
+  border-radius: 12px;
   text-align: center;
-  transition: transform 0.3s ease;
-  border: 1px solid #e9ecef;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 107, 53, 0.1);
+  backdrop-filter: blur(10px);
 }
 
 .feature-card:hover {
-  transform: translateY(-10px);
-  box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+  transform: translateY(-8px);
+  border-color: rgba(255, 107, 53, 0.3);
+  background: rgba(255, 107, 53, 0.1);
+  box-shadow: 0 10px 25px rgba(255, 107, 53, 0.2);
 }
 
 .feature-icon {
-  font-size: 3rem;
-  margin-bottom: 20px;
+  font-size: 2.5rem;
+  margin-bottom: 15px;
+  text-shadow: 0 0 10px rgba(255, 107, 53, 0.5);
 }
 
 .feature-card h3 {
-  color: #333;
-  margin-bottom: 15px;
-  font-size: 1.5rem;
+  color: #FF6B35;
+  margin-bottom: 12px;
+  font-size: 1.4rem;
 }
 
 .feature-card p {
-  color: #666;
-  line-height: 1.6;
+  color: #CCCCCC; /* CINZA CLARO PARA LEGIBILIDADE */
+  line-height: 1.5;
+  font-size: 0.95rem;
 }
 
+.feature-card small {
+  color: #FFA500; /* LARANJA MAIS CLARO */
+  font-size: 0.8rem;
+  display: block;
+  margin-top: 8px;
+}
+
+/* PARA RESTAURANTES */
 .for-restaurants {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  padding: 80px 20px;
+  background: linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(20,20,20,0.9) 100%);
+  padding: 60px 20px;
   text-align: center;
+  position: relative;
 }
 
 .for-restaurants h2 {
-  font-size: 2.5rem;
-  margin-bottom: 40px;
+  font-size: 2.2rem;
+  margin-bottom: 30px;
+  color: #FF6B35;
+  text-shadow: 0 0 10px rgba(255, 107, 53, 0.3);
 }
 
 .restaurant-benefits {
-  max-width: 800px;
+  max-width: 900px;
   margin: 0 auto;
 }
 
-.restaurant-benefits ul {
-  list-style: none;
-  text-align: left;
-  margin-bottom: 40px;
-  background: rgba(255,255,255,0.1);
+.benefits-list {
+  background: rgba(255, 107, 53, 0.05);
   padding: 30px;
   border-radius: 15px;
+  margin-bottom: 30px;
+  border: 1px solid rgba(255, 107, 53, 0.1);
+  text-align: left;
 }
 
-.restaurant-benefits li {
-  font-size: 1.2rem;
+.benefit-item {
+  display: flex;
+  align-items: flex-start;
   margin-bottom: 15px;
-  padding-left: 10px;
+  font-size: 1.1rem;
+  color: #FFFFFF;
+  padding: 10px;
+  border-bottom: 1px solid rgba(255, 107, 53, 0.1);
 }
 
-.landing-footer {
-  background: #222;
-  color: white;
-  padding: 40px 20px;
+.benefit-item:last-child {
+  border-bottom: none;
+}
+
+.check-icon {
+  font-size: 1.3rem;
+  margin-right: 15px;
+  flex-shrink: 0;
+  color: #FF6B35;
+}
+
+.cta-container {
   text-align: center;
 }
 
-.footer-links {
-  margin-top: 20px;
+.cta-note {
+  margin-top: 15px;
+  color: #FFA500;
+  font-style: italic;
+  font-size: 0.9rem;
+}
+
+/* FOOTER */
+.landing-footer {
+  background: #000000;
+  padding: 40px 20px;
+  text-align: center;
+  border-top: 2px solid #FF6B35;
+}
+
+.footer-logo-container {
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+.footer-logo {
+  max-width: 120px;
+  height: auto;
+  opacity: 0.9;
+  filter: drop-shadow(0 0 8px rgba(255, 107, 53, 0.5));
+}
+
+.footer-tagline {
+  font-size: 1.1rem;
+  margin-top: 8px;
+  color: #FF6B35;
+  font-style: italic;
+}
+
+.footer-info {
+  text-align: center;
+  margin-bottom: 30px;
+  line-height: 1.8;
+}
+
+.footer-info p {
+  margin: 8px 0;
+  color: #CCCCCC;
+}
+
+.footer-info p:first-child {
+  color: #FF6B35;
+  font-weight: bold;
+}
+
+.footer-actions {
   display: flex;
   justify-content: center;
-  gap: 20px;
+  gap: 15px;
   flex-wrap: wrap;
+  margin-bottom: 30px;
 }
 
-.footer-links button {
-  background: transparent;
-  color: white;
-  border: 1px solid white;
+.footer-btn {
+  background: rgba(255, 107, 53, 0.1);
+  color: #FF6B35;
+  border: 1px solid rgba(255, 107, 53, 0.3);
   padding: 10px 20px;
-  border-radius: 5px;
+  border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
+  font-size: 0.9rem;
 }
 
-.footer-links button:hover {
-  background: white;
-  color: #222;
+.footer-btn:hover {
+  background: rgba(255, 107, 53, 0.2);
+  border-color: #FF6B35;
 }
 
-/* Responsivo */
+.footer-legal {
+  text-align: center;
+  border-top: 1px solid rgba(255, 107, 53, 0.1);
+  padding-top: 20px;
+  margin-top: 20px;
+}
+
+.footer-legal p {
+  color: #888888;
+  font-size: 0.9rem;
+  margin: 5px 0;
+}
+
+.disclaimer {
+  font-size: 0.8rem;
+  color: #FFA500;
+  margin-top: 10px;
+  font-style: italic;
+}
+
+/* ANIMAÇÕES */
+@keyframes neonPulse {
+  0% {
+    box-shadow: 0 0 5px rgba(255, 107, 53, 0.5),
+                0 0 10px rgba(255, 107, 53, 0.3),
+                0 0 15px rgba(255, 107, 53, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 10px rgba(255, 107, 53, 0.8),
+                0 0 20px rgba(255, 107, 53, 0.5),
+                0 0 30px rgba(255, 107, 53, 0.2);
+  }
+  100% {
+    box-shadow: 0 0 5px rgba(255, 107, 53, 0.5),
+                0 0 10px rgba(255, 107, 53, 0.3),
+                0 0 15px rgba(255, 107, 53, 0.1);
+  }
+}
+
+@keyframes glow {
+  0%, 100% {
+    text-shadow: 0 0 5px rgba(255, 107, 53, 0.5);
+  }
+  50% {
+    text-shadow: 0 0 15px rgba(255, 107, 53, 0.8),
+                 0 0 20px rgba(255, 107, 53, 0.4);
+  }
+}
+
+/* ANIMAÇÃO PARA TÍTULOS */
+.landing-title, .offer-section h2, .features-section h2, .for-restaurants h2 {
+  animation: glow 3s infinite;
+}
+
+/* RESPONSIVO */
 @media (max-width: 768px) {
+  .landing-logo {
+    max-width: 140px;
+  }
+  
   .landing-title {
-    font-size: 2.5rem;
+    font-size: 2.2rem;
   }
   
   .landing-subtitle {
     font-size: 1.2rem;
   }
   
+  .offer-section {
+    padding: 30px 15px;
+    margin: 20px;
+  }
+  
   .features-grid {
     grid-template-columns: 1fr;
+    gap: 20px;
   }
   
   .btn-landing {
     min-width: 250px;
-    padding: 15px 30px;
+    padding: 14px 25px;
+    font-size: 1rem;
   }
   
-  .footer-links {
+  .footer-actions {
     flex-direction: column;
     align-items: center;
   }
+  
+  .footer-btn {
+    width: 220px;
+    margin-bottom: 10px;
+  }
+  
+  .video-wrapper {
+    padding-bottom: 75%; /* Mais alto em mobile */
+  }
+}
+
+/* SCROLLBAR PERSONALIZADA */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #111111;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #FF6B35;
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #FF8B35;
 }
