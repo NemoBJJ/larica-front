@@ -1,3 +1,4 @@
+// src/pages/App.tsx
 import React, { useEffect, useMemo, useState } from 'react';
 import { 
   BrowserRouter as Router, 
@@ -52,9 +53,14 @@ const getUser = () => {
 /* ========================= Wrappers ========================= */
 const PainelWrapper: React.FC = () => {
   const user = getUser();
+  
+  console.log('🔄 PainelWrapper - Verificando usuário:', user);
+  
   if (!user || user.tipo !== 'DONO' || !user.restauranteId) {
+    console.log('🚫 Usuário não autorizado ou sem restauranteId, redirecionando para login-dono');
     return <Navigate to="/login-dono" replace />;
   }
+  
   return <PainelRestaurante restauranteId={user.restauranteId} />;
 };
 
@@ -62,9 +68,19 @@ const CardapioWrapper: React.FC = () => {
   const { restauranteId } = useParams<{ restauranteId: string }>();
   const user = getUser();
   
-  if (!user?.id) return <Navigate to="/login" replace />;
+  console.log('📋 CardapioWrapper - User:', user, 'RestauranteId:', restauranteId);
+  
+  if (!user?.id) {
+    console.log('🔒 Usuário não logado, redirecionando para login');
+    return <Navigate to="/login" replace />;
+  }
   
   const id = Number(restauranteId);
+  if (isNaN(id)) {
+    console.log('❌ ID do restaurante inválido:', restauranteId);
+    return <Navigate to="/dashboard" replace />;
+  }
+  
   return (
     <CardapioRestaurante
       restauranteId={id}
@@ -77,7 +93,13 @@ const CardapioWrapper: React.FC = () => {
 
 const HistoricoUsuarioWrapper: React.FC = () => {
   const user = getUser();
-  if (!user?.id) return <Navigate to="/login" replace />;
+  
+  console.log('📜 HistoricoUsuarioWrapper - User:', user);
+  
+  if (!user?.id) {
+    return <Navigate to="/login" replace />;
+  }
+  
   return <HistoricoUsuario usuarioId={user.id} onVoltar={() => window.history.back()} />;
 };
 
@@ -85,6 +107,8 @@ const HistoricoUsuarioWrapper: React.FC = () => {
 const App: React.FC = () => {
   const isStandalone = useIsStandalone();
   const user = getUser();
+
+  console.log('🚀 App iniciado - Standalone:', isStandalone, 'User:', user);
 
   const WebNavbar = useMemo(
     () => (
@@ -94,45 +118,105 @@ const App: React.FC = () => {
         <Link to="/login-dono" className="nav-link">🍽️ Login Restaurante</Link>
         <Link to="/cadastro" className="nav-link">👤 Cadastro Cliente</Link>
         <Link to="/cadastro-dono" className="nav-link">🏪 Cadastro Dono</Link>
-        <Link to="/historico-geral" className="nav-link">≡ Histórico Geral</Link>
+        <Link to="/dashboard" className="nav-link">📍 Ver Restaurantes</Link>
+        <Link to="/historico-geral" className="nav-link">📊 Histórico Geral</Link>
         <Link to="/debug-usuario" className="nav-link">🔍 Debug</Link>
         <InstallPWAButton />
+        
+        {user && (
+          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={{ fontSize: '14px', color: '#666' }}>
+              👋 {user.nome || user.email}
+            </span>
+            <button
+              onClick={() => {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = '/';
+              }}
+              style={{
+                padding: '5px 10px',
+                background: '#dc3545',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '12px'
+              }}
+            >
+              Sair
+            </button>
+          </div>
+        )}
       </nav>
     ),
-    []
+    [user]
   );
 
   const PwaNavbar = useMemo(() => {
     if (!user) return null;
+    
     if (user.tipo === 'CLIENTE') {
       return (
         <nav className="navbar">
+          <Link to="/dashboard" className="nav-link">📍 Restaurantes</Link>
           <Link to="/historico-usuario" className="nav-link">📋 Meu Histórico</Link>
+          <button
+            onClick={() => {
+              localStorage.clear();
+              window.location.href = '/';
+            }}
+            className="nav-link"
+            style={{ color: '#dc3545', marginLeft: 'auto' }}
+          >
+            🚪 Sair
+          </button>
         </nav>
       );
     }
+    
+    if (user.tipo === 'DONO') {
+      return (
+        <nav className="navbar">
+          <Link to="/painel-restaurante" className="nav-link">🏪 Meu Painel</Link>
+          <button
+            onClick={() => {
+              localStorage.clear();
+              window.location.href = '/';
+            }}
+            className="nav-link"
+            style={{ color: '#dc3545', marginLeft: 'auto' }}
+          >
+            🚪 Sair
+          </button>
+        </nav>
+      );
+    }
+    
     return null;
   }, [user]);
 
   return (
     <Router>
       {isStandalone ? PwaNavbar : WebNavbar}
+      
       <Routes>
+        {/* Página Inicial */}
         <Route path="/" element={<HomePage />} />
         
         {/* Cliente */}
         <Route path="/login" element={<UsuarioLogin />} />
-        <Route path="/cadastro" element={<CadastroUsuario onVoltar={() => {}} />} />
+        <Route path="/cadastro" element={<CadastroUsuario onVoltar={() => window.history.back()} />} />
         <Route path="/dashboard" element={<ListaRestaurantes />} />
         <Route path="/cardapio/:restauranteId" element={<CardapioWrapper />} />
         <Route path="/historico-usuario" element={<HistoricoUsuarioWrapper />} />
         
-        {/* Dono */}
+        {/* Dono/Restaurante */}
         <Route path="/login-dono" element={<DonoLogin />} />
         <Route path="/cadastro-dono" element={<CadastroDono />} />
         <Route path="/painel-restaurante" element={<PainelWrapper />} />
         
-        {/* Manager */}
+        {/* Manager/Admin */}
         <Route path="/historico-geral" element={<HistoricoGeral />} />
         
         {/* Debug */}
@@ -140,6 +224,9 @@ const App: React.FC = () => {
         
         {/* Entregador */}
         <Route path="/entregador/pedido/:pedidoId" element={<TelaEntregador />} />
+        
+        {/* Fallback para rotas inválidas */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
   );
