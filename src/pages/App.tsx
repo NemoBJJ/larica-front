@@ -1,4 +1,4 @@
-// src/pages/App.tsx - ATUALIZADO COM LANDING PAGE
+// src/pages/App.tsx - VERSÃO FINAL
 import React, { useEffect, useMemo, useState } from 'react';
 import { 
   BrowserRouter as Router, 
@@ -6,11 +6,12 @@ import {
   Routes, 
   Link, 
   useParams, 
-  Navigate 
+  Navigate,
+  useLocation 
 } from 'react-router-dom';
 import api from '../services/api';
 import HomePage from './HomePage';
-import LandingPage from './LandingPage'; // ✅ NOVA IMPORT
+import LandingPage from './LandingPage';
 import ListaRestaurantes from '../components/ListaRestaurantes';
 import CadastroUsuario from '../components/CadastroUsuario';
 import CadastroDono from '../components/CadastroDono';
@@ -104,56 +105,19 @@ const HistoricoUsuarioWrapper: React.FC = () => {
   return <HistoricoUsuario usuarioId={user.id} onVoltar={() => window.history.back()} />;
 };
 
-/* ========================= App ========================= */
-const App: React.FC = () => {
+/* ========================= App Content ========================= */
+const AppContent: React.FC = () => {
   const isStandalone = useIsStandalone();
   const user = getUser();
-
-  console.log('🚀 App iniciado - Standalone:', isStandalone, 'User:', user);
-
-  const WebNavbar = useMemo(
-    () => (
-      <nav className="navbar">
-        <Link to="/" className="nav-link">🏠 Home</Link>
-        <Link to="/landing" className="nav-link">🎬 Landing Page</Link> {/* ✅ NOVO LINK */}
-        <Link to="/login" className="nav-link">🔓 Login Cliente</Link>
-        <Link to="/login-dono" className="nav-link">🍽️ Login Restaurante</Link>
-        <Link to="/cadastro" className="nav-link">👤 Cadastro Cliente</Link>
-        <Link to="/cadastro-dono" className="nav-link">🏪 Cadastro Dono</Link>
-        <Link to="/dashboard" className="nav-link">📍 Ver Restaurantes</Link>
-        <Link to="/historico-geral" className="nav-link">📊 Histórico Geral</Link>
-        <Link to="/debug-usuario" className="nav-link">🔍 Debug</Link>
-        <InstallPWAButton />
-        
-        {user && (
-          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={{ fontSize: '14px', color: '#666' }}>
-              👋 {user.nome || user.email}
-            </span>
-            <button
-              onClick={() => {
-                localStorage.removeItem('token');
-                localStorage.removeItem('user');
-                window.location.href = '/';
-              }}
-              style={{
-                padding: '5px 10px',
-                background: '#dc3545',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '12px'
-              }}
-            >
-              Sair
-            </button>
-          </div>
-        )}
-      </nav>
-    ),
-    [user]
-  );
+  const location = useLocation();
+  
+  // ✅ DETECTA SE ESTÁ NA LANDING PAGE
+  const isLandingPage = location.pathname === '/landing';
+  
+  // ✅ VERIFICA SE É O DESENVOLVEDOR (Nemin)
+  const isDeveloper = user && user.email === 'nemo@neemindev.com'; // ALTERE PARA SEU EMAIL
+  
+  console.log('📍 Path:', location.pathname, 'Landing?', isLandingPage, 'Dev?', isDeveloper);
 
   const PwaNavbar = useMemo(() => {
     if (!user) return null;
@@ -198,16 +162,64 @@ const App: React.FC = () => {
     return null;
   }, [user]);
 
+  const WebNavbar = useMemo(() => {
+    // ✅ NA LANDING: MOSTRA MENU APENAS PARA O DESENVOLVEDOR
+    if (isLandingPage && !isDeveloper) {
+      return null;
+    }
+    
+    return (
+      <nav className="navbar">
+        <Link to="/" className="nav-link">🏠 Home</Link>
+        <Link to="/landing" className="nav-link">🎬 Landing Page</Link>
+        <Link to="/login" className="nav-link">🔓 Login Cliente</Link>
+        <Link to="/login-dono" className="nav-link">🍽️ Login Restaurante</Link>
+        <Link to="/cadastro" className="nav-link">👤 Cadastro Cliente</Link>
+        <Link to="/cadastro-dono" className="nav-link">🏪 Cadastro Dono</Link>
+        <Link to="/dashboard" className="nav-link">📍 Ver Restaurantes</Link>
+        <Link to="/historico-geral" className="nav-link">📊 Histórico Geral</Link>
+        <Link to="/debug-usuario" className="nav-link">🔍 Debug</Link>
+        <InstallPWAButton />
+        
+        {user && (
+          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={{ fontSize: '14px', color: '#666' }}>
+              👋 {user.nome || user.email}
+            </span>
+            <button
+              onClick={() => {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = '/';
+              }}
+              style={{
+                padding: '5px 10px',
+                background: '#dc3545',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '12px'
+              }}
+            >
+              Sair
+            </button>
+          </div>
+        )}
+      </nav>
+    );
+  }, [user, isLandingPage, isDeveloper]);
+
   return (
-    <Router>
+    <>
       {isStandalone ? PwaNavbar : WebNavbar}
       
       <Routes>
         {/* Página Inicial */}
         <Route path="/" element={<HomePage />} />
         
-        {/* Landing Page com Vídeo */}
-        <Route path="/landing" element={<LandingPage />} /> {/* ✅ NOVA ROTA */}
+        {/* Landing Page com Vídeo - SEM MENU PARA VISITANTES */}
+        <Route path="/landing" element={<LandingPage />} />
         
         {/* Cliente */}
         <Route path="/login" element={<UsuarioLogin />} />
@@ -233,6 +245,15 @@ const App: React.FC = () => {
         {/* Fallback para rotas inválidas */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+    </>
+  );
+};
+
+/* ========================= App Principal ========================= */
+const App: React.FC = () => {
+  return (
+    <Router>
+      <AppContent />
     </Router>
   );
 };

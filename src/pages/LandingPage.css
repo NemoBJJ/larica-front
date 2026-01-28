@@ -1,4 +1,4 @@
-/* E:\larica-frontend\src\pages\LandingPage.css - TEMA PRETO/LARANJA */
+/* src/pages/LandingPage.css - TEMA PRETO/LARANJA */
 .landing-container {
   min-height: 100vh;
   background: #000000; /* FUNDO PRETO */
@@ -38,7 +38,7 @@
 .landing-subtitle {
   font-size: 1.5rem;
   margin-bottom: 30px;
-  color: #FFFFFF; /* BRANCO PARA CONTRASTE */
+  color: #FFFFFF;
   opacity: 0.9;
 }
 
@@ -54,7 +54,7 @@
 
 .video-wrapper {
   position: relative;
-  padding-bottom: 56.25%; /* 16:9 */
+  padding-bottom: 56.25%;
   height: 0;
   overflow: hidden;
 }
@@ -99,7 +99,7 @@
 
 .btn-primary {
   background: linear-gradient(135deg, #FF6B35 0%, #FF8B35 100%);
-  color: #000000; /* TEXTO PRETO PARA CONTRASTE */
+  color: #000000;
   box-shadow: 0 5px 15px rgba(255, 107, 53, 0.4);
   border: 2px solid #FF6B35;
 }
@@ -192,7 +192,7 @@
 
 /* FEATURES SECTION */
 .features-section {
-  background: #111111; /* FUNDO UM POUCO MAIS CLARO */
+  background: #111111;
   padding: 60px 20px;
   border-top: 1px solid rgba(255, 107, 53, 0.2);
   border-bottom: 1px solid rgba(255, 107, 53, 0.2);
@@ -243,13 +243,13 @@
 }
 
 .feature-card p {
-  color: #CCCCCC; /* CINZA CLARO PARA LEGIBILIDADE */
+  color: #CCCCCC;
   line-height: 1.5;
   font-size: 0.95rem;
 }
 
 .feature-card small {
-  color: #FFA500; /* LARANJA MAIS CLARO */
+  color: #FFA500;
   font-size: 0.8rem;
   display: block;
   margin-top: 8px;
@@ -478,7 +478,7 @@
   }
   
   .video-wrapper {
-    padding-bottom: 75%; /* Mais alto em mobile */
+    padding-bottom: 75%;
   }
 }
 

@@ -1,8 +1,8 @@
-// E:\larica-frontend\src\pages\LandingPage.tsx - VERSÃO FINAL
+// src/pages/LandingPage.tsx - VERSÃO FINAL
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import './LandingPage.css';
-import laricaLogo from '../assets/larica-logo.png'; // ✅ IMPORTA SUA LOGO
+import laricaLogo from '../assets/larica-logo.png';
 
 const LandingPage: React.FC = () => {
   const navigate = useNavigate();
@@ -29,7 +29,7 @@ const LandingPage: React.FC = () => {
             <iframe 
               width="100%" 
               height="400"
-              src="https://www.youtube.com/embed/SEU_CODIGO_DO_VIDEO_AQUI" 
+              src="https://www.youtube.com/embed/SEU_VIDEO_AQUI" 
               title="Demonstração LARICA - Sistema de Delivery" 
               frameBorder="0" 
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
@@ -39,17 +39,41 @@ const LandingPage: React.FC = () => {
           </div>
         </div>
         
-        {/* CALL TO ACTION PRINCIPAL */}
+        {/* CALL TO ACTION - BOTÕES PARA CLIENTE E DONO */}
         <div className="landing-cta">
+          {/* BOTÃO PRINCIPAL PARA DONO */}
           <button 
             onClick={() => navigate('/cadastro-dono')}
             className="btn-landing btn-primary"
           >
             🍽️ INSTALE AGORA E CONCORRA A R$ 1.000,00
           </button>
+          
+          {/* BOTÃO PARA CLIENTE */}
+          <button 
+            onClick={() => navigate('/cadastro')}
+            className="btn-landing btn-secondary"
+            style={{
+              backgroundColor: 'transparent',
+              color: '#FF6B35',
+              border: '2px solid #FF6B35',
+              marginTop: '15px'
+            }}
+          >
+            👤 SOU CLIENTE - CADASTRE-SE GRATUITAMENTE
+          </button>
+          
+          {/* BOTÃO DE VOLTAR */}
           <button 
             onClick={() => navigate('/')}
-            className="btn-landing btn-secondary"
+            className="btn-landing btn-tertiary"
+            style={{
+              backgroundColor: 'rgba(255, 107, 53, 0.1)',
+              color: '#FFFFFF',
+              border: '1px solid rgba(255, 107, 53, 0.3)',
+              marginTop: '15px',
+              fontSize: '0.9rem'
+            }}
           >
             ← Voltar para Home Simples
           </button>
@@ -173,11 +197,11 @@ const LandingPage: React.FC = () => {
         </div>
         
         <div className="footer-actions">
-          <button onClick={() => navigate('/login')} className="footer-btn">
-            👤 Sou Cliente
+          <button onClick={() => navigate('/cadastro')} className="footer-btn">
+            👤 Sou Cliente - Cadastrar
           </button>
-          <button onClick={() => navigate('/login-dono')} className="footer-btn">
-            🍽️ Sou Restaurante
+          <button onClick={() => navigate('/cadastro-dono')} className="footer-btn">
+            🍽️ Sou Restaurante - Cadastrar
           </button>
           <button onClick={() => navigate('/')} className="footer-btn">
             🏠 Página Inicial
