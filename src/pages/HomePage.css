@@ -1,40 +1,70 @@
 /* src/pages/HomePage.css - TEMA PRETO/LARANJA */
-.home-container {
+.home {
   min-height: 100vh;
-  background: #000000; /* FUNDO PRETO */
-  color: #FF6B35; /* COR PRINCIPAL LARANJA */
+  background: #000000;
+  color: #FF6B35;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   padding: 20px;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
-.home-content {
   text-align: center;
-  max-width: 500px;
-  width: 100%;
-  padding: 40px 20px;
-  background: rgba(255, 107, 53, 0.03);
-  border-radius: 20px;
-  border: 1px solid rgba(255, 107, 53, 0.1);
-  box-shadow: 0 10px 40px rgba(255, 107, 53, 0.1);
-}
-
-.home-hero {
-  margin-bottom: 40px;
 }
 
 .home-logo {
-  max-width: 200px;
+  max-width: 250px;
   height: auto;
-  margin-bottom: 20px;
+  margin-bottom: 40px;
   filter: drop-shadow(0 0 15px rgba(255, 107, 53, 0.5));
 }
 
+.home-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 400px;
+  width: 100%;
+}
+
+.btn {
+  padding: 18px 24px;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: inherit;
+  text-align: center;
+}
+
+.btn.primary {
+  background: linear-gradient(135deg, #FF6B35 0%, #FF8B35 100%);
+  color: #000000;
+  box-shadow: 0 5px 20px rgba(255, 107, 53, 0.4);
+}
+
+.btn.primary:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(255, 107, 53, 0.6);
+}
+
+.btn.secondary {
+  background: transparent;
+  color: #FF6B35;
+  border: 2px solid #FF6B35;
+}
+
+.btn.secondary:hover {
+  background: rgba(255, 107, 53, 0.1);
+  transform: translateY(-3px);
+}
+
+/* Título opcional (se quiser adicionar) */
 .home-title {
   font-size: 2.8rem;
-  margin: 20px 0 10px 0;
+  margin: 0 0 10px 0;
   color: #FF6B35;
   text-shadow: 0 0 15px rgba(255, 107, 53, 0.4);
   animation: glow 3s infinite;
@@ -50,16 +80,13 @@
 
 /* RESPONSIVO */
 @media (max-width: 768px) {
-  .home-container {
+  .home {
     padding: 10px;
   }
   
-  .home-content {
-    padding: 30px 15px;
-  }
-  
   .home-logo {
-    max-width: 150px;
+    max-width: 180px;
+    margin-bottom: 30px;
   }
   
   .home-title {
@@ -68,6 +95,16 @@
   
   .home-subtitle {
     font-size: 1.1rem;
+    margin-bottom: 30px;
+  }
+  
+  .btn {
+    padding: 16px 20px;
+    font-size: 1.1rem;
+  }
+  
+  .home-actions {
+    gap: 15px;
   }
 }
 
