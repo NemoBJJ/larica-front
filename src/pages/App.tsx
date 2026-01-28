@@ -1,4 +1,4 @@
-// src/pages/App.tsx - VERSÃO FINAL
+// src/pages/App.tsx - VERSÃO DEFINITIVA
 import React, { useEffect, useMemo, useState } from 'react';
 import { 
   BrowserRouter as Router, 
@@ -52,14 +52,37 @@ const getUser = () => {
   }
 };
 
+// ✅ FUNÇÃO PARA VERIFICAR SE É O DESENVOLVEDOR (VOCÊ - Nemin)
+const isDeveloperUser = (user: any): boolean => {
+  if (!user || !user.email) return false;
+  
+  // 🔥 SEUS EMAILS CADASTRADOS
+  const developerEmails = [
+    'engnfaraujo@gmail.com',     // Seu email principal
+    'jiunemojitsu@gmail.com',    // Seu segundo email
+    'nemo@neemindev.com',        // Email do domínio
+    'admin@larica.com'           // Email admin
+  ];
+  
+  // ✅ VERIFICA SE O EMAIL DO USUÁRIO É UM DOS SEUS
+  const isDev = developerEmails.includes(user.email.toLowerCase());
+  
+  // 🔐 VERIFICAÇÃO EXTRA DE SENHA (PARA MAIOR SEGURANÇA)
+  if (isDev && user.senha) {
+    // Senha: "eujamereergui"
+    const senhaCorreta = user.senha === 'eujamereergui';
+    console.log('🔐 Verificação dev:', user.email, 'Senha correta?', senhaCorreta);
+    return senhaCorreta;
+  }
+  
+  return isDev;
+};
+
 /* ========================= Wrappers ========================= */
 const PainelWrapper: React.FC = () => {
   const user = getUser();
   
-  console.log('🔄 PainelWrapper - Verificando usuário:', user);
-  
   if (!user || user.tipo !== 'DONO' || !user.restauranteId) {
-    console.log('🚫 Usuário não autorizado ou sem restauranteId, redirecionando para login-dono');
     return <Navigate to="/login-dono" replace />;
   }
   
@@ -70,16 +93,12 @@ const CardapioWrapper: React.FC = () => {
   const { restauranteId } = useParams<{ restauranteId: string }>();
   const user = getUser();
   
-  console.log('📋 CardapioWrapper - User:', user, 'RestauranteId:', restauranteId);
-  
   if (!user?.id) {
-    console.log('🔒 Usuário não logado, redirecionando para login');
     return <Navigate to="/login" replace />;
   }
   
   const id = Number(restauranteId);
   if (isNaN(id)) {
-    console.log('❌ ID do restaurante inválido:', restauranteId);
     return <Navigate to="/dashboard" replace />;
   }
   
@@ -96,8 +115,6 @@ const CardapioWrapper: React.FC = () => {
 const HistoricoUsuarioWrapper: React.FC = () => {
   const user = getUser();
   
-  console.log('📜 HistoricoUsuarioWrapper - User:', user);
-  
   if (!user?.id) {
     return <Navigate to="/login" replace />;
   }
@@ -111,88 +128,31 @@ const AppContent: React.FC = () => {
   const user = getUser();
   const location = useLocation();
   
-  // ✅ DETECTA SE ESTÁ NA LANDING PAGE
-  const isLandingPage = location.pathname === '/landing';
+  // ✅ VERIFICA SE É O DESENVOLVEDOR (VOCÊ)
+  const isDeveloper = isDeveloperUser(user);
   
-  // ✅ VERIFICA SE É O DESENVOLVEDOR (Nemin)
-  const isDeveloper = user && user.email === 'nemo@neemindev.com'; // ALTERE PARA SEU EMAIL
-  
-  console.log('📍 Path:', location.pathname, 'Landing?', isLandingPage, 'Dev?', isDeveloper);
+  console.log('🔐 DEBUG - Usuário:', user?.email, 'É dev?', isDeveloper, 'Path:', location.pathname);
 
+  // ✅ NAVBAR PARA PWA (APENAS PARA USUÁRIOS LOGADOS COMUNS)
   const PwaNavbar = useMemo(() => {
     if (!user) return null;
     
+    // ❌ NÃO MOSTRA MENU PWA PARA O DESENVOLVEDOR (pra não duplicar)
+    if (isDeveloper) return null;
+    
     if (user.tipo === 'CLIENTE') {
       return (
-        <nav className="navbar">
-          <Link to="/dashboard" className="nav-link">📍 Restaurantes</Link>
-          <Link to="/historico-usuario" className="nav-link">📋 Meu Histórico</Link>
-          <button
-            onClick={() => {
-              localStorage.clear();
-              window.location.href = '/';
-            }}
-            className="nav-link"
-            style={{ color: '#dc3545', marginLeft: 'auto' }}
-          >
-            🚪 Sair
-          </button>
-        </nav>
-      );
-    }
-    
-    if (user.tipo === 'DONO') {
-      return (
-        <nav className="navbar">
-          <Link to="/painel-restaurante" className="nav-link">🏪 Meu Painel</Link>
-          <button
-            onClick={() => {
-              localStorage.clear();
-              window.location.href = '/';
-            }}
-            className="nav-link"
-            style={{ color: '#dc3545', marginLeft: 'auto' }}
-          >
-            🚪 Sair
-          </button>
-        </nav>
-      );
-    }
-    
-    return null;
-  }, [user]);
-
-  const WebNavbar = useMemo(() => {
-    // ✅ NA LANDING: MOSTRA MENU APENAS PARA O DESENVOLVEDOR
-    if (isLandingPage && !isDeveloper) {
-      return null;
-    }
-    
-    return (
-      <nav className="navbar">
-        <Link to="/" className="nav-link">🏠 Home</Link>
-        <Link to="/landing" className="nav-link">🎬 Landing Page</Link>
-        <Link to="/login" className="nav-link">🔓 Login Cliente</Link>
-        <Link to="/login-dono" className="nav-link">🍽️ Login Restaurante</Link>
-        <Link to="/cadastro" className="nav-link">👤 Cadastro Cliente</Link>
-        <Link to="/cadastro-dono" className="nav-link">🏪 Cadastro Dono</Link>
-        <Link to="/dashboard" className="nav-link">📍 Ver Restaurantes</Link>
-        <Link to="/historico-geral" className="nav-link">📊 Histórico Geral</Link>
-        <Link to="/debug-usuario" className="nav-link">🔍 Debug</Link>
-        <InstallPWAButton />
-        
-        {user && (
-          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={{ fontSize: '14px', color: '#666' }}>
-              👋 {user.nome || user.email}
-            </span>
+        <nav className="navbar" style={{ background: '#333', padding: '8px 15px' }}>
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+            <Link to="/dashboard" className="nav-link">📍 Restaurantes</Link>
+            <Link to="/historico-usuario" className="nav-link">📋 Histórico</Link>
             <button
               onClick={() => {
-                localStorage.removeItem('token');
-                localStorage.removeItem('user');
+                localStorage.clear();
                 window.location.href = '/';
               }}
               style={{
+                marginLeft: 'auto',
                 padding: '5px 10px',
                 background: '#dc3545',
                 color: 'white',
@@ -205,10 +165,118 @@ const AppContent: React.FC = () => {
               Sair
             </button>
           </div>
-        )}
+        </nav>
+      );
+    }
+    
+    if (user.tipo === 'DONO') {
+      return (
+        <nav className="navbar" style={{ background: '#333', padding: '8px 15px' }}>
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+            <Link to="/painel-restaurante" className="nav-link">🏪 Meu Painel</Link>
+            <button
+              onClick={() => {
+                localStorage.clear();
+                window.location.href = '/';
+              }}
+              style={{
+                marginLeft: 'auto',
+                padding: '5px 10px',
+                background: '#dc3545',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '12px'
+              }}
+            >
+              Sair
+            </button>
+          </div>
+        </nav>
+      );
+    }
+    
+    return null;
+  }, [user, isDeveloper]);
+
+  // ✅ NAVBAR PARA WEB (APENAS PARA O DESENVOLVEDOR - VOCÊ)
+  const WebNavbar = useMemo(() => {
+    // ❌ SE NÃO FOR O DESENVOLVEDOR → SEM MENU COMPLETO
+    if (!isDeveloper) {
+      return null;
+    }
+    
+    // ✅ SE FOR O DESENVOLVEDOR → MOSTRA MENU COMPLETO COM DESTAQUE
+    return (
+      <nav className="navbar" style={{ 
+        background: 'linear-gradient(135deg, #1a1a1a 0%, #333 100%)',
+        padding: '12px 20px',
+        borderBottom: '3px solid #FF6B35',
+        boxShadow: '0 4px 20px rgba(255, 107, 53, 0.3)'
+      }}>
+        <div style={{ 
+          display: 'flex', 
+          gap: '15px', 
+          flexWrap: 'wrap',
+          alignItems: 'center'
+        }}>
+          <span style={{ 
+            color: '#FF6B35', 
+            fontWeight: 'bold',
+            marginRight: '10px',
+            fontSize: '14px'
+          }}>
+            🔧 DEV PANEL:
+          </span>
+          
+          <Link to="/" className="nav-link" style={{ color: '#FFFFFF' }}>🏠 Home</Link>
+          <Link to="/landing" className="nav-link" style={{ color: '#FFFFFF' }}>🎬 Landing</Link>
+          <Link to="/login" className="nav-link" style={{ color: '#FFFFFF' }}>🔓 Login Cliente</Link>
+          <Link to="/login-dono" className="nav-link" style={{ color: '#FFFFFF' }}>🍽️ Login Restaurante</Link>
+          <Link to="/cadastro" className="nav-link" style={{ color: '#FFFFFF' }}>👤 Cadastro Cliente</Link>
+          <Link to="/cadastro-dono" className="nav-link" style={{ color: '#FFFFFF' }}>🏪 Cadastro Dono</Link>
+          <Link to="/dashboard" className="nav-link" style={{ color: '#FFFFFF' }}>📍 Restaurantes</Link>
+          <Link to="/historico-geral" className="nav-link" style={{ color: '#FFFFFF' }}>📊 Histórico Geral</Link>
+          <Link to="/debug-usuario" className="nav-link" style={{ color: '#FFFFFF' }}>🔍 Debug</Link>
+          
+          <InstallPWAButton />
+          
+          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '15px' }}>
+            <span style={{ 
+              fontSize: '14px', 
+              color: '#FF6B35',
+              fontWeight: 'bold',
+              background: 'rgba(255, 107, 53, 0.1)',
+              padding: '4px 10px',
+              borderRadius: '20px'
+            }}>
+              👑 DEV: {user?.nome || user?.email || 'Nemin'}
+            </span>
+            <button
+              onClick={() => {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = '/';
+              }}
+              style={{
+                padding: '6px 15px',
+                background: '#dc3545',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '12px',
+                fontWeight: 'bold'
+              }}
+            >
+              🚪 Sair
+            </button>
+          </div>
+        </div>
       </nav>
     );
-  }, [user, isLandingPage, isDeveloper]);
+  }, [user, isDeveloper]);
 
   return (
     <>
