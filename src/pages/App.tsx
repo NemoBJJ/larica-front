@@ -1,13 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import {
-  BrowserRouter as Router,
-  Route,
-  Routes,
-  Link,
-  useParams,
-  Navigate
+import { 
+  BrowserRouter as Router, 
+  Route, 
+  Routes, 
+  Link, 
+  useParams, 
+  Navigate 
 } from 'react-router-dom';
-
+import api from '../services/api';
 import HomePage from './HomePage';
 import ListaRestaurantes from '../components/ListaRestaurantes';
 import CadastroUsuario from '../components/CadastroUsuario';
@@ -21,12 +21,24 @@ import HistoricoGeral from '../components/HistoricoGeral';
 import VerificarUsuario from '../components/VerificarUsuario';
 import TelaEntregador from '../components/TelaEntregador';
 import InstallPWAButton from '../components/InstallPWAButton';
-
 import './App.css';
 
-/* =========================
-   Helpers
-========================= */
+/* ========================= Helpers ========================= */
+const useIsStandalone = () => {
+  const [standalone, setStandalone] = useState(false);
+  useEffect(() => {
+    const check = () => {
+      setStandalone(
+        window.matchMedia('(display-mode: standalone)').matches ||
+        (window.navigator as any).standalone === true
+      );
+    };
+    check();
+    window.addEventListener('appinstalled', check);
+    return () => window.removeEventListener('appinstalled', check);
+  }, []);
+  return standalone;
+};
 
 const getUser = () => {
   try {
@@ -37,51 +49,27 @@ const getUser = () => {
   }
 };
 
-const useIsStandalone = () => {
-  const [standalone, setStandalone] = useState(false);
-
-  useEffect(() => {
-    const check = () => {
-      setStandalone(
-        window.matchMedia('(display-mode: standalone)').matches ||
-          (window.navigator as any).standalone === true
-      );
-    };
-    check();
-    window.addEventListener('appinstalled', check);
-    return () => window.removeEventListener('appinstalled', check);
-  }, []);
-
-  return standalone;
-};
-
-/* =========================
-   Wrappers
-========================= */
-
+/* ========================= Wrappers ========================= */
 const PainelWrapper: React.FC = () => {
   const user = getUser();
-
   if (!user || user.tipo !== 'DONO' || !user.restauranteId) {
     return <Navigate to="/login-dono" replace />;
   }
-
   return <PainelRestaurante restauranteId={user.restauranteId} />;
 };
 
 const CardapioWrapper: React.FC = () => {
   const { restauranteId } = useParams<{ restauranteId: string }>();
   const user = getUser();
-
-  if (!user || user.tipo !== 'CLIENTE' || !user.id) {
-    return <Navigate to="/login" replace />;
-  }
-
+  
+  if (!user?.id) return <Navigate to="/login" replace />;
+  
+  const id = Number(restauranteId);
   return (
     <CardapioRestaurante
-      restauranteId={Number(restauranteId)}
+      restauranteId={id}
       usuarioId={user.id}
-      nomeRestaurante={`Restaurante #${restauranteId}`}
+      nomeRestaurante={`Restaurante #${id}`}
       onVoltar={() => window.history.back()}
     />
   );
@@ -89,34 +77,14 @@ const CardapioWrapper: React.FC = () => {
 
 const HistoricoUsuarioWrapper: React.FC = () => {
   const user = getUser();
-
-  if (!user || user.tipo !== 'CLIENTE' || !user.id) {
-    return <Navigate to="/login" replace />;
-  }
-
-  return (
-    <HistoricoUsuario
-      usuarioId={user.id}
-      onVoltar={() => window.history.back()}
-    />
-  );
+  if (!user?.id) return <Navigate to="/login" replace />;
+  return <HistoricoUsuario usuarioId={user.id} onVoltar={() => window.history.back()} />;
 };
 
-/* =========================
-   App
-========================= */
-
+/* ========================= App ========================= */
 const App: React.FC = () => {
   const isStandalone = useIsStandalone();
-
-  // 🔥 ESTADO REATIVO DO USUÁRIO
-  const [user, setUser] = useState<any>(() => getUser());
-
-  useEffect(() => {
-    const syncUser = () => setUser(getUser());
-    window.addEventListener('storage', syncUser);
-    return () => window.removeEventListener('storage', syncUser);
-  }, []);
+  const user = getUser();
 
   const WebNavbar = useMemo(
     () => (
@@ -136,45 +104,40 @@ const App: React.FC = () => {
 
   const PwaNavbar = useMemo(() => {
     if (!user) return null;
-
     if (user.tipo === 'CLIENTE') {
       return (
         <nav className="navbar">
-          <Link to="/historico-usuario" className="nav-link">
-            📋 Meu Histórico
-          </Link>
+          <Link to="/historico-usuario" className="nav-link">📋 Meu Histórico</Link>
         </nav>
       );
     }
-
     return null;
   }, [user]);
 
   return (
     <Router>
       {isStandalone ? PwaNavbar : WebNavbar}
-
       <Routes>
         <Route path="/" element={<HomePage />} />
-
+        
         {/* Cliente */}
         <Route path="/login" element={<UsuarioLogin />} />
         <Route path="/cadastro" element={<CadastroUsuario onVoltar={() => {}} />} />
         <Route path="/dashboard" element={<ListaRestaurantes />} />
         <Route path="/cardapio/:restauranteId" element={<CardapioWrapper />} />
         <Route path="/historico-usuario" element={<HistoricoUsuarioWrapper />} />
-
+        
         {/* Dono */}
         <Route path="/login-dono" element={<DonoLogin />} />
         <Route path="/cadastro-dono" element={<CadastroDono />} />
         <Route path="/painel-restaurante" element={<PainelWrapper />} />
-
+        
         {/* Manager */}
         <Route path="/historico-geral" element={<HistoricoGeral />} />
-
+        
         {/* Debug */}
         <Route path="/debug-usuario" element={<VerificarUsuario />} />
-
+        
         {/* Entregador */}
         <Route path="/entregador/pedido/:pedidoId" element={<TelaEntregador />} />
       </Routes>

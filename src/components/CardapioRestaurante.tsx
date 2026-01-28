@@ -1,4 +1,3 @@
-// src/components/CardapioRestaurante.tsx
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
 import './CardapioRestaurante.css';
@@ -22,7 +21,12 @@ interface ItemCarrinho {
   quantidade: number;
 }
 
-const CardapioRestaurante: React.FC<Props> = ({ restauranteId, nomeRestaurante, onVoltar, usuarioId }) => {
+const CardapioRestaurante: React.FC<Props> = ({ 
+  restauranteId, 
+  nomeRestaurante, 
+  onVoltar, 
+  usuarioId 
+}) => {
   const [cardapio, setCardapio] = useState<Produto[]>([]);
   const [carrinho, setCarrinho] = useState<ItemCarrinho[]>([]);
   const [erro, setErro] = useState<string | null>(null);
@@ -40,7 +44,7 @@ const CardapioRestaurante: React.FC<Props> = ({ restauranteId, nomeRestaurante, 
         setErro('Erro ao carregar cardápio. Verifique a conexão ou o ID do restaurante.');
       }
     };
-
+    
     carregarCardapio();
   }, [restauranteId]);
 
@@ -49,7 +53,9 @@ const CardapioRestaurante: React.FC<Props> = ({ restauranteId, nomeRestaurante, 
       const existente = prev.find((item) => item.id === produtoId);
       if (existente) {
         return prev.map((item) =>
-          item.id === produtoId ? { ...item, quantidade: item.quantidade + 1 } : item
+          item.id === produtoId
+            ? { ...item, quantidade: item.quantidade + 1 }
+            : item
         );
       }
       return [...prev, { id: produtoId, quantidade: 1 }];
@@ -64,7 +70,9 @@ const CardapioRestaurante: React.FC<Props> = ({ restauranteId, nomeRestaurante, 
     if (novaQuantidade < 1) return;
     setCarrinho((prev) =>
       prev.map((item) =>
-        item.id === produtoId ? { ...item, quantidade: novaQuantidade } : item
+        item.id === produtoId
+          ? { ...item, quantidade: novaQuantidade }
+          : item
       )
     );
   };
@@ -105,7 +113,6 @@ const CardapioRestaurante: React.FC<Props> = ({ restauranteId, nomeRestaurante, 
       setCarrinho([]);
       setMensagemSucesso(`✅ Pedido #${pedidoId} realizado! Redirecionando para pagamento...`);
       setTimeout(() => setMensagemSucesso(null), 5000);
-
     } catch (error: any) {
       console.error('Erro ao fazer pedido:', error);
       const mensagem = error?.response?.data?.message || 'Erro ao realizar pedido. Tente novamente.';
@@ -120,6 +127,7 @@ const CardapioRestaurante: React.FC<Props> = ({ restauranteId, nomeRestaurante, 
       <button className="voltar-btn" onClick={onVoltar}>
         ← Voltar
       </button>
+
       <h2 className="titulo-cardapio">Cardápio de {nomeRestaurante}</h2>
 
       {erro && <div className="erro-cardapio">{erro}</div>}
@@ -151,16 +159,21 @@ const CardapioRestaurante: React.FC<Props> = ({ restauranteId, nomeRestaurante, 
               {carrinho.map((item) => {
                 const produto = cardapio.find((p) => p.id === item.id);
                 const subtotal = ((produto?.preco || 0) * item.quantidade).toFixed(2);
+                
                 return (
                   <li key={item.id} className="carrinho-item">
                     <div className="carrinho-item-info">
                       <span>{produto?.nome}</span>
                       <div className="quantidade-control">
-                        <button onClick={() => atualizarQuantidade(item.id, item.quantidade - 1)}>
+                        <button
+                          onClick={() => atualizarQuantidade(item.id, item.quantidade - 1)}
+                        >
                           -
                         </button>
                         <span>{item.quantidade}</span>
-                        <button onClick={() => atualizarQuantidade(item.id, item.quantidade + 1)}>
+                        <button
+                          onClick={() => atualizarQuantidade(item.id, item.quantidade + 1)}
+                        >
                           +
                         </button>
                       </div>
