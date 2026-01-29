@@ -1,8 +1,9 @@
-// src/pages/LandingPage.tsx - VERSÃO FINAL COM UM BOTÃO
+// src/pages/LandingPage.tsx - VERSÃO COMPLETA ATUALIZADA
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import './LandingPage.css';
 import laricaLogo from '../assets/larica-logo.png';
+import nemodevLogo from '../assets/logonemindev.png';
 
 const LandingPage: React.FC = () => {
   const navigate = useNavigate();
@@ -11,7 +12,6 @@ const LandingPage: React.FC = () => {
     <div className="landing-container">
       {/* HERO SECTION */}
       <div className="landing-hero">
-        {/* LOGO NO TOPO */}
         <div className="landing-logo-container">
           <img 
             src={laricaLogo} 
@@ -21,7 +21,7 @@ const LandingPage: React.FC = () => {
         </div>
         
         <h1 className="landing-title">🍔 LARICA FOOD</h1>
-        <p className="landing-subtitle"> Bateu comeu</p>
+        <p className="landing-subtitle">Bateu comeu</p>
         
         {/* VÍDEO DE DIVULGAÇÃO */}
         <div className="video-container">
@@ -35,11 +35,10 @@ const LandingPage: React.FC = () => {
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
               allowFullScreen
             />
-            <p className="video-caption"></p>
           </div>
         </div>
         
-        {/* APENAS UM BOTÃO QUE LEVA PARA A HOME PAGE PRINCIPAL */}
+        {/* BOTÃO PRINCIPAL */}
         <div className="landing-cta">
           <button 
             onClick={() => window.location.href = 'https://larica.neemindev.com/'}
@@ -64,7 +63,7 @@ const LandingPage: React.FC = () => {
               width: '100%'
             }}
           >
-            🚀 ACESSAR LARICA FOOD
+            🚀 INSTALE/CADASTRE AGORA 
           </button>
           
           <p className="cta-note" style={{
@@ -73,8 +72,7 @@ const LandingPage: React.FC = () => {
             color: '#FF6B35',
             fontSize: '1.1rem'
           }}>
-            📱  celular: <br />
-            💻  WEB
+            📱 celular • 💻 WEB
           </p>
         </div>
       </div>
@@ -84,7 +82,7 @@ const LandingPage: React.FC = () => {
         <div className="offer-badge">🔥 PROMOÇÃO DE LANÇAMENTO</div>
         <h2>✨ 30 DIAS GRÁTIS PARA O SEU DELIVERY</h2>
         <p className="offer-description">
-          Cadastre-se AGORA, TENHA 30 dias gratuitos e Concorra a R$ 1.000,00 em dinheiro!
+          Concorra a R$ 1.000,00 em dinheiro e após a promoção APENAS 3% POR PEDIDO.
         </p>
       </div>
 
@@ -100,7 +98,7 @@ const LandingPage: React.FC = () => {
           <div className="feature-card">
             <div className="feature-icon">🏪</div>
             <h3>Painel Restaurante</h3>
-            <p>Cadastre produtos, administre pedidos, chame seu entregador</p>
+            <p>Gerencie seus pedidos, Rota pronta para o seu entregador</p>
           </div>
           
           <div className="feature-card">
@@ -125,7 +123,7 @@ const LandingPage: React.FC = () => {
           <div className="feature-card">
             <div className="feature-icon">⚡</div>
             <h3>App no Celular</h3>
-            <p>Instale direto na tela inicial do celular</p>
+            <p>Todas as Funcionalidades, em apenas 01 toque</p>
           </div>
         </div>
       </div>
@@ -137,15 +135,15 @@ const LandingPage: React.FC = () => {
           <div className="benefits-list">
             <div className="benefit-item">
               <span className="check-icon">✅</span>
-              <span>30 dias de cardápio gratuito + marketing por nossa conta, depois APENAS 3% POR PEDIDO</span>
+              <span>30 dias de cardápio gratuito + marketing por nossa conta</span>
             </div>
             <div className="benefit-item">
               <span className="check-icon">✅</span>
-              <span>Painel administrativo completo e intuitivo</span>
+              <span>Concorra a R$ 1.000,00 apenas ao se cadastrar</span>
             </div>
             <div className="benefit-item">
               <span className="check-icon">✅</span>
-              <span>Gerenciamento de cardápio em tempo real</span>
+              <span>Apenas 3% por pedido após os 30 dias grátis</span>
             </div>
             <div className="benefit-item">
               <span className="check-icon">✅</span>
@@ -191,12 +189,66 @@ const LandingPage: React.FC = () => {
             >
               🚀 INSTALAR AGORA 
             </button>
-            <p className="cta-note">Aproveite 30 dias grátis , Depois 3% por pedido!</p>
+            <p className="cta-note">Aproveite 30 dias grátis, depois apenas 3% por pedido!</p>
           </div>
         </div>
       </div>
 
-      {/* FOOTER COM LOGO */}
+      {/* BOTÃO DO REGULAMENTO */}
+      <div style={{
+        textAlign: 'center',
+        padding: '40px 20px',
+        backgroundColor: 'rgba(255, 107, 53, 0.05)',
+        margin: '50px auto 0 auto',
+        borderRadius: '15px',
+        maxWidth: '800px',
+        width: '90%',
+        border: '2px dashed #FF6B35'
+      }}>
+        <h3 style={{ 
+          color: '#FF6B35', 
+          marginBottom: '15px',
+          fontSize: '1.5rem'
+        }}>
+          📋 DETALHES COMPLETOS DA PROMOÇÃO
+        </h3>
+        <p style={{ 
+          color: '#666', 
+          marginBottom: '25px',
+          fontSize: '1.1rem'
+        }}>
+          Saiba tudo sobre como concorrer aos R$ 1.000,00
+        </p>
+        <button 
+          onClick={() => navigate('/regulamento')}
+          style={{
+            background: 'white',
+            color: '#FF6B35',
+            border: '2px solid #FF6B35',
+            padding: '15px 35px',
+            fontSize: '1.1rem',
+            fontWeight: 'bold',
+            borderRadius: '10px',
+            cursor: 'pointer',
+            transition: 'all 0.3s',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '10px'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = '#FF6B35';
+            e.currentTarget.style.color = 'white';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'white';
+            e.currentTarget.style.color = '#FF6B35';
+          }}
+        >
+          📄 VER REGULAMENTO COMPLETO
+        </button>
+      </div>
+
+      {/* FOOTER */}
       <div className="landing-footer">
         <div className="footer-logo-container">
           <img 
@@ -205,6 +257,40 @@ const LandingPage: React.FC = () => {
             className="footer-logo"
           />
           <p className="footer-tagline">A Larica é sua, O Rango é nosso</p>
+          
+          {/* LOGO DA NEMO SYSTEMS */}
+          <div style={{ 
+            marginTop: '30px', 
+            paddingTop: '20px', 
+            borderTop: '1px solid rgba(255,255,255,0.1)',
+            textAlign: 'center',
+            width: '100%'
+          }}>
+            <p style={{ 
+              fontSize: '0.9rem', 
+              color: '#aaa', 
+              marginBottom: '10px' 
+            }}>
+              Desenvolvido por:
+            </p>
+            <img 
+              src={nemodevLogo} 
+              alt="Nemo Systems - Desenvolvimento de Software" 
+              style={{ 
+                height: '40px', 
+                filter: 'brightness(0.9)',
+                opacity: '0.8',
+                marginBottom: '5px'
+              }}
+            />
+            <p style={{ 
+              fontSize: '0.8rem', 
+              color: '#888', 
+              marginTop: '0'
+            }}>
+              NEMO SYSTEMS LTDA
+            </p>
+          </div>
         </div>
         
         <div className="footer-info">
