@@ -1,18 +1,23 @@
-// src/pages/LandingPage.tsx - VERSÃO CORRIGIDA
+// src/pages/LandingPage.tsx - VERSÃO LIMPA COM WHATSAPP
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import './LandingPage.css';
 import laricaLogo from '../assets/larica-logo.png';
 import nemodevLogo from '../assets/logonemindev.png';
 
 const LandingPage: React.FC = () => {
-  const navigate = useNavigate();
+  // Função para abrir WhatsApp
+  const openWhatsApp = () => {
+    const phone = '91987446061'; // Número sem espaços e parênteses
+    const message = 'Olá! Quero participar da promoção do Larica Food! Como faço para indicar meus amigos?';
+    const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+    window.open(url, '_blank');
+  };
 
   return (
     <div className="landing-container">
       {/* HERO SECTION */}
       <div className="landing-hero">
-        {/* LOGO PRINCIPAL MAIOR - AUMENTEI O TAMANHO */}
+        {/* LOGO PRINCIPAL MAIOR */}
         <div className="landing-logo-container" style={{
           marginBottom: '30px',
           display: 'flex',
@@ -22,7 +27,7 @@ const LandingPage: React.FC = () => {
             src={laricaLogo} 
             alt="LARICA Food Delivery" 
             style={{
-              height: '120px', // AUMENTEI DE 80-100px PARA 120px
+              height: '120px',
               width: 'auto',
               maxWidth: '100%'
             }}
@@ -203,58 +208,69 @@ const LandingPage: React.FC = () => {
         </div>
       </div>
 
-      {/* BOTÃO DO REGULAMENTO - CORRIGIDO! */}
+      {/* BOTÃO DO WHATSAPP - NOVO! */}
       <div style={{
         textAlign: 'center',
-        padding: '40px 20px',
-        backgroundColor: 'rgba(255, 107, 53, 0.05)',
+        padding: '50px 20px',
+        backgroundColor: 'rgba(37, 211, 102, 0.1)',
         margin: '50px auto 0 auto',
         borderRadius: '15px',
         maxWidth: '800px',
         width: '90%',
-        border: '2px dashed #FF6B35'
+        border: '2px dashed #25D366'
       }}>
         <h3 style={{ 
-          color: '#FF6B35', 
+          color: '#25D366', 
           marginBottom: '15px',
-          fontSize: '1.5rem'
+          fontSize: '1.8rem'
         }}>
-          📋 DETALHES COMPLETOS DA PROMOÇÃO
+          💬 INDICAR AMIGOS E GANHAR R$ 1.000,00
         </h3>
         <p style={{ 
           color: '#666', 
           marginBottom: '25px',
-          fontSize: '1.1rem'
+          fontSize: '1.2rem'
         }}>
-          Saiba tudo sobre como concorrer aos R$ 1.000,00
+          <strong>Como participar:</strong> Indique 3 amigos pelo WhatsApp do Larica e concorra!
         </p>
+        
         <button 
-          onClick={() => navigate('/regulamento')} // CORRETO! Vai para /regulamento
+          onClick={openWhatsApp}
           style={{
-            background: 'white',
-            color: '#FF6B35',
-            border: '2px solid #FF6B35',
-            padding: '15px 35px',
-            fontSize: '1.1rem',
+            background: '#25D366',
+            color: 'white',
+            border: 'none',
+            padding: '20px 45px',
+            fontSize: '1.3rem',
             fontWeight: 'bold',
-            borderRadius: '10px',
+            borderRadius: '12px',
             cursor: 'pointer',
             transition: 'all 0.3s',
             display: 'inline-flex',
             alignItems: 'center',
-            gap: '10px'
+            gap: '15px',
+            boxShadow: '0 8px 25px rgba(37, 211, 102, 0.4)'
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.background = '#FF6B35';
-            e.currentTarget.style.color = 'white';
+            e.currentTarget.style.background = '#128C7E';
+            e.currentTarget.style.transform = 'translateY(-3px)';
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'white';
-            e.currentTarget.style.color = '#FF6B35';
+            e.currentTarget.style.background = '#25D366';
+            e.currentTarget.style.transform = 'translateY(0)';
           }}
         >
-          📄 VER REGULAMENTO COMPLETO
+          <span style={{ fontSize: '1.5rem' }}>📱</span>
+          FALAR NO WHATSAPP (91) 98744-6061
         </button>
+        
+        <p style={{ 
+          marginTop: '20px', 
+          color: '#666',
+          fontSize: '1rem'
+        }}>
+          Clique acima para conversar diretamente com nosso suporte!
+        </p>
       </div>
 
       {/* FOOTER */}
@@ -279,7 +295,7 @@ const LandingPage: React.FC = () => {
               src={nemodevLogo} 
               alt="Nemo Systems - Desenvolvimento de Software" 
               style={{ 
-                height: '70px', // AUMENTEI DE 40px PARA 70px
+                height: '70px',
                 width: 'auto',
                 filter: 'brightness(1.1)',
                 opacity: '0.9',
@@ -326,7 +342,8 @@ const LandingPage: React.FC = () => {
         <div className="footer-legal">
           <p>Termos de Uso | Política de Privacidade</p>
           <p className="disclaimer">
-            *Promoção válida durante o período de lançamento. Consulte regulamento.
+            *Promoção válida durante o período de lançamento. 
+            Sorteio em 01/03/2024. Clientes devem indicar 3 amigos pelo WhatsApp.
           </p>
         </div>
       </div>
