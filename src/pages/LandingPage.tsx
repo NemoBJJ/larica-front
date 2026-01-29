@@ -261,7 +261,7 @@ const LandingPage: React.FC = () => {
           }}
         >
           <span style={{ fontSize: '1.5rem' }}>📱</span>
-          WHATSAPP (91) 98744-6061
+          WHATSAPP 
         </button>
         
         <p style={{ 
