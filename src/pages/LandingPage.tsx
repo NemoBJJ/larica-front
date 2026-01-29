@@ -35,7 +35,7 @@ const LandingPage: React.FC = () => {
         </div>
         
         <h1 className="landing-title">🍔 LARICA FOOD</h1>
-        <p className="landing-subtitle">Bateu comeu</p>
+        <p className="landing-subtitle"> Bateu comeu</p>
         
         {/* VÍDEO DE DIVULGAÇÃO */}
         <div className="video-container">
@@ -106,7 +106,7 @@ const LandingPage: React.FC = () => {
           <div className="feature-card">
             <div className="feature-icon">📱</div>
             <h3>App para Clientes</h3>
-            <p>Indique um amigo e concorra a R$ 1.000,00</p>
+            <p>Indique 03 amigos e concorra a R$ 1.000,00</p>
           </div>
           
           <div className="feature-card">
@@ -224,14 +224,14 @@ const LandingPage: React.FC = () => {
           marginBottom: '15px',
           fontSize: '1.8rem'
         }}>
-          💬 INDICAR AMIGOS E GANHAR R$ 1.000,00
+          💬 INDIQUE 03 AMIGOS E CONCORRA A  R$ 1.000,00
         </h3>
         <p style={{ 
           color: '#666', 
           marginBottom: '25px',
           fontSize: '1.2rem'
         }}>
-          <strong>Como participar:</strong> Indique 3 amigos pelo WhatsApp do Larica e concorra!
+          <strong>Como participar:</strong> 
         </p>
         
         <button 
@@ -261,7 +261,7 @@ const LandingPage: React.FC = () => {
           }}
         >
           <span style={{ fontSize: '1.5rem' }}>📱</span>
-          FALAR NO WHATSAPP (91) 98744-6061
+          WHATSAPP (91) 98744-6061
         </button>
         
         <p style={{ 
@@ -269,7 +269,7 @@ const LandingPage: React.FC = () => {
           color: '#666',
           fontSize: '1rem'
         }}>
-          Clique acima para conversar diretamente com nosso suporte!
+          Indicações, duvidas e suporte!
         </p>
       </div>
 
@@ -314,7 +314,7 @@ const LandingPage: React.FC = () => {
         </div>
         
         <div className="footer-info">
-          <p>© 2026 LARICA Food Delivery - Todos os direitos reservados a NEMO SYSTEMS LTDA</p>
+          <p>© 2026 LARICA Food Delivery - Todos os direitos reservados </p>
           <p>📱 App disponível para iOS e Android</p>
           <p>📧 Contato: engnfaraujo@gmail.com | 📞 (91) 998744-6061</p>
           <p>📍 Natal - RN, Brasil</p>
