@@ -1,4 +1,4 @@
-// src/pages/LandingPage.tsx - VERSÃO LIMPA COM WHATSAPP
+// src/pages/LandingPage.tsx - COM VÍDEO OFICIAL
 import React from 'react';
 import './LandingPage.css';
 import laricaLogo from '../assets/larica-logo.png';
@@ -35,21 +35,29 @@ const LandingPage: React.FC = () => {
         </div>
         
         <h1 className="landing-title">🍔 LARICA FOOD</h1>
-        <p className="landing-subtitle"> Bateu comeu</p>
+        <p className="landing-subtitle">Bateu comeu</p>
         
-        {/* VÍDEO DE DIVULGAÇÃO */}
+        {/* VÍDEO OFICIAL DO LARICA */}
         <div className="video-container">
           <div className="video-wrapper">
             <iframe 
               width="100%" 
               height="400"
-              src="https://www.youtube.com/embed/SEU_VIDEO_AQUI" 
-              title="Food Delivery" 
+              src="https://www.youtube.com/embed/lvrCNzuSDdI" 
+              title="LARICA FOOD - Delivery Inteligente" 
               frameBorder="0" 
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
               allowFullScreen
             />
           </div>
+          <p className="video-caption" style={{
+            textAlign: 'center',
+            marginTop: '10px',
+            color: '#666',
+            fontSize: '0.9rem'
+          }}>
+            📹 Vídeo oficial do LARICA FOOD
+          </p>
         </div>
         
         {/* BOTÃO PRINCIPAL */}
@@ -208,7 +216,7 @@ const LandingPage: React.FC = () => {
         </div>
       </div>
 
-      {/* BOTÃO DO WHATSAPP - NOVO! */}
+      {/* BOTÃO DO WHATSAPP */}
       <div style={{
         textAlign: 'center',
         padding: '50px 20px',
@@ -224,7 +232,7 @@ const LandingPage: React.FC = () => {
           marginBottom: '15px',
           fontSize: '1.8rem'
         }}>
-          💬 INDIQUE 03 AMIGOS E CONCORRA A  R$ 1.000,00
+          💬 INDIQUE 03 AMIGOS E CONCORRA A R$ 1.000,00
         </h3>
         <p style={{ 
           color: '#666', 
@@ -269,7 +277,7 @@ const LandingPage: React.FC = () => {
           color: '#666',
           fontSize: '1rem'
         }}>
-          Indicações, duvidas e suporte!
+          Indicações, dúvidas e suporte!
         </p>
       </div>
 
@@ -283,7 +291,7 @@ const LandingPage: React.FC = () => {
           />
           <p className="footer-tagline">A Larica é sua, O Rango é nosso</p>
           
-          {/* LOGO DA NEMO SYSTEMS - MAIOR! */}
+          {/* LOGO DA NEMO SYSTEMS */}
           <div style={{ 
             marginTop: '40px', 
             paddingTop: '25px', 
