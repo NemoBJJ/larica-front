@@ -1,4 +1,4 @@
-// src/pages/LandingPage.tsx - VERSÃO COMPLETA ATUALIZADA
+// src/pages/LandingPage.tsx - VERSÃO CORRIGIDA
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import './LandingPage.css';
@@ -12,11 +12,20 @@ const LandingPage: React.FC = () => {
     <div className="landing-container">
       {/* HERO SECTION */}
       <div className="landing-hero">
-        <div className="landing-logo-container">
+        {/* LOGO PRINCIPAL MAIOR - AUMENTEI O TAMANHO */}
+        <div className="landing-logo-container" style={{
+          marginBottom: '30px',
+          display: 'flex',
+          justifyContent: 'center'
+        }}>
           <img 
             src={laricaLogo} 
             alt="LARICA Food Delivery" 
-            className="landing-logo"
+            style={{
+              height: '120px', // AUMENTEI DE 80-100px PARA 120px
+              width: 'auto',
+              maxWidth: '100%'
+            }}
           />
         </div>
         
@@ -194,7 +203,7 @@ const LandingPage: React.FC = () => {
         </div>
       </div>
 
-      {/* BOTÃO DO REGULAMENTO */}
+      {/* BOTÃO DO REGULAMENTO - CORRIGIDO! */}
       <div style={{
         textAlign: 'center',
         padding: '40px 20px',
@@ -220,7 +229,7 @@ const LandingPage: React.FC = () => {
           Saiba tudo sobre como concorrer aos R$ 1.000,00
         </p>
         <button 
-          onClick={() => navigate('/regulamento')}
+          onClick={() => navigate('/regulamento')} // CORRETO! Vai para /regulamento
           style={{
             background: 'white',
             color: '#FF6B35',
@@ -258,35 +267,30 @@ const LandingPage: React.FC = () => {
           />
           <p className="footer-tagline">A Larica é sua, O Rango é nosso</p>
           
-          {/* LOGO DA NEMO SYSTEMS */}
+          {/* LOGO DA NEMO SYSTEMS - MAIOR! */}
           <div style={{ 
-            marginTop: '30px', 
-            paddingTop: '20px', 
+            marginTop: '40px', 
+            paddingTop: '25px', 
             borderTop: '1px solid rgba(255,255,255,0.1)',
             textAlign: 'center',
             width: '100%'
           }}>
-            <p style={{ 
-              fontSize: '0.9rem', 
-              color: '#aaa', 
-              marginBottom: '10px' 
-            }}>
-              Desenvolvido por:
-            </p>
             <img 
               src={nemodevLogo} 
               alt="Nemo Systems - Desenvolvimento de Software" 
               style={{ 
-                height: '40px', 
-                filter: 'brightness(0.9)',
-                opacity: '0.8',
-                marginBottom: '5px'
+                height: '70px', // AUMENTEI DE 40px PARA 70px
+                width: 'auto',
+                filter: 'brightness(1.1)',
+                opacity: '0.9',
+                marginBottom: '8px'
               }}
             />
             <p style={{ 
-              fontSize: '0.8rem', 
-              color: '#888', 
-              marginTop: '0'
+              fontSize: '1rem', 
+              color: '#aaa', 
+              marginTop: '0',
+              fontWeight: 'bold'
             }}>
               NEMO SYSTEMS LTDA
             </p>
@@ -294,9 +298,9 @@ const LandingPage: React.FC = () => {
         </div>
         
         <div className="footer-info">
-          <p>© 2024 LARICA Food Delivery - Todos os direitos reservados a NEMO SYSTEMS LTDA</p>
+          <p>© 2026 LARICA Food Delivery - Todos os direitos reservados a NEMO SYSTEMS LTDA</p>
           <p>📱 App disponível para iOS e Android</p>
-          <p>📧 Contato: contato@larica.com | 📞 (91) 998744-6061</p>
+          <p>📧 Contato: engnfaraujo@gmail.com | 📞 (91) 998744-6061</p>
           <p>📍 Natal - RN, Brasil</p>
         </div>
         
