@@ -1,4 +1,4 @@
-// src/pages/LandingPage.tsx - COM VÍDEO OFICIAL
+// src/pages/LandingPage.tsx - COM TUTORIAL "COMO USAR"
 import React from 'react';
 import './LandingPage.css';
 import laricaLogo from '../assets/larica-logo.png';
@@ -148,6 +148,59 @@ const LandingPage: React.FC = () => {
             <p>Todas as Funcionalidades, em apenas 01 toque</p>
           </div>
         </div>
+      </div>
+
+      {/* TUTORIAL "COMO USAR" - NOVA SEÇÃO ADICIONADA */}
+      <div className="tutorial-section" style={{
+        textAlign: 'center',
+        padding: '50px 20px',
+        backgroundColor: 'rgba(255, 107, 53, 0.05)',
+        margin: '50px auto',
+        borderRadius: '15px',
+        maxWidth: '900px',
+        width: '90%',
+        border: '2px solid #FF6B35'
+      }}>
+        <h2 style={{ 
+          color: '#FF6B35', 
+          marginBottom: '25px',
+          fontSize: '2rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '15px'
+        }}>
+          📱 COMO USAR
+        </h2>
+        
+        <div className="video-wrapper" style={{
+          maxWidth: '800px',
+          margin: '0 auto',
+          borderRadius: '12px',
+          overflow: 'hidden',
+          boxShadow: '0 10px 30px rgba(0, 0, 0, 0.2)'
+        }}>
+          <iframe 
+            width="100%" 
+            height="450"
+            src="https://www.youtube.com/embed/NHqEhb1CVcM" 
+            title="COMO USAR o LARICA FOOD - Tutorial Completo" 
+            frameBorder="0" 
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+            allowFullScreen
+          />
+        </div>
+        
+        <p style={{ 
+          marginTop: '20px', 
+          color: '#666',
+          fontSize: '1.1rem',
+          maxWidth: '600px',
+          marginLeft: 'auto',
+          marginRight: 'auto'
+        }}>
+          Aprenda em poucos minutos como instalar e usar o app Larica Food no seu celular ou computador.
+        </p>
       </div>
 
       {/* BENEFÍCIOS PARA RESTAURANTES */}
