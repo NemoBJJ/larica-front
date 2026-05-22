@@ -204,7 +204,8 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
     alert('Número salvo com sucesso!');
   };
 
-  const API_BASE = 'https://api-larica.neemindev.com/api';
+  // ✅ CORRIGIDO: Usando a baseURL do axios (api.defaults.baseURL)
+  const API_BASE = api.defaults.baseURL || 'https://larica-api-1.onrender.com/api';
 
   const linkRota = (pedidoId: number) =>
     `${API_BASE}/entregador/pedido/${pedidoId}/rota`;
