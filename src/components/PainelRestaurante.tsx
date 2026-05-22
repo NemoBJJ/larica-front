@@ -204,14 +204,29 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
     alert('Número salvo com sucesso!');
   };
 
-  // ✅ CORRIGIDO: Usando a baseURL do axios (api.defaults.baseURL)
+  // ✅ Usando a baseURL do axios
   const API_BASE = api.defaults.baseURL || 'https://larica-api-1.onrender.com/api';
 
-  const linkRota = (pedidoId: number) =>
-    `${API_BASE}/entregador/pedido/${pedidoId}/rota`;
+  // ✅ CORRIGIDO: Função que pega o token do localStorage e monta a URL com autenticação
+  const getAuthToken = (): string | null => {
+    return localStorage.getItem('token');
+  };
 
-  const linkRotaHtml = (pedidoId: number) =>
-    `${API_BASE}/entregador/pedido/${pedidoId}/rota-html`;
+  const linkRota = (pedidoId: number) => {
+    const token = getAuthToken();
+    if (token) {
+      return `${API_BASE}/entregador/pedido/${pedidoId}/rota?token=${token}`;
+    }
+    return `${API_BASE}/entregador/pedido/${pedidoId}/rota`;
+  };
+
+  const linkRotaHtml = (pedidoId: number) => {
+    const token = getAuthToken();
+    if (token) {
+      return `${API_BASE}/entregador/pedido/${pedidoId}/rota-html?token=${token}`;
+    }
+    return `${API_BASE}/entregador/pedido/${pedidoId}/rota-html`;
+  };
 
   const chamarMeuEntregador = (pedido: Pedido) => {
     const numero = obterOuConfigurarCooperativa();
