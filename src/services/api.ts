@@ -4,7 +4,7 @@ const BASE =
   (typeof window !== 'undefined' && (window as any).__API_BASE_URL__) ||
   (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_API_BASE_URL) ||
   process.env.REACT_APP_API_BASE_URL ||
-  'https://api-larica.neemindev.com/api'; // ✅ ADD https:// e /api
+  'https://larica-api-1.onrender.com/api';  // ← APONTANDO PARA O RENDER!
 
 const api = axios.create({
   baseURL: BASE,
@@ -13,7 +13,7 @@ const api = axios.create({
   withCredentials: false,
 });
 
-// ✅ INTERCEPTOR PARA ADICIONAR TOKEN AUTOMATICAMENTE
+// Interceptor para adicionar token automaticamente
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
@@ -22,7 +22,7 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// ✅ INTERCEPTOR PARA TRATAR TOKEN EXPIRADO
+// Interceptor para tratar token expirado
 api.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
@@ -32,7 +32,6 @@ api.interceptors.response.use(
       window.location.href = '/login';
     }
 
-    // Mantém o logging original de erro
     const cfg = (error.config || {}) as AxiosRequestConfig;
     const finalUrl = `${api.defaults.baseURL || ''}${cfg.url || ''}`;
     console.error('Erro na requisição:', {
@@ -48,6 +47,6 @@ api.interceptors.response.use(
 
 export default api;
 
-/** helper opcional */
+// Helper opcional
 export const loginDono = (email: string, senha: string) =>
   api.post('/auth/donos/login', { email, senha });
