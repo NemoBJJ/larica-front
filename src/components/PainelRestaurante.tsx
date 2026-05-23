@@ -25,6 +25,8 @@ interface Pedido {
     nome: string;
     endereco: string;
     telefone: string;
+    latitude?: number;
+    longitude?: number;
   };
 }
 
@@ -56,19 +58,15 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
 
   const navigate = useNavigate();
 
-  // 🚀 CARREGA PEDIDOS USANDO ENDPOINT DO HISTÓRICO (QUE FUNCIONA)
   const carregarPedidos = async () => {
     console.log(`🔍 Buscando pedidos para restaurante ${restauranteIdFinal}`);
     
     try {
-      // USA ENDPOINT DO HISTÓRICO QUE JÁ FUNCIONA
       const response = await api.get(`/pedidos/restaurante/${restauranteIdFinal}`);
       
       console.log('✅ Dados recebidos:', response.data);
       
-      // Converte formato do histórico para formato do painel
       const pedidosConvertidos = (response.data || []).map((pedidoHist: any) => {
-        // Calcula total
         const total = pedidoHist.itens.reduce((soma: number, item: any) => {
           const preco = typeof item.precoUnitario === 'string'
             ? parseFloat(item.precoUnitario)
@@ -77,10 +75,10 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
         }, 0);
         
         return {
-          id: pedidoHist.pedidoId, // ⚠️ USA pedidoId, NÃO id
+          id: pedidoHist.pedidoId,
           data: pedidoHist.data.includes('T') ? pedidoHist.data : `${pedidoHist.data}T12:00:00`,
           status: pedidoHist.status,
-          nomeCliente: 'Cliente', // Histórico não tem nome do cliente
+          nomeCliente: 'Cliente',
           telefoneCliente: '',
           itens: pedidoHist.itens.map((item: any) => ({
             id: item.id,
@@ -149,7 +147,6 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
         null,
         { params: { status: novoStatus } }
       );
-      // Recarrega pedidos após atualização
       await carregarPedidos();
     } catch (err) {
       console.error('Erro ao atualizar status:', err);
@@ -204,59 +201,73 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
     alert('Número salvo com sucesso!');
   };
 
-  // ✅ Usando a baseURL do axios
   const API_BASE = api.defaults.baseURL || 'https://larica-api-1.onrender.com/api';
 
-  // ✅ CORRIGIDO: Função que pega o token do localStorage e monta a URL com autenticação
-  const getAuthToken = (): string | null => {
-    return localStorage.getItem('token');
-  };
-
-  const linkRota = (pedidoId: number) => {
-    const token = getAuthToken();
-    if (token) {
-      return `${API_BASE}/entregador/pedido/${pedidoId}/rota?token=${token}`;
+  // ✅ FUNÇÃO CORRIGIDA: Busca as coordenadas e gera link do Google Maps diretamente
+  const gerarLinkRota = async (pedido: Pedido, numeroWhats: string, nomeRest: string) => {
+    try {
+      // Busca as coordenadas do backend
+      const token = localStorage.getItem('token');
+      const response = await api.get(`/auth/donos/entregador/pedido/${pedido.id}/rota`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      const data = response.data;
+      const restLat = data.latRestaurante;
+      const restLng = data.lngRestaurante;
+      const clientLat = data.latCliente || -5.7945;
+      const clientLng = data.lngCliente || -35.211;
+      
+      // Monta o link do Google Maps
+      const mapsUrl = `https://www.google.com/maps/dir/${restLat},${restLng}/${clientLat},${clientLng}`;
+      
+      const mensagem = 
+        `🚚 *LARICA - ENTREGA DISPONÍVEL* 🚚\n\n` +
+        `*Pedido:* #${pedido.id}\n` +
+        `*Restaurante:* ${nomeRest}\n\n` +
+        `📍 *ROTA DO GOOGLE MAPS:*\n` +
+        `${mapsUrl}\n\n` +
+        `💰 *Valor sugerido:* R$ 15,00\n` +
+        `⏰ *Prazo:* 30 minutos`;
+      
+      window.open(`https://wa.me/${numeroWhats}?text=${encodeURIComponent(mensagem)}`, '_blank');
+    } catch (err) {
+      console.error('Erro ao gerar rota:', err);
+      alert('Erro ao gerar rota. Tente novamente.');
     }
-    return `${API_BASE}/entregador/pedido/${pedidoId}/rota`;
   };
 
-  const linkRotaHtml = (pedidoId: number) => {
-    const token = getAuthToken();
-    if (token) {
-      return `${API_BASE}/entregador/pedido/${pedidoId}/rota-html?token=${token}`;
-    }
-    return `${API_BASE}/entregador/pedido/${pedidoId}/rota-html`;
-  };
-
-  const chamarMeuEntregador = (pedido: Pedido) => {
+  const chamarMeuEntregador = async (pedido: Pedido) => {
     const numero = obterOuConfigurarCooperativa();
     if (!numero) return;
 
     const nomeRest = pedido.restaurante?.nome || nomeRestaurante || 'Restaurante';
-    const urlRota = linkRota(pedido.id);
-
-    const mensagem =
-      `🚚 *LARICA - ENTREGA DISPONÍVEL* 🚚\n\n` +
-      `*Pedido:* #${pedido.id}\n` +
-      `*Restaurante:* ${nomeRest}\n\n` +
-      `📍 *ACESSE O MAPA COMPLETO:*\n` +
-      `${urlRota}\n\n` +
-      `💰 *Valor sugerido:* R$ 15,00\n` +
-      `⏰ *Prazo:* 30 minutos`;
-
-    window.open(`https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`, '_blank');
+    await gerarLinkRota(pedido, numero, nomeRest);
   };
 
-  const postarNoGrupoWhatsApp = (pedido: Pedido) => {
+  const postarNoGrupoWhatsApp = async (pedido: Pedido) => {
     const nomeRest = pedido.restaurante?.nome || nomeRestaurante || 'Restaurante';
-    const urlRota = linkRota(pedido.id);
-
+    
+    // Busca as coordenadas
+    const token = localStorage.getItem('token');
+    const response = await api.get(`/auth/donos/entregador/pedido/${pedido.id}/rota`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    
+    const data = response.data;
+    const restLat = data.latRestaurante;
+    const restLng = data.lngRestaurante;
+    const clientLat = data.latCliente || -5.7945;
+    const clientLng = data.lngCliente || -35.211;
+    
+    const mapsUrl = `https://www.google.com/maps/dir/${restLat},${restLng}/${clientLat},${clientLng}`;
+    
     const mensagem =
       `🚚 *LARICA - ENTREGA DISPONÍVEL* 🚚\n\n` +
       `*Pedido:* #${pedido.id}\n` +
       `*Restaurante:* ${nomeRest}\n\n` +
-      `📍 *ACESSE O MAPA COMPLETO:*\n` +
-      `${urlRota}\n\n` +
+      `📍 *ROTA DO GOOGLE MAPS:*\n` +
+      `${mapsUrl}\n\n` +
       `⚠️ *QUEM PEGAR COMENTA NO GRUPO!*`;
 
     window.open(`https://web.whatsapp.com/send?text=${encodeURIComponent(mensagem)}`, '_blank');
