@@ -1,10 +1,12 @@
+// src/services/api.ts
 import axios, { AxiosError, AxiosRequestConfig } from 'axios';
 
-const BASE =
-  (typeof window !== 'undefined' && (window as any).__API_BASE_URL__) ||
-  (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_API_BASE_URL) ||
-  process.env.REACT_APP_API_BASE_URL ||
-  'https://larica-api-1.onrender.com/api';  // ← APONTANDO PARA O RENDER!
+// Detecta ambiente (local ou produção)
+const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+const BASE = isDevelopment
+  ? 'http://localhost:8086/api'
+  : 'https://larica-api-1.onrender.com/api';
 
 const api = axios.create({
   baseURL: BASE,

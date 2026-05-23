@@ -6,7 +6,7 @@ interface Props {
   restauranteId: number;
   nomeRestaurante: string;
   onVoltar: () => void;
-  usuarioId: number; // ✅ AGORA RECEBE via props
+  usuarioId: number;
 }
 
 interface Produto {
@@ -32,6 +32,7 @@ const CardapioRestaurante: React.FC<Props> = ({
   const [erro, setErro] = useState<string | null>(null);
   const [mensagemSucesso, setMensagemSucesso] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(false);
+  const [capturandoLocalizacao, setCapturandoLocalizacao] = useState(false);
 
   useEffect(() => {
     const carregarCardapio = async () => {
@@ -84,16 +85,71 @@ const CardapioRestaurante: React.FC<Props> = ({
     }, 0);
   };
 
+  // ✅ NOVA FUNÇÃO: Captura a localização do cliente
+  const capturarLocalizacao = (): Promise<{ lat: number; lng: number }> => {
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        reject(new Error('Geolocalização não é suportada pelo seu navegador'));
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          resolve({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          });
+        },
+        (error) => {
+          let errorMessage = 'Erro ao capturar localização. ';
+          switch(error.code) {
+            case error.PERMISSION_DENIED:
+              errorMessage += 'Você precisa permitir o acesso à localização.';
+              break;
+            case error.POSITION_UNAVAILABLE:
+              errorMessage += 'Informação de localização indisponível.';
+              break;
+            case error.TIMEOUT:
+              errorMessage += 'Tempo limite excedido. Tente novamente.';
+              break;
+            default:
+              errorMessage += error.message;
+          }
+          reject(new Error(errorMessage));
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        }
+      );
+    });
+  };
+
   const fazerPedido = async () => {
-    // ✅ CORREÇÃO: Remove a linha do localStorage e usa o usuarioId das props
     setCarregando(true);
     setErro(null);
     setMensagemSucesso(null);
+    setCapturandoLocalizacao(true);
 
     try {
-      // 1. Cria o pedido no backend
-      const payload = {
-        usuarioId, // ✅ Já vem das props
+      // ✅ CAPTURA A LOCALIZAÇÃO DO CLIENTE
+      let clienteLat = null;
+      let clienteLng = null;
+      
+      try {
+        const posicao = await capturarLocalizacao();
+        clienteLat = posicao.lat;
+        clienteLng = posicao.lng;
+        console.log('📍 Localização capturada:', { clienteLat, clienteLng });
+      } catch (locationError: any) {
+        console.warn('⚠️ Não foi possível capturar localização:', locationError.message);
+        // Continua sem localização - não bloqueia o pedido
+      }
+
+      // 1. Cria o pedido no backend (com localização se disponível)
+      const payload: any = {
+        usuarioId,
         restauranteId,
         itens: carrinho.map((item) => ({
           produtoId: item.id,
@@ -101,10 +157,16 @@ const CardapioRestaurante: React.FC<Props> = ({
         })),
       };
 
+      // Adiciona localização se foi capturada
+      if (clienteLat && clienteLng) {
+        payload.clienteLatitude = clienteLat;
+        payload.clienteLongitude = clienteLng;
+      }
+
       const pedidoRes = await api.post('/pedidos', payload);
       const pedidoId = pedidoRes.data.id;
 
-      // 2. Gera o link de pagamento DINÂMICO
+      // 2. Gera o link de pagamento
       const pagamentoRes = await api.post(`/pagamentos/mercadopago/preference/${pedidoId}`);
       const initPoint = pagamentoRes.data.initPoint;
 
@@ -119,6 +181,7 @@ const CardapioRestaurante: React.FC<Props> = ({
       setErro(mensagem);
     } finally {
       setCarregando(false);
+      setCapturandoLocalizacao(false);
     }
   };
 
@@ -132,6 +195,9 @@ const CardapioRestaurante: React.FC<Props> = ({
 
       {erro && <div className="erro-cardapio">{erro}</div>}
       {mensagemSucesso && <div className="mensagem-sucesso">{mensagemSucesso}</div>}
+      {capturandoLocalizacao && (
+        <div className="mensagem-info">📍 Capturando sua localização para a rota do entregador...</div>
+      )}
 
       <div className="cardapio-content">
         <ul className="cardapio-list">
