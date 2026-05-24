@@ -206,7 +206,6 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
   // ✅ FUNÇÃO CORRIGIDA: Rota do CLIENTE (origem) para RESTAURANTE (destino)
   const gerarLinkRota = async (pedido: Pedido, numeroWhats: string, nomeRest: string) => {
     try {
-      // Busca as coordenadas do backend
       const token = localStorage.getItem('token');
       const response = await api.get(`/auth/donos/entregador/pedido/${pedido.id}/rota`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -215,17 +214,22 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
       const data = response.data;
       const restLat = data.latRestaurante;
       const restLng = data.lngRestaurante;
-      const clientLat = data.latCliente || -5.7945;
-      const clientLng = data.lngCliente || -35.211;
       
-      // ✅ CORRIGIDO: Cliente → Restaurante (entregador busca no restaurante)
+      // ✅ PRIORIZA LOCALIZAÇÃO SALVA NO localStorage
+      const savedLat = localStorage.getItem('clienteLatitude');
+      const savedLng = localStorage.getItem('clienteLongitude');
+      
+      const clientLat = savedLat ? parseFloat(savedLat) : (data.latCliente || -5.7945);
+      const clientLng = savedLng ? parseFloat(savedLng) : (data.lngCliente || -35.211);
+      
+      // ✅ Cliente → Restaurante
       const mapsUrl = `https://www.google.com/maps/dir/${clientLat},${clientLng}/${restLat},${restLng}`;
       
       const mensagem = 
         `🚚 *LARICA - ENTREGA DISPONÍVEL* 🚚\n\n` +
         `*Pedido:* #${pedido.id}\n` +
         `*Restaurante:* ${nomeRest}\n\n` +
-        `📍 *ROTA DO GOOGLE MAPS (Cliente → Restaurante):*\n` +
+        `📍 *ROTA DO GOOGLE MAPS:*\n` +
         `${mapsUrl}\n\n` +
         `💰 *Valor sugerido:* R$ 15,00\n` +
         `⏰ *Prazo:* 30 minutos`;
@@ -248,7 +252,6 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
   const postarNoGrupoWhatsApp = async (pedido: Pedido) => {
     const nomeRest = pedido.restaurante?.nome || nomeRestaurante || 'Restaurante';
     
-    // Busca as coordenadas
     const token = localStorage.getItem('token');
     const response = await api.get(`/auth/donos/entregador/pedido/${pedido.id}/rota`, {
       headers: { Authorization: `Bearer ${token}` }
@@ -257,17 +260,20 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
     const data = response.data;
     const restLat = data.latRestaurante;
     const restLng = data.lngRestaurante;
-    const clientLat = data.latCliente || -5.7945;
-    const clientLng = data.lngCliente || -35.211;
     
-    // ✅ CORRIGIDO: Cliente → Restaurante
+    const savedLat = localStorage.getItem('clienteLatitude');
+    const savedLng = localStorage.getItem('clienteLongitude');
+    
+    const clientLat = savedLat ? parseFloat(savedLat) : (data.latCliente || -5.7945);
+    const clientLng = savedLng ? parseFloat(savedLng) : (data.lngCliente || -35.211);
+    
     const mapsUrl = `https://www.google.com/maps/dir/${clientLat},${clientLng}/${restLat},${restLng}`;
     
     const mensagem =
       `🚚 *LARICA - ENTREGA DISPONÍVEL* 🚚\n\n` +
       `*Pedido:* #${pedido.id}\n` +
       `*Restaurante:* ${nomeRest}\n\n` +
-      `📍 *ROTA DO GOOGLE MAPS (Cliente → Restaurante):*\n` +
+      `📍 *ROTA DO GOOGLE MAPS:*\n` +
       `${mapsUrl}\n\n` +
       `⚠️ *QUEM PEGAR COMENTA NO GRUPO!*`;
 

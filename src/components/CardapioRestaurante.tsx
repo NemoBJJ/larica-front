@@ -1,3 +1,4 @@
+// src/components/CardapioRestaurante.tsx
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
 import './CardapioRestaurante.css';
@@ -85,7 +86,7 @@ const CardapioRestaurante: React.FC<Props> = ({
     }, 0);
   };
 
-  // ✅ NOVA FUNÇÃO: Captura a localização do cliente
+  // ✅ Captura a localização e SALVA no localStorage
   const capturarLocalizacao = (): Promise<{ lat: number; lng: number }> => {
     return new Promise((resolve, reject) => {
       if (!navigator.geolocation) {
@@ -95,10 +96,13 @@ const CardapioRestaurante: React.FC<Props> = ({
 
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          resolve({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          });
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          // ✅ SALVA NO LOCALSTORAGE para reutilizar depois
+          localStorage.setItem('clienteLatitude', lat.toString());
+          localStorage.setItem('clienteLongitude', lng.toString());
+          console.log('📍 Localização salva no localStorage:', { lat, lng });
+          resolve({ lat, lng });
         },
         (error) => {
           let errorMessage = 'Erro ao capturar localização. ';
@@ -132,22 +136,29 @@ const CardapioRestaurante: React.FC<Props> = ({
     setMensagemSucesso(null);
     setCapturandoLocalizacao(true);
 
-    try {
-      // ✅ CAPTURA A LOCALIZAÇÃO DO CLIENTE
-      let clienteLat = null;
-      let clienteLng = null;
-      
+    let clienteLat = null;
+    let clienteLng = null;
+    
+    // ✅ TENTA PEGAR DO LOCALSTORAGE PRIMEIRO
+    const savedLat = localStorage.getItem('clienteLatitude');
+    const savedLng = localStorage.getItem('clienteLongitude');
+    
+    if (savedLat && savedLng) {
+      clienteLat = parseFloat(savedLat);
+      clienteLng = parseFloat(savedLng);
+      console.log('📍 Localização recuperada do localStorage:', { clienteLat, clienteLng });
+    } else {
+      // Se não tem no localStorage, captura agora
       try {
         const posicao = await capturarLocalizacao();
         clienteLat = posicao.lat;
         clienteLng = posicao.lng;
-        console.log('📍 Localização capturada:', { clienteLat, clienteLng });
       } catch (locationError: any) {
         console.warn('⚠️ Não foi possível capturar localização:', locationError.message);
-        // Continua sem localização - não bloqueia o pedido
       }
+    }
 
-      // 1. Cria o pedido no backend (com localização se disponível)
+    try {
       const payload: any = {
         usuarioId,
         restauranteId,
@@ -157,7 +168,6 @@ const CardapioRestaurante: React.FC<Props> = ({
         })),
       };
 
-      // Adiciona localização se foi capturada
       if (clienteLat && clienteLng) {
         payload.clienteLatitude = clienteLat;
         payload.clienteLongitude = clienteLng;
@@ -166,11 +176,9 @@ const CardapioRestaurante: React.FC<Props> = ({
       const pedidoRes = await api.post('/pedidos', payload);
       const pedidoId = pedidoRes.data.id;
 
-      // 2. Gera o link de pagamento
       const pagamentoRes = await api.post(`/pagamentos/mercadopago/preference/${pedidoId}`);
       const initPoint = pagamentoRes.data.initPoint;
 
-      // 3. Redireciona para o Mercado Pago
       window.open(initPoint, '_blank');
       setCarrinho([]);
       setMensagemSucesso(`✅ Pedido #${pedidoId} realizado! Redirecionando para pagamento...`);
