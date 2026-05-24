@@ -203,7 +203,7 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
 
   const API_BASE = api.defaults.baseURL || 'https://larica-api-1.onrender.com/api';
 
-  // ✅ FUNÇÃO CORRIGIDA: Busca as coordenadas e gera link do Google Maps diretamente
+  // ✅ FUNÇÃO CORRIGIDA: Rota do CLIENTE (origem) para RESTAURANTE (destino)
   const gerarLinkRota = async (pedido: Pedido, numeroWhats: string, nomeRest: string) => {
     try {
       // Busca as coordenadas do backend
@@ -218,14 +218,14 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
       const clientLat = data.latCliente || -5.7945;
       const clientLng = data.lngCliente || -35.211;
       
-      // Monta o link do Google Maps
-      const mapsUrl = `https://www.google.com/maps/dir/${restLat},${restLng}/${clientLat},${clientLng}`;
+      // ✅ CORRIGIDO: Cliente → Restaurante (entregador busca no restaurante)
+      const mapsUrl = `https://www.google.com/maps/dir/${clientLat},${clientLng}/${restLat},${restLng}`;
       
       const mensagem = 
         `🚚 *LARICA - ENTREGA DISPONÍVEL* 🚚\n\n` +
         `*Pedido:* #${pedido.id}\n` +
         `*Restaurante:* ${nomeRest}\n\n` +
-        `📍 *ROTA DO GOOGLE MAPS:*\n` +
+        `📍 *ROTA DO GOOGLE MAPS (Cliente → Restaurante):*\n` +
         `${mapsUrl}\n\n` +
         `💰 *Valor sugerido:* R$ 15,00\n` +
         `⏰ *Prazo:* 30 minutos`;
@@ -260,13 +260,14 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
     const clientLat = data.latCliente || -5.7945;
     const clientLng = data.lngCliente || -35.211;
     
-    const mapsUrl = `https://www.google.com/maps/dir/${restLat},${restLng}/${clientLat},${clientLng}`;
+    // ✅ CORRIGIDO: Cliente → Restaurante
+    const mapsUrl = `https://www.google.com/maps/dir/${clientLat},${clientLng}/${restLat},${restLng}`;
     
     const mensagem =
       `🚚 *LARICA - ENTREGA DISPONÍVEL* 🚚\n\n` +
       `*Pedido:* #${pedido.id}\n` +
       `*Restaurante:* ${nomeRest}\n\n` +
-      `📍 *ROTA DO GOOGLE MAPS:*\n` +
+      `📍 *ROTA DO GOOGLE MAPS (Cliente → Restaurante):*\n` +
       `${mapsUrl}\n\n` +
       `⚠️ *QUEM PEGAR COMENTA NO GRUPO!*`;
 
