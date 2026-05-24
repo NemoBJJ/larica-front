@@ -1,4 +1,3 @@
-// src/components/PainelRestaurante.tsx
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../services/api';
@@ -203,7 +202,6 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
 
   const API_BASE = api.defaults.baseURL || 'https://larica-api-1.onrender.com/api';
 
-  // ✅ FUNÇÃO CORRIGIDA: Rota do CLIENTE (origem) para RESTAURANTE (destino)
   const gerarLinkRota = async (pedido: Pedido, numeroWhats: string, nomeRest: string) => {
     try {
       const token = localStorage.getItem('token');
@@ -215,21 +213,25 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
       const restLat = data.latRestaurante;
       const restLng = data.lngRestaurante;
       
-      // ✅ PRIORIZA LOCALIZAÇÃO SALVA NO localStorage
+      // Pega endereço do localStorage (cadastrado pelo cliente no pedido)
+      const enderecoCliente = localStorage.getItem('enderecoCliente') || 'Endereço não informado';
+      
       const savedLat = localStorage.getItem('clienteLatitude');
       const savedLng = localStorage.getItem('clienteLongitude');
       
       const clientLat = savedLat ? parseFloat(savedLat) : (data.latCliente || -5.7945);
       const clientLng = savedLng ? parseFloat(savedLng) : (data.lngCliente || -35.211);
       
-      // ✅ Cliente → Restaurante
-      const mapsUrl = `https://www.google.com/maps/dir/${clientLat},${clientLng}/${restLat},${restLng}`;
+      // ✅ ORDEM CORRETA: Restaurante → Cliente
+      const mapsUrl = `https://www.google.com/maps/dir/${restLat},${restLng}/${clientLat},${clientLng}`;
       
       const mensagem = 
         `🚚 *LARICA - ENTREGA DISPONÍVEL* 🚚\n\n` +
         `*Pedido:* #${pedido.id}\n` +
-        `*Restaurante:* ${nomeRest}\n\n` +
-        `📍 *ROTA DO GOOGLE MAPS:*\n` +
+        `*Restaurante:* ${nomeRest}\n` +
+        `📍 *Endereço do Restaurante:* ${pedido.restaurante?.endereco || enderecoRestaurante}\n` +
+        `🏠 *Endereço do Cliente:* ${enderecoCliente}\n\n` +
+        `🗺️ *ROTA DO GOOGLE MAPS:*\n` +
         `${mapsUrl}\n\n` +
         `💰 *Valor sugerido:* R$ 15,00\n` +
         `⏰ *Prazo:* 30 minutos`;
@@ -261,19 +263,24 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
     const restLat = data.latRestaurante;
     const restLng = data.lngRestaurante;
     
+    const enderecoCliente = localStorage.getItem('enderecoCliente') || 'Endereço não informado';
+    
     const savedLat = localStorage.getItem('clienteLatitude');
     const savedLng = localStorage.getItem('clienteLongitude');
     
     const clientLat = savedLat ? parseFloat(savedLat) : (data.latCliente || -5.7945);
     const clientLng = savedLng ? parseFloat(savedLng) : (data.lngCliente || -35.211);
     
-    const mapsUrl = `https://www.google.com/maps/dir/${clientLat},${clientLng}/${restLat},${restLng}`;
+    // ✅ ORDEM CORRETA: Restaurante → Cliente
+    const mapsUrl = `https://www.google.com/maps/dir/${restLat},${restLng}/${clientLat},${clientLng}`;
     
     const mensagem =
       `🚚 *LARICA - ENTREGA DISPONÍVEL* 🚚\n\n` +
       `*Pedido:* #${pedido.id}\n` +
-      `*Restaurante:* ${nomeRest}\n\n` +
-      `📍 *ROTA DO GOOGLE MAPS:*\n` +
+      `*Restaurante:* ${nomeRest}\n` +
+      `📍 *Endereço do Restaurante:* ${pedido.restaurante?.endereco || enderecoRestaurante}\n` +
+      `🏠 *Endereço do Cliente:* ${enderecoCliente}\n\n` +
+      `🗺️ *ROTA DO GOOGLE MAPS:*\n` +
       `${mapsUrl}\n\n` +
       `⚠️ *QUEM PEGAR COMENTA NO GRUPO!*`;
 

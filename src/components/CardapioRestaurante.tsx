@@ -1,4 +1,3 @@
-// src/components/CardapioRestaurante.tsx
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
 import './CardapioRestaurante.css';
@@ -34,6 +33,7 @@ const CardapioRestaurante: React.FC<Props> = ({
   const [mensagemSucesso, setMensagemSucesso] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(false);
   const [capturandoLocalizacao, setCapturandoLocalizacao] = useState(false);
+  const [enderecoCliente, setEnderecoCliente] = useState('');
 
   useEffect(() => {
     const carregarCardapio = async () => {
@@ -86,7 +86,6 @@ const CardapioRestaurante: React.FC<Props> = ({
     }, 0);
   };
 
-  // ✅ Captura a localização e SALVA no localStorage
   const capturarLocalizacao = (): Promise<{ lat: number; lng: number }> => {
     return new Promise((resolve, reject) => {
       if (!navigator.geolocation) {
@@ -98,7 +97,6 @@ const CardapioRestaurante: React.FC<Props> = ({
         (position) => {
           const lat = position.coords.latitude;
           const lng = position.coords.longitude;
-          // ✅ SALVA NO LOCALSTORAGE para reutilizar depois
           localStorage.setItem('clienteLatitude', lat.toString());
           localStorage.setItem('clienteLongitude', lng.toString());
           console.log('📍 Localização salva no localStorage:', { lat, lng });
@@ -131,6 +129,11 @@ const CardapioRestaurante: React.FC<Props> = ({
   };
 
   const fazerPedido = async () => {
+    if (!enderecoCliente.trim()) {
+      setErro('Por favor, informe seu endereço completo.');
+      return;
+    }
+
     setCarregando(true);
     setErro(null);
     setMensagemSucesso(null);
@@ -139,7 +142,6 @@ const CardapioRestaurante: React.FC<Props> = ({
     let clienteLat = null;
     let clienteLng = null;
     
-    // ✅ TENTA PEGAR DO LOCALSTORAGE PRIMEIRO
     const savedLat = localStorage.getItem('clienteLatitude');
     const savedLng = localStorage.getItem('clienteLongitude');
     
@@ -148,7 +150,6 @@ const CardapioRestaurante: React.FC<Props> = ({
       clienteLng = parseFloat(savedLng);
       console.log('📍 Localização recuperada do localStorage:', { clienteLat, clienteLng });
     } else {
-      // Se não tem no localStorage, captura agora
       try {
         const posicao = await capturarLocalizacao();
         clienteLat = posicao.lat;
@@ -166,6 +167,7 @@ const CardapioRestaurante: React.FC<Props> = ({
           produtoId: item.id,
           quantidade: item.quantidade,
         })),
+        enderecoCliente: enderecoCliente,
       };
 
       if (clienteLat && clienteLng) {
@@ -181,6 +183,7 @@ const CardapioRestaurante: React.FC<Props> = ({
 
       window.open(initPoint, '_blank');
       setCarrinho([]);
+      setEnderecoCliente('');
       setMensagemSucesso(`✅ Pedido #${pedidoId} realizado! Redirecionando para pagamento...`);
       setTimeout(() => setMensagemSucesso(null), 5000);
     } catch (error: any) {
@@ -208,6 +211,19 @@ const CardapioRestaurante: React.FC<Props> = ({
       )}
 
       <div className="cardapio-content">
+        <div className="endereco-cliente-section">
+          <label>Seu endereço completo:</label>
+          <input
+            type="text"
+            className="endereco-input"
+            placeholder="Rua, número, bairro, cidade - CEP"
+            value={enderecoCliente}
+            onChange={(e) => setEnderecoCliente(e.target.value)}
+            required
+          />
+          <small className="endereco-dica">Ex: Rua das Flores, 123 - Centro, Natal - RN, 59000-000</small>
+        </div>
+
         <ul className="cardapio-list">
           {cardapio.map((produto) => (
             <li className="cardapio-item" key={produto.id}>
