@@ -32,7 +32,6 @@ const CardapioRestaurante: React.FC<Props> = ({
   const [erro, setErro] = useState<string | null>(null);
   const [mensagemSucesso, setMensagemSucesso] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(false);
-  const [capturandoLocalizacao, setCapturandoLocalizacao] = useState(false);
   const [enderecoCliente, setEnderecoCliente] = useState('');
 
   useEffect(() => {
@@ -86,48 +85,7 @@ const CardapioRestaurante: React.FC<Props> = ({
     }, 0);
   };
 
-  const capturarLocalizacao = (): Promise<{ lat: number; lng: number }> => {
-    return new Promise((resolve, reject) => {
-      if (!navigator.geolocation) {
-        reject(new Error('Geolocalização não é suportada pelo seu navegador'));
-        return;
-      }
-
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const lat = position.coords.latitude;
-          const lng = position.coords.longitude;
-          localStorage.setItem('clienteLatitude', lat.toString());
-          localStorage.setItem('clienteLongitude', lng.toString());
-          console.log('📍 Localização salva no localStorage:', { lat, lng });
-          resolve({ lat, lng });
-        },
-        (error) => {
-          let errorMessage = 'Erro ao capturar localização. ';
-          switch(error.code) {
-            case error.PERMISSION_DENIED:
-              errorMessage += 'Você precisa permitir o acesso à localização.';
-              break;
-            case error.POSITION_UNAVAILABLE:
-              errorMessage += 'Informação de localização indisponível.';
-              break;
-            case error.TIMEOUT:
-              errorMessage += 'Tempo limite excedido. Tente novamente.';
-              break;
-            default:
-              errorMessage += error.message;
-          }
-          reject(new Error(errorMessage));
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 0
-        }
-      );
-    });
-  };
-
+  // ✅ FUNÇÃO ATUALIZADA - SALVA ENDEREÇO NO LOCALSTORAGE
   const fazerPedido = async () => {
     if (!enderecoCliente.trim()) {
       setErro('Por favor, informe seu endereço completo.');
@@ -137,30 +95,25 @@ const CardapioRestaurante: React.FC<Props> = ({
     setCarregando(true);
     setErro(null);
     setMensagemSucesso(null);
-    setCapturandoLocalizacao(true);
-
-    let clienteLat = null;
-    let clienteLng = null;
-    
-    const savedLat = localStorage.getItem('clienteLatitude');
-    const savedLng = localStorage.getItem('clienteLongitude');
-    
-    if (savedLat && savedLng) {
-      clienteLat = parseFloat(savedLat);
-      clienteLng = parseFloat(savedLng);
-      console.log('📍 Localização recuperada do localStorage:', { clienteLat, clienteLng });
-    } else {
-      try {
-        const posicao = await capturarLocalizacao();
-        clienteLat = posicao.lat;
-        clienteLng = posicao.lng;
-      } catch (locationError: any) {
-        console.warn('⚠️ Não foi possível capturar localização:', locationError.message);
-      }
-    }
 
     try {
-      const payload: any = {
+      // ✅ SALVA O ENDEREÇO DIGITADO PELO CLIENTE
+      localStorage.setItem('enderecoCliente', enderecoCliente);
+      
+      // Opcional: tenta obter coordenadas para fallback (não obrigatório)
+      if ('geolocation' in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            localStorage.setItem('clienteLatitude', position.coords.latitude.toString());
+            localStorage.setItem('clienteLongitude', position.coords.longitude.toString());
+          },
+          (error) => {
+            console.log('Geolocalização não autorizada ou indisponível');
+          }
+        );
+      }
+
+      const payload = {
         usuarioId,
         restauranteId,
         itens: carrinho.map((item) => ({
@@ -170,11 +123,6 @@ const CardapioRestaurante: React.FC<Props> = ({
         enderecoCliente: enderecoCliente,
       };
 
-      if (clienteLat && clienteLng) {
-        payload.clienteLatitude = clienteLat;
-        payload.clienteLongitude = clienteLng;
-      }
-
       const pedidoRes = await api.post('/pedidos', payload);
       const pedidoId = pedidoRes.data.id;
 
@@ -183,7 +131,6 @@ const CardapioRestaurante: React.FC<Props> = ({
 
       window.open(initPoint, '_blank');
       setCarrinho([]);
-      setEnderecoCliente('');
       setMensagemSucesso(`✅ Pedido #${pedidoId} realizado! Redirecionando para pagamento...`);
       setTimeout(() => setMensagemSucesso(null), 5000);
     } catch (error: any) {
@@ -192,7 +139,6 @@ const CardapioRestaurante: React.FC<Props> = ({
       setErro(mensagem);
     } finally {
       setCarregando(false);
-      setCapturandoLocalizacao(false);
     }
   };
 
@@ -206,24 +152,31 @@ const CardapioRestaurante: React.FC<Props> = ({
 
       {erro && <div className="erro-cardapio">{erro}</div>}
       {mensagemSucesso && <div className="mensagem-sucesso">{mensagemSucesso}</div>}
-      {capturandoLocalizacao && (
-        <div className="mensagem-info">📍 Capturando sua localização para a rota do entregador...</div>
-      )}
+
+      {/* CAMPO DE ENDEREÇO - AGORA COM VALIDAÇÃO MELHORADA */}
+      <div style={{ marginBottom: '20px', padding: '15px', background: '#f5f5f5', borderRadius: '8px' }}>
+        <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
+          Seu endereço completo para entrega:
+        </label>
+        <input
+          type="text"
+          style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ccc' }}
+          placeholder="Rua, número, bairro, cidade - CEP"
+          value={enderecoCliente}
+          onChange={(e) => setEnderecoCliente(e.target.value)}
+          required
+        />
+        <small style={{ display: 'block', marginTop: '5px', color: '#666' }}>
+          Ex: Rua das Flores, 123 - Centro, Natal - RN, 59000-000
+        </small>
+        {enderecoCliente && (
+          <small style={{ display: 'block', marginTop: '5px', color: '#4CAF50' }}>
+            ✅ Endereço salvo: {enderecoCliente}
+          </small>
+        )}
+      </div>
 
       <div className="cardapio-content">
-        <div className="endereco-cliente-section">
-          <label>Seu endereço completo:</label>
-          <input
-            type="text"
-            className="endereco-input"
-            placeholder="Rua, número, bairro, cidade - CEP"
-            value={enderecoCliente}
-            onChange={(e) => setEnderecoCliente(e.target.value)}
-            required
-          />
-          <small className="endereco-dica">Ex: Rua das Flores, 123 - Centro, Natal - RN, 59000-000</small>
-        </div>
-
         <ul className="cardapio-list">
           {cardapio.map((produto) => (
             <li className="cardapio-item" key={produto.id}>
@@ -255,24 +208,13 @@ const CardapioRestaurante: React.FC<Props> = ({
                     <div className="carrinho-item-info">
                       <span>{produto?.nome}</span>
                       <div className="quantidade-control">
-                        <button
-                          onClick={() => atualizarQuantidade(item.id, item.quantidade - 1)}
-                        >
-                          -
-                        </button>
+                        <button onClick={() => atualizarQuantidade(item.id, item.quantidade - 1)}>-</button>
                         <span>{item.quantidade}</span>
-                        <button
-                          onClick={() => atualizarQuantidade(item.id, item.quantidade + 1)}
-                        >
-                          +
-                        </button>
+                        <button onClick={() => atualizarQuantidade(item.id, item.quantidade + 1)}>+</button>
                       </div>
                       <span>R$ {subtotal}</span>
                     </div>
-                    <button
-                      className="remover-btn"
-                      onClick={() => removerDoCarrinho(item.id)}
-                    >
+                    <button className="remover-btn" onClick={() => removerDoCarrinho(item.id)}>
                       Remover
                     </button>
                   </li>
@@ -283,11 +225,7 @@ const CardapioRestaurante: React.FC<Props> = ({
               <span>Total:</span>
               <span>R$ {calcularTotal().toFixed(2)}</span>
             </div>
-            <button
-              className="finalizar-btn"
-              onClick={fazerPedido}
-              disabled={carregando}
-            >
+            <button className="finalizar-btn" onClick={fazerPedido} disabled={carregando}>
               {carregando ? 'Processando...' : 'Finalizar Pedido e Pagar'}
             </button>
           </div>

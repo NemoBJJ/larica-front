@@ -202,6 +202,7 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
 
   const API_BASE = api.defaults.baseURL || 'https://larica-api-1.onrender.com/api';
 
+  // ✅ FUNÇÃO ATUALIZADA COM ENDEREÇO DO FRONTEND
   const gerarLinkRota = async (pedido: Pedido, numeroWhats: string, nomeRest: string) => {
     try {
       const token = localStorage.getItem('token');
@@ -213,44 +214,42 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
       const restLat = data.latRestaurante;
       const restLng = data.lngRestaurante;
       
-      // Pega endereço do localStorage (cadastrado pelo cliente no pedido)
-      const enderecoCliente = localStorage.getItem('enderecoCliente') || 'Endereço não informado';
+      // 🔥 PEGA O ENDEREÇO QUE O CLIENTE DIGITOU NO FRONTEND
+      const enderecoCliente = localStorage.getItem('enderecoCliente');
       
-      const savedLat = localStorage.getItem('clienteLatitude');
-      const savedLng = localStorage.getItem('clienteLongitude');
+      // 🎯 CONSTRÓI URL DO MAPS COM ENDEREÇO TEXTUAL
+      let mapsUrl: string;
       
-      const clientLat = savedLat ? parseFloat(savedLat) : (data.latCliente || -5.7945);
-      const clientLng = savedLng ? parseFloat(savedLng) : (data.lngCliente || -35.211);
-      
-      // ✅ ORDEM CORRETA: Restaurante → Cliente
-      const mapsUrl = `https://www.google.com/maps/dir/${restLat},${restLng}/${clientLat},${clientLng}`;
+      if (enderecoCliente && enderecoCliente.trim() !== '') {
+        // Usa o endereço literal que o cliente digitou
+        const enderecoEncoded = encodeURIComponent(enderecoCliente);
+        mapsUrl = `https://www.google.com/maps/dir/${restLat},${restLng}/${enderecoEncoded}`;
+      } else {
+        // Fallback: coordenadas do backend ou central da cidade
+        const clientLat = data.latCliente || -5.7945;
+        const clientLng = data.lngCliente || -35.211;
+        mapsUrl = `https://www.google.com/maps/dir/${restLat},${restLng}/${clientLat},${clientLng}`;
+      }
       
       const mensagem = 
         `🚚 *LARICA - ENTREGA DISPONÍVEL* 🚚\n\n` +
         `*Pedido:* #${pedido.id}\n` +
         `*Restaurante:* ${nomeRest}\n` +
-        `📍 *Endereço do Restaurante:* ${pedido.restaurante?.endereco || enderecoRestaurante}\n` +
-        `🏠 *Endereço do Cliente:* ${enderecoCliente}\n\n` +
-        `🗺️ *ROTA DO GOOGLE MAPS:*\n` +
-        `${mapsUrl}\n\n` +
+        `📍 *Restaurante:* ${pedido.restaurante?.endereco || enderecoRestaurante}\n` +
+        `🏠 *Cliente:* ${enderecoCliente || 'Endereço não informado'}\n\n` +
+        `🗺️ *ROTA EXATA:*\n${mapsUrl}\n\n` +
         `💰 *Valor sugerido:* R$ 15,00\n` +
         `⏰ *Prazo:* 30 minutos`;
       
       window.open(`https://wa.me/${numeroWhats}?text=${encodeURIComponent(mensagem)}`, '_blank');
+      
     } catch (err) {
       console.error('Erro ao gerar rota:', err);
       alert('Erro ao gerar rota. Tente novamente.');
     }
   };
 
-  const chamarMeuEntregador = async (pedido: Pedido) => {
-    const numero = obterOuConfigurarCooperativa();
-    if (!numero) return;
-
-    const nomeRest = pedido.restaurante?.nome || nomeRestaurante || 'Restaurante';
-    await gerarLinkRota(pedido, numero, nomeRest);
-  };
-
+  // ✅ FUNÇÃO ATUALIZADA PARA O GRUPO
   const postarNoGrupoWhatsApp = async (pedido: Pedido) => {
     const nomeRest = pedido.restaurante?.nome || nomeRestaurante || 'Restaurante';
     
@@ -263,25 +262,28 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
     const restLat = data.latRestaurante;
     const restLng = data.lngRestaurante;
     
-    const enderecoCliente = localStorage.getItem('enderecoCliente') || 'Endereço não informado';
+    // 🔥 PEGA DO LOCALSTORAGE
+    const enderecoCliente = localStorage.getItem('enderecoCliente');
     
-    const savedLat = localStorage.getItem('clienteLatitude');
-    const savedLng = localStorage.getItem('clienteLongitude');
-    
-    const clientLat = savedLat ? parseFloat(savedLat) : (data.latCliente || -5.7945);
-    const clientLng = savedLng ? parseFloat(savedLng) : (data.lngCliente || -35.211);
-    
-    // ✅ ORDEM CORRETA: Restaurante → Cliente
-    const mapsUrl = `https://www.google.com/maps/dir/${restLat},${restLng}/${clientLat},${clientLng}`;
+    let mapsUrl: string;
+    if (enderecoCliente && enderecoCliente.trim() !== '') {
+      const enderecoEncoded = encodeURIComponent(enderecoCliente);
+      mapsUrl = `https://www.google.com/maps/dir/${restLat},${restLng}/${enderecoEncoded}`;
+    } else {
+      const savedLat = localStorage.getItem('clienteLatitude');
+      const savedLng = localStorage.getItem('clienteLongitude');
+      const clientLat = savedLat ? parseFloat(savedLat) : (data.latCliente || -5.7945);
+      const clientLng = savedLng ? parseFloat(savedLng) : (data.lngCliente || -35.211);
+      mapsUrl = `https://www.google.com/maps/dir/${restLat},${restLng}/${clientLat},${clientLng}`;
+    }
     
     const mensagem =
       `🚚 *LARICA - ENTREGA DISPONÍVEL* 🚚\n\n` +
       `*Pedido:* #${pedido.id}\n` +
       `*Restaurante:* ${nomeRest}\n` +
       `📍 *Endereço do Restaurante:* ${pedido.restaurante?.endereco || enderecoRestaurante}\n` +
-      `🏠 *Endereço do Cliente:* ${enderecoCliente}\n\n` +
-      `🗺️ *ROTA DO GOOGLE MAPS:*\n` +
-      `${mapsUrl}\n\n` +
+      `🏠 *Endereço do Cliente:* ${enderecoCliente || 'Endereço não informado'}\n\n` +
+      `🗺️ *ROTA EXATA:*\n${mapsUrl}\n\n` +
       `⚠️ *QUEM PEGAR COMENTA NO GRUPO!*`;
 
     window.open(`https://web.whatsapp.com/send?text=${encodeURIComponent(mensagem)}`, '_blank');
