@@ -14,6 +14,7 @@ interface Produto {
   nome: string;
   descricao: string;
   preco: number;
+  imagemUrl?: string;
 }
 
 interface ItemCarrinho {
@@ -140,6 +141,21 @@ const CardapioRestaurante: React.FC<Props> = ({
           {cardapio.map((produto) => (
             <li className="cardapio-item" key={produto.id}>
               <div className="produto-info">
+                {/* 🔥 IMAGEM DO PRODUTO */}
+                {produto.imagemUrl && (
+                  <img 
+                    src={produto.imagemUrl} 
+                    alt={produto.nome}
+                    className="produto-imagem"
+                    style={{ 
+                      width: '100%', 
+                      height: '150px', 
+                      objectFit: 'cover', 
+                      borderRadius: '8px',
+                      marginBottom: '10px'
+                    }}
+                  />
+                )}
                 <h3>{produto.nome}</h3>
                 <p>{produto.descricao}</p>
                 <span>R$ {produto.preco.toFixed(2)}</span>
