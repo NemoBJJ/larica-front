@@ -192,7 +192,7 @@ const CardapioRestaurante: React.FC<Props> = ({
                   checked={formaPagamento === 'online'}
                   onChange={() => setFormaPagamento('online')}
                 />
-                <span>💳 Pagar agora (PIX/Cartão) - Mercado Pago</span>
+                <span>💳 Pagar agora  - Mercado Pago</span>
               </label>
               <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
                 <input
@@ -202,7 +202,7 @@ const CardapioRestaurante: React.FC<Props> = ({
                   checked={formaPagamento === 'entrega'}
                   onChange={() => setFormaPagamento('entrega')}
                 />
-                <span>💰 Pagar na entrega (Dinheiro/PIX na hora)</span>
+                <span>💰 Pagar na entrega </span>
               </label>
             </div>
 
