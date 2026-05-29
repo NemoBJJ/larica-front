@@ -33,6 +33,7 @@ const CardapioRestaurante: React.FC<Props> = ({
   const [erro, setErro] = useState<string | null>(null);
   const [mensagemSucesso, setMensagemSucesso] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(false);
+  const [formaPagamento, setFormaPagamento] = useState<'online' | 'entrega'>('online');
 
   useEffect(() => {
     const carregarCardapio = async () => {
@@ -109,13 +110,21 @@ const CardapioRestaurante: React.FC<Props> = ({
       const pedidoRes = await api.post('/pedidos', payload);
       const pedidoId = pedidoRes.data.id;
 
-      const pagamentoRes = await api.post(`/pagamentos/mercadopago/preference/${pedidoId}`);
-      const initPoint = pagamentoRes.data.initPoint;
-
-      window.open(initPoint, '_blank');
+      // 🔥 SE FOR PAGAMENTO ONLINE, ABRE MERCADO PAGO
+      if (formaPagamento === 'online') {
+        const pagamentoRes = await api.post(`/pagamentos/mercadopago/preference/${pedidoId}`);
+        const initPoint = pagamentoRes.data.initPoint;
+        window.open(initPoint, '_blank');
+        setMensagemSucesso(`✅ Pedido #${pedidoId} realizado! Redirecionando para pagamento...`);
+      } 
+      // 🔥 SE FOR PAGAR NA ENTREGA, NÃO ABRE MERCADO PAGO
+      else {
+        setMensagemSucesso(`✅ Pedido #${pedidoId} realizado! Você pagará na entrega. O restaurante já foi notificado.`);
+      }
+      
       setCarrinho([]);
-      setMensagemSucesso(`✅ Pedido #${pedidoId} realizado! Redirecionando para pagamento...`);
       setTimeout(() => setMensagemSucesso(null), 5000);
+      
     } catch (error: any) {
       console.error('Erro ao fazer pedido:', error);
       const mensagem = error?.response?.data?.message || 'Erro ao realizar pedido. Tente novamente.';
@@ -141,7 +150,6 @@ const CardapioRestaurante: React.FC<Props> = ({
           {cardapio.map((produto) => (
             <li className="cardapio-item" key={produto.id}>
               <div className="produto-info">
-                {/* 🔥 IMAGEM DO PRODUTO */}
                 {produto.imagemUrl && (
                   <img 
                     src={produto.imagemUrl} 
@@ -173,6 +181,31 @@ const CardapioRestaurante: React.FC<Props> = ({
         {carrinho.length > 0 && (
           <div className="carrinho-section">
             <h3>Seu Carrinho</h3>
+            
+            {/* 🔥 OPÇÕES DE PAGAMENTO */}
+            <div className="pagamento-opcoes" style={{ marginBottom: '15px', padding: '10px', background: '#1a1a1a', borderRadius: '8px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', cursor: 'pointer' }}>
+                <input
+                  type="radio"
+                  name="pagamento"
+                  value="online"
+                  checked={formaPagamento === 'online'}
+                  onChange={() => setFormaPagamento('online')}
+                />
+                <span>💳 Pagar agora (PIX/Cartão) - Mercado Pago</span>
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+                <input
+                  type="radio"
+                  name="pagamento"
+                  value="entrega"
+                  checked={formaPagamento === 'entrega'}
+                  onChange={() => setFormaPagamento('entrega')}
+                />
+                <span>💰 Pagar na entrega (Dinheiro/PIX na hora)</span>
+              </label>
+            </div>
+
             <ul className="carrinho-list">
               {carrinho.map((item) => {
                 const produto = cardapio.find((p) => p.id === item.id);
@@ -205,7 +238,7 @@ const CardapioRestaurante: React.FC<Props> = ({
               onClick={fazerPedido}
               disabled={carregando}
             >
-              {carregando ? 'Processando...' : 'Finalizar Pedido e Pagar'}
+              {carregando ? 'Processando...' : formaPagamento === 'online' ? 'Finalizar Pedido e Pagar' : 'Confirmar Pedido (Pagar na Entrega)'}
             </button>
           </div>
         )}
