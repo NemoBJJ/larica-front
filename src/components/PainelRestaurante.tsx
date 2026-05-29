@@ -45,6 +45,8 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
   const [nomeProd, setNomeProd] = useState('');
   const [descProd, setDescProd] = useState('');
   const [precoProd, setPrecoProd] = useState('');
+  const [imagemFile, setImagemFile] = useState<File | null>(null);
+  const [imagemPreview, setImagemPreview] = useState<string | null>(null);
   const [salvando, setSalvando] = useState(false);
   const [msgOk, setMsgOk] = useState<string | null>(null);
   const [msgErro, setMsgErro] = useState<string | null>(null);
@@ -56,6 +58,9 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
   const [mostrarHistorico, setMostrarHistorico] = useState(false);
 
   const navigate = useNavigate();
+
+  const CLOUD_NAME = 'dcc1ltcod';
+  const UPLOAD_PRESET = 'larica_preset';
 
   const carregarPedidos = async () => {
     console.log(`🔍 Buscando pedidos para restaurante ${restauranteIdFinal}`);
@@ -200,8 +205,6 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
     alert('Número salvo com sucesso!');
   };
 
-  // ========== FUNÇÕES PARA CHAMAR ENTREGADOR ==========
-
   const chamarMeuEntregador = async (pedido: Pedido) => {
     const numero = obterOuConfigurarCooperativa();
     if (!numero) return;
@@ -318,6 +321,41 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
     return '';
   };
 
+  const fazerUploadImagem = async (file: File): Promise<{ url: string; publicId: string }> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', UPLOAD_PRESET);
+    formData.append('folder', `larica/restaurantes/${restauranteIdFinal}/produtos`);
+
+    const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
+      method: 'POST',
+      body: formData
+    });
+
+    if (!response.ok) {
+      throw new Error('Erro ao fazer upload da imagem');
+    }
+
+    const data = await response.json();
+    return { url: data.secure_url, publicId: data.public_id };
+  };
+
+  const handleImagemChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        setMsgErro('Por favor, selecione uma imagem válida');
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        setMsgErro('Imagem muito grande. Máximo 5MB');
+        return;
+      }
+      setImagemFile(file);
+      setImagemPreview(URL.createObjectURL(file));
+    }
+  };
+
   const criarProduto = async (e: React.FormEvent) => {
     e.preventDefault();
     setMsgOk(null);
@@ -336,16 +374,29 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
 
     setSalvando(true);
     try {
-      await api.post(`/produtos/por-restaurante/${restauranteIdFinal}`, {
+      const produtoResponse = await api.post(`/produtos/por-restaurante/${restauranteIdFinal}`, {
         nome: nomeProd.trim(),
         descricao: descProd.trim(),
         preco: precoNumber,
       });
 
+      const produtoId = produtoResponse.data.id;
+
+      if (imagemFile) {
+        const { url, publicId } = await fazerUploadImagem(imagemFile);
+        
+        await api.patch(`/produtos/${produtoId}/imagem`, {
+          imagemUrl: url,
+          imagemPublicId: publicId
+        });
+      }
+
       setMsgOk('✅ Produto cadastrado com sucesso!');
       setNomeProd('');
       setDescProd('');
       setPrecoProd('');
+      setImagemFile(null);
+      setImagemPreview(null);
     } catch (err: any) {
       const msg = err?.response?.data?.message || 'Erro ao cadastrar produto.';
       setMsgErro(`❌ ${msg}`);
@@ -438,6 +489,37 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
               />
             </div>
           </div>
+
+          <div>
+            <label>Imagem do produto (opcional)</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImagemChange}
+              style={{ display: 'block', marginTop: '8px', marginBottom: '8px' }}
+            />
+            {imagemPreview && (
+              <div style={{ marginTop: '10px' }}>
+                <img 
+                  src={imagemPreview} 
+                  alt="Preview" 
+                  style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '8px' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setImagemFile(null);
+                    setImagemPreview(null);
+                  }}
+                  style={{ marginLeft: '10px', padding: '4px 8px', background: '#dc3545', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                >
+                  Remover
+                </button>
+              </div>
+            )}
+            <small style={{ color: '#666' }}>Formatos: JPG, PNG, GIF. Máximo 5MB</small>
+          </div>
+
           <div className="acoes">
             <button
               type="button"
@@ -446,6 +528,8 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
                 setNomeProd('');
                 setDescProd('');
                 setPrecoProd('');
+                setImagemFile(null);
+                setImagemPreview(null);
                 setMsgErro(null);
                 setMsgOk(null);
               }}
