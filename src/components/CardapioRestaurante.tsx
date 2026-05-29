@@ -32,7 +32,6 @@ const CardapioRestaurante: React.FC<Props> = ({
   const [erro, setErro] = useState<string | null>(null);
   const [mensagemSucesso, setMensagemSucesso] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(false);
-  const [enderecoCliente, setEnderecoCliente] = useState('');
 
   useEffect(() => {
     const carregarCardapio = async () => {
@@ -85,34 +84,18 @@ const CardapioRestaurante: React.FC<Props> = ({
     }, 0);
   };
 
-  // ✅ FUNÇÃO ATUALIZADA - SALVA ENDEREÇO NO LOCALSTORAGE
   const fazerPedido = async () => {
-    if (!enderecoCliente.trim()) {
-      setErro('Por favor, informe seu endereço completo.');
-      return;
-    }
-
     setCarregando(true);
     setErro(null);
     setMensagemSucesso(null);
 
-    try {
-      // ✅ SALVA O ENDEREÇO DIGITADO PELO CLIENTE
-      localStorage.setItem('enderecoCliente', enderecoCliente);
-      
-      // Opcional: tenta obter coordenadas para fallback (não obrigatório)
-      if ('geolocation' in navigator) {
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            localStorage.setItem('clienteLatitude', position.coords.latitude.toString());
-            localStorage.setItem('clienteLongitude', position.coords.longitude.toString());
-          },
-          (error) => {
-            console.log('Geolocalização não autorizada ou indisponível');
-          }
-        );
-      }
+    if (carrinho.length === 0) {
+      setErro('Seu carrinho está vazio!');
+      setCarregando(false);
+      return;
+    }
 
+    try {
       const payload = {
         usuarioId,
         restauranteId,
@@ -120,7 +103,6 @@ const CardapioRestaurante: React.FC<Props> = ({
           produtoId: item.id,
           quantidade: item.quantidade,
         })),
-        enderecoCliente: enderecoCliente,
       };
 
       const pedidoRes = await api.post('/pedidos', payload);
@@ -152,29 +134,6 @@ const CardapioRestaurante: React.FC<Props> = ({
 
       {erro && <div className="erro-cardapio">{erro}</div>}
       {mensagemSucesso && <div className="mensagem-sucesso">{mensagemSucesso}</div>}
-
-      {/* CAMPO DE ENDEREÇO - AGORA COM VALIDAÇÃO MELHORADA */}
-      <div style={{ marginBottom: '20px', padding: '15px', background: '#f5f5f5', borderRadius: '8px' }}>
-        <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
-          Seu endereço completo para entrega:
-        </label>
-        <input
-          type="text"
-          style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ccc' }}
-          placeholder="Rua, número, bairro, cidade - CEP"
-          value={enderecoCliente}
-          onChange={(e) => setEnderecoCliente(e.target.value)}
-          required
-        />
-        <small style={{ display: 'block', marginTop: '5px', color: '#666' }}>
-          Ex: Rua das Flores, 123 - Centro, Natal - RN, 59000-000
-        </small>
-        {enderecoCliente && (
-          <small style={{ display: 'block', marginTop: '5px', color: '#4CAF50' }}>
-            ✅ Endereço salvo: {enderecoCliente}
-          </small>
-        )}
-      </div>
 
       <div className="cardapio-content">
         <ul className="cardapio-list">
@@ -225,7 +184,11 @@ const CardapioRestaurante: React.FC<Props> = ({
               <span>Total:</span>
               <span>R$ {calcularTotal().toFixed(2)}</span>
             </div>
-            <button className="finalizar-btn" onClick={fazerPedido} disabled={carregando}>
+            <button
+              className="finalizar-btn"
+              onClick={fazerPedido}
+              disabled={carregando}
+            >
               {carregando ? 'Processando...' : 'Finalizar Pedido e Pagar'}
             </button>
           </div>

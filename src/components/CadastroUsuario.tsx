@@ -12,6 +12,7 @@ function CadastroUsuario({ onVoltar }: Props) {
     email: '',
     senha: '',
     telefone: '',
+    endereco: '',  // 🔥 NOVO CAMPO
     tipo: 'CLIENTE',
     dataCadastro: new Date().toISOString().split('T')[0]
   });
@@ -45,6 +46,10 @@ function CadastroUsuario({ onVoltar }: Props) {
     if (formData.telefone.replace(/\D/g, '').length < 11) {
       novosErros.telefone = 'Celular inválido (11 dígitos com DDD)';
     }
+    // 🔥 VALIDAÇÃO DO ENDEREÇO
+    if (!formData.endereco.trim()) {
+      novosErros.endereco = 'Endereço é obrigatório';
+    }
     setErros(novosErros);
     return Object.keys(novosErros).length === 0;
   };
@@ -61,6 +66,7 @@ function CadastroUsuario({ onVoltar }: Props) {
         email: formData.email,
         senha: formData.senha,
         telefone: formData.telefone.replace(/\D/g, ''),
+        endereco: formData.endereco,  // 🔥 NOVO CAMPO
         tipo: formData.tipo,
         dataCadastro: formData.dataCadastro
       };
@@ -73,6 +79,7 @@ function CadastroUsuario({ onVoltar }: Props) {
         email: '',
         senha: '',
         telefone: '',
+        endereco: '',  // 🔥 RESETA O ENDEREÇO
         tipo: 'CLIENTE',
         dataCadastro: new Date().toISOString().split('T')[0]
       });
@@ -148,6 +155,23 @@ function CadastroUsuario({ onVoltar }: Props) {
               className={erros.telefone ? 'input-erro' : ''}
             />
             {erros.telefone && <span className="msg-erro">{erros.telefone}</span>}
+          </div>
+
+          {/* 🔥 NOVO CAMPO - ENDEREÇO */}
+          <div className="form-group">
+            <label>Endereço Completo *</label>
+            <input
+              type="text"
+              name="endereco"
+              value={formData.endereco}
+              onChange={handleChange}
+              placeholder="Rua, número, bairro, cidade - CEP"
+              className={erros.endereco ? 'input-erro' : ''}
+            />
+            {erros.endereco && <span className="msg-erro">{erros.endereco}</span>}
+            <small style={{ display: 'block', marginTop: '5px', color: '#666' }}>
+              Ex: Rua das Flores, 123 - Centro, Natal - RN, 59000-000
+            </small>
           </div>
 
           <div className="form-group">

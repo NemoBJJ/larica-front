@@ -200,10 +200,14 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
     alert('Número salvo com sucesso!');
   };
 
-  const API_BASE = api.defaults.baseURL || 'https://larica-api-1.onrender.com/api';
+  // ========== FUNÇÕES PARA CHAMAR ENTREGADOR ==========
 
-  // ✅ FUNÇÃO ATUALIZADA COM ENDEREÇO DO FRONTEND
-  const gerarLinkRota = async (pedido: Pedido, numeroWhats: string, nomeRest: string) => {
+  const chamarMeuEntregador = async (pedido: Pedido) => {
+    const numero = obterOuConfigurarCooperativa();
+    if (!numero) return;
+
+    const nomeRest = pedido.restaurante?.nome || nomeRestaurante || 'Restaurante';
+    
     try {
       const token = localStorage.getItem('token');
       const response = await api.get(`/auth/donos/entregador/pedido/${pedido.id}/rota`, {
@@ -213,22 +217,14 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
       const data = response.data;
       const restLat = data.latRestaurante;
       const restLng = data.lngRestaurante;
+      const enderecoCliente = data.enderecoCliente;
       
-      // 🔥 PEGA O ENDEREÇO QUE O CLIENTE DIGITOU NO FRONTEND
-      const enderecoCliente = localStorage.getItem('enderecoCliente');
-      
-      // 🎯 CONSTRÓI URL DO MAPS COM ENDEREÇO TEXTUAL
       let mapsUrl: string;
-      
       if (enderecoCliente && enderecoCliente.trim() !== '') {
-        // Usa o endereço literal que o cliente digitou
         const enderecoEncoded = encodeURIComponent(enderecoCliente);
         mapsUrl = `https://www.google.com/maps/dir/${restLat},${restLng}/${enderecoEncoded}`;
       } else {
-        // Fallback: coordenadas do backend ou central da cidade
-        const clientLat = data.latCliente || -5.7945;
-        const clientLng = data.lngCliente || -35.211;
-        mapsUrl = `https://www.google.com/maps/dir/${restLat},${restLng}/${clientLat},${clientLng}`;
+        mapsUrl = `https://www.google.com/maps/dir/${restLat},${restLng}/-5.7945,-35.211`;
       }
       
       const mensagem = 
@@ -237,11 +233,11 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
         `*Restaurante:* ${nomeRest}\n` +
         `📍 *Restaurante:* ${pedido.restaurante?.endereco || enderecoRestaurante}\n` +
         `🏠 *Cliente:* ${enderecoCliente || 'Endereço não informado'}\n\n` +
-        `🗺️ *ROTA EXATA:*\n${mapsUrl}\n\n` +
+        `🗺️ *ROTA:*\n${mapsUrl}\n\n` +
         `💰 *Valor sugerido:* R$ 15,00\n` +
         `⏰ *Prazo:* 30 minutos`;
       
-      window.open(`https://wa.me/${numeroWhats}?text=${encodeURIComponent(mensagem)}`, '_blank');
+      window.open(`https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`, '_blank');
       
     } catch (err) {
       console.error('Erro ao gerar rota:', err);
@@ -249,44 +245,43 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
     }
   };
 
-  // ✅ FUNÇÃO ATUALIZADA PARA O GRUPO
   const postarNoGrupoWhatsApp = async (pedido: Pedido) => {
     const nomeRest = pedido.restaurante?.nome || nomeRestaurante || 'Restaurante';
     
-    const token = localStorage.getItem('token');
-    const response = await api.get(`/auth/donos/entregador/pedido/${pedido.id}/rota`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    
-    const data = response.data;
-    const restLat = data.latRestaurante;
-    const restLng = data.lngRestaurante;
-    
-    // 🔥 PEGA DO LOCALSTORAGE
-    const enderecoCliente = localStorage.getItem('enderecoCliente');
-    
-    let mapsUrl: string;
-    if (enderecoCliente && enderecoCliente.trim() !== '') {
-      const enderecoEncoded = encodeURIComponent(enderecoCliente);
-      mapsUrl = `https://www.google.com/maps/dir/${restLat},${restLng}/${enderecoEncoded}`;
-    } else {
-      const savedLat = localStorage.getItem('clienteLatitude');
-      const savedLng = localStorage.getItem('clienteLongitude');
-      const clientLat = savedLat ? parseFloat(savedLat) : (data.latCliente || -5.7945);
-      const clientLng = savedLng ? parseFloat(savedLng) : (data.lngCliente || -35.211);
-      mapsUrl = `https://www.google.com/maps/dir/${restLat},${restLng}/${clientLat},${clientLng}`;
-    }
-    
-    const mensagem =
-      `🚚 *LARICA - ENTREGA DISPONÍVEL* 🚚\n\n` +
-      `*Pedido:* #${pedido.id}\n` +
-      `*Restaurante:* ${nomeRest}\n` +
-      `📍 *Endereço do Restaurante:* ${pedido.restaurante?.endereco || enderecoRestaurante}\n` +
-      `🏠 *Endereço do Cliente:* ${enderecoCliente || 'Endereço não informado'}\n\n` +
-      `🗺️ *ROTA EXATA:*\n${mapsUrl}\n\n` +
-      `⚠️ *QUEM PEGAR COMENTA NO GRUPO!*`;
+    try {
+      const token = localStorage.getItem('token');
+      const response = await api.get(`/auth/donos/entregador/pedido/${pedido.id}/rota`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      const data = response.data;
+      const restLat = data.latRestaurante;
+      const restLng = data.lngRestaurante;
+      const enderecoCliente = data.enderecoCliente;
+      
+      let mapsUrl: string;
+      if (enderecoCliente && enderecoCliente.trim() !== '') {
+        const enderecoEncoded = encodeURIComponent(enderecoCliente);
+        mapsUrl = `https://www.google.com/maps/dir/${restLat},${restLng}/${enderecoEncoded}`;
+      } else {
+        mapsUrl = `https://www.google.com/maps/dir/${restLat},${restLng}/-5.7945,-35.211`;
+      }
+      
+      const mensagem =
+        `🚚 *LARICA - ENTREGA DISPONÍVEL* 🚚\n\n` +
+        `*Pedido:* #${pedido.id}\n` +
+        `*Restaurante:* ${nomeRest}\n` +
+        `📍 *Endereço do Restaurante:* ${pedido.restaurante?.endereco || enderecoRestaurante}\n` +
+        `🏠 *Endereço do Cliente:* ${enderecoCliente || 'Endereço não informado'}\n\n` +
+        `🗺️ *ROTA:*\n${mapsUrl}\n\n` +
+        `⚠️ *QUEM PEGAR COMENTA NO GRUPO!*`;
 
-    window.open(`https://web.whatsapp.com/send?text=${encodeURIComponent(mensagem)}`, '_blank');
+      window.open(`https://web.whatsapp.com/send?text=${encodeURIComponent(mensagem)}`, '_blank');
+      
+    } catch (err) {
+      console.error('Erro ao postar no grupo:', err);
+      alert('Erro ao gerar rota. Tente novamente.');
+    }
   };
 
   const handleAceitar = async (pedido: Pedido) => {
