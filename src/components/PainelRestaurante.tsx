@@ -358,6 +358,7 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
 
   const marcarEntregue = async (pedidoId: number) => {
     try {
+      // Marca como ENTREGUE (backend vai marcar também como PAGO)
       await atualizarStatus(pedidoId, 'ENTREGUE');
     } catch {
       setErro('Erro ao marcar como entregue.');
@@ -655,7 +656,7 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
                 <div className="acoes-pedido" style={{ gap: 8, flexDirection: 'column' }}>
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                     
-                    {/* 🔥 CASO AGUARDANDO - Verificar Pagamento + Aceitar/Recusar */}
+                    {/* 🔥 AGUARDANDO - Verificar Pagamento + Aceitar/Recusar */}
                     {statusUp === 'AGUARDANDO' && (
                       <>
                         <button
@@ -680,25 +681,40 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
                       </>
                     )}
 
-                    {/* 🔥 CASO PAGO - Aceitar/Recusar (depois de verificar pagamento) */}
+                    {/* 🔥 PAGO - NÃO MUDA MAIS STATUS, só ações */}
                     {statusUp === 'PAGO' && (
                       <>
+                        {pedido.telefoneCliente && (
+                          <button
+                            onClick={() => avisarCliente(pedido)}
+                            className="btn-aviso"
+                            style={{ background: '#25D366', color: 'white' }}
+                          >
+                            📱 Avisar Cliente via WhatsApp
+                          </button>
+                        )}
                         <button
-                          onClick={() => handleAceitar(pedido)}
-                          className="btn-aceitar"
+                          onClick={() => chamarMeuEntregador(pedido)}
+                          className="btn-primario"
                         >
-                          ✅ Aceitar Pedido
+                          📞 Chamar Meu Entregador
                         </button>
                         <button
-                          onClick={() => handleRecusar(pedido.id)}
-                          className="btn-recusar"
+                          onClick={() => postarNoGrupoWhatsApp(pedido)}
+                          className="btn-secundario"
                         >
-                          ❌ Recusar Pedido
+                          📢 Chamar Grupo de Entregadores
+                        </button>
+                        <button
+                          onClick={() => marcarEntregue(pedido.id)}
+                          className="btn-entregue"
+                        >
+                          ✅ Marcar como Entregue
                         </button>
                       </>
                     )}
 
-                    {/* 🔥 CASO EM_PREPARO - Avisar Cliente + Entregador + Marcar Entregue */}
+                    {/* 🔥 EM_PREPARO - Ações completas */}
                     {statusUp === 'EM_PREPARO' && (
                       <>
                         {pedido.telefoneCliente && (
@@ -731,7 +747,7 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
                       </>
                     )}
 
-                    {/* 🔥 CASO PRONTO - Chamar Entregador + Marcar Entregue */}
+                    {/* 🔥 PRONTO - Chamar entregador + marcar entregue */}
                     {statusUp === 'PRONTO' && (
                       <>
                         <button
