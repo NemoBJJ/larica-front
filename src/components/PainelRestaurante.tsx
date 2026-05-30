@@ -82,8 +82,8 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
           id: pedidoHist.pedidoId,
           data: pedidoHist.data.includes('T') ? pedidoHist.data : `${pedidoHist.data}T12:00:00`,
           status: pedidoHist.status,
-          nomeCliente: 'Cliente',
-          telefoneCliente: '',
+          nomeCliente: pedidoHist.nomeCliente || 'Cliente',
+          telefoneCliente: pedidoHist.telefoneCliente || '',
           itens: pedidoHist.itens.map((item: any) => ({
             id: item.id,
             nomeProduto: item.nomeProduto,
@@ -205,6 +205,8 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
     alert('Número salvo com sucesso!');
   };
 
+  // ========== FUNÇÕES PARA CHAMAR ENTREGADOR ==========
+
   const chamarMeuEntregador = async (pedido: Pedido) => {
     const numero = obterOuConfigurarCooperativa();
     if (!numero) return;
@@ -287,9 +289,65 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
     }
   };
 
+  // 🔥 NOVA FUNÇÃO: AVISAR CLIENTE
+  const avisarCliente = async (pedido: Pedido) => {
+    // Normaliza o telefone do cliente
+    let telefoneCliente = pedido.telefoneCliente;
+    if (!telefoneCliente || telefoneCliente === '') {
+      alert('Cliente não cadastrou telefone!');
+      return;
+    }
+    
+    // Remove tudo que não é dígito
+    let numero = telefoneCliente.replace(/\D/g, '');
+    
+    // Adiciona DDI 55 se necessário
+    if (!numero.startsWith('55') && (numero.length === 10 || numero.length === 11)) {
+      numero = '55' + numero;
+    }
+    
+    if (!/^55\d{10,13}$/.test(numero)) {
+      alert('Número de telefone do cliente inválido');
+      return;
+    }
+    
+    const nomeRest = pedido.restaurante?.nome || nomeRestaurante || 'Restaurante';
+    
+    // Define status de pagamento amigável
+    let statusPagamento = '⏳ Aguardando confirmação';
+    let corPagamento = '#ffc107';
+    
+    if (pedido.status === 'PAGO') {
+      statusPagamento = '✅ Pagamento confirmado';
+      corPagamento = '#28a745';
+    } else if (pedido.status === 'AGUARDANDO_PAGAMENTO') {
+      statusPagamento = '⏳ Pagamento pendente';
+      corPagamento = '#ffc107';
+    }
+    
+    const mensagem = 
+      `🍕 *LARICA - SEU PEDIDO FOI CONFIRMADO!* 🍕\n\n` +
+      `*Restaurante:* ${nomeRest}\n` +
+      `*Pedido:* #${pedido.id}\n` +
+      `*Status:* ${pedido.status === 'EM_PREPARO' ? '🟡 Em preparo' : pedido.status === 'PAGO' ? '💰 Pago' : pedido.status}\n\n` +
+      `💰 *Pagamento:* ${statusPagamento}\n\n` +
+      `*Itens do pedido:*\n` +
+      pedido.itens.map(item => `- ${item.quantidade}x ${item.nomeProduto} - R$ ${(item.quantidade * item.precoUnitario).toFixed(2)}`).join('\n') +
+      `\n\n*Total:* R$ ${pedido.total.toFixed(2)}\n\n` +
+      `⏰ *Previsão de entrega:* 30-45 minutos\n\n` +
+      `📞 Dúvidas? Entre em contato com o restaurante: ${pedido.restaurante?.telefone || telefoneRestaurante}\n\n` +
+      `*Agradecemos a preferência!* ❤️`;
+    
+    window.open(`https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`, '_blank');
+  };
+
   const handleAceitar = async (pedido: Pedido) => {
     try {
       await atualizarStatus(pedido.id, 'EM_PREPARO');
+      // Após aceitar, pergunta se quer avisar o cliente
+      if (window.confirm('Pedido aceito! Deseja avisar o cliente via WhatsApp?')) {
+        await avisarCliente(pedido);
+      }
     } catch {
       setErro('Erro ao aceitar o pedido.');
     }
@@ -318,7 +376,21 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
     if (s === 'PRONTO') return 'status-pronto';
     if (s === 'ENTREGUE') return 'status-entregue';
     if (s === 'CANCELADO' || s === 'RECUSADO') return 'status-cancelado';
+    if (s === 'PAGO') return 'status-pago';
+    if (s === 'AGUARDANDO_PAGAMENTO') return 'status-aguardando-pagamento';
     return '';
+  };
+
+  const getStatusTexto = (status: string) => {
+    const s = status?.toUpperCase?.() || '';
+    if (s === 'AGUARDANDO') return '🟡 Aguardando confirmação';
+    if (s === 'EM_PREPARO' || s === 'PREPARANDO') return '🟠 Em preparo';
+    if (s === 'PRONTO') return '🟢 Pronto para retirada';
+    if (s === 'ENTREGUE') return '✅ Entregue';
+    if (s === 'CANCELADO' || s === 'RECUSADO') return '❌ Cancelado';
+    if (s === 'PAGO') return '💰 Pago';
+    if (s === 'AGUARDANDO_PAGAMENTO') return '⏳ Aguardando pagamento';
+    return status;
   };
 
   const fazerUploadImagem = async (file: File): Promise<{ url: string; publicId: string }> => {
@@ -553,19 +625,21 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
           pedidos.map((pedido) => {
             const statusUp = (pedido.status || '').toUpperCase();
             const podeChamarEntregador = statusUp === 'EM_PREPARO' || statusUp === 'PRONTO';
+            const podeAvisarCliente = statusUp === 'EM_PREPARO' || statusUp === 'AGUARDANDO';
 
             return (
               <div key={pedido.id} className="pedido-card">
                 <div className="pedido-header">
                   <h3>Pedido #{pedido.id}</h3>
                   <span className={`status-badge ${getStatusClass(pedido.status)}`}>
-                    {pedido.status}
+                    {getStatusTexto(pedido.status)}
                   </span>
                 </div>
 
                 <div className="pedido-info">
                   <p><strong>Data:</strong> {new Date(pedido.data).toLocaleString()}</p>
                   <p><strong>Cliente:</strong> {pedido.nomeCliente}</p>
+                  <p><strong>Telefone:</strong> {pedido.telefoneCliente || 'Não informado'}</p>
                   <p><strong>Total:</strong> R$ {pedido.total.toFixed(2)}</p>
                 </div>
 
@@ -584,26 +658,47 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
                   </ul>
                 </div>
 
-                <div className="acoes-pedido" style={{ gap: 8 }}>
-                  {(statusUp === 'AGUARDANDO') && (
-                    <>
+                <div className="acoes-pedido" style={{ gap: 8, flexDirection: 'column' }}>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    {(statusUp === 'AGUARDANDO') && (
+                      <>
+                        <button
+                          onClick={() => handleAceitar(pedido)}
+                          className="btn-aceitar"
+                        >
+                          Aceitar Pedido
+                        </button>
+                        <button
+                          onClick={() => handleRecusar(pedido.id)}
+                          className="btn-recusar"
+                        >
+                          Recusar Pedido
+                        </button>
+                      </>
+                    )}
+
+                    {podeAvisarCliente && pedido.telefoneCliente && (
                       <button
-                        onClick={() => handleAceitar(pedido)}
-                        className="btn-aceitar"
+                        onClick={() => avisarCliente(pedido)}
+                        className="btn-aviso"
+                        style={{ background: '#25D366', color: 'white' }}
                       >
-                        Aceitar Pedido
+                        📱 Avisar Cliente via WhatsApp
                       </button>
+                    )}
+
+                    {(statusUp === 'EM_PREPARO' || statusUp === 'PRONTO') && (
                       <button
-                        onClick={() => handleRecusar(pedido.id)}
-                        className="btn-recusar"
+                        onClick={() => marcarEntregue(pedido.id)}
+                        className="btn-entregue"
                       >
-                        Recusar Pedido
+                        Marcar como Entregue
                       </button>
-                    </>
-                  )}
+                    )}
+                  </div>
 
                   {podeChamarEntregador && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
                       <button
                         onClick={() => chamarMeuEntregador(pedido)}
                         className="btn-primario"
@@ -620,15 +715,6 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
                         📢 Chamar Grupo de Entregadores
                       </button>
                     </div>
-                  )}
-
-                  {(statusUp === 'EM_PREPARO' || statusUp === 'PRONTO') && (
-                    <button
-                      onClick={() => marcarEntregue(pedido.id)}
-                      className="btn-entregue"
-                    >
-                      Marcar como Entregue
-                    </button>
                   )}
                 </div>
               </div>
