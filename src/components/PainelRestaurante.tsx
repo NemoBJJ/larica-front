@@ -65,8 +65,42 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
   const carregarPedidos = async () => {
     try {
       const response = await api.get(`/pedidos/restaurante/${restauranteIdFinal}`);
-      setPedidos(response.data?.content || []);
+      
+      const pedidosConvertidos = (response.data || []).map((pedidoHist: any) => {
+        const total = pedidoHist.itens.reduce((soma: number, item: any) => {
+          const preco = typeof item.precoUnitario === 'string'
+            ? parseFloat(item.precoUnitario)
+            : item.precoUnitario || 0;
+          return soma + (preco * item.quantidade);
+        }, 0);
+        
+        return {
+          id: pedidoHist.pedidoId,
+          data: pedidoHist.data.includes('T') ? pedidoHist.data : `${pedidoHist.data}T12:00:00`,
+          status: pedidoHist.status,
+          nomeCliente: pedidoHist.nomeCliente || 'Cliente',
+          telefoneCliente: pedidoHist.telefoneCliente || '',
+          itens: pedidoHist.itens.map((item: any) => ({
+            id: item.id,
+            nomeProduto: item.nomeProduto,
+            quantidade: item.quantidade,
+            precoUnitario: typeof item.precoUnitario === 'string'
+              ? parseFloat(item.precoUnitario)
+              : item.precoUnitario
+          })),
+          total: total,
+          restaurante: {
+            id: restauranteIdFinal,
+            nome: nomeRestaurante,
+            endereco: enderecoRestaurante,
+            telefone: telefoneRestaurante
+          }
+        };
+      });
+      
+      setPedidos(pedidosConvertidos);
       setErro(null);
+      
     } catch (err: any) {
       console.error('Erro ao carregar pedidos:', err);
       setErro('Erro ao carregar pedidos. Tente novamente.');
@@ -96,8 +130,13 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
       setCarregando(false);
       return;
     }
-    carregarDadosRestaurante();
-    carregarPedidos();
+    
+    const carregarTudo = async () => {
+      await carregarDadosRestaurante();
+      await carregarPedidos();
+    };
+    
+    carregarTudo();
   }, [restauranteIdFinal]);
 
   const atualizarStatus = async (pedidoId: number, novoStatus: string) => {
@@ -166,6 +205,7 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
     try {
       const response = await api.post(`/pagamentos/mp/sync?payment_id=${pedidoId}`);
       const data = response.data;
+      
       if (data.ok) {
         alert('✅ Status do pagamento verificado! Recarregando...');
         await carregarPedidos();
@@ -176,50 +216,6 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
       console.error('Erro ao verificar pagamento:', error);
       alert('❌ Erro ao verificar pagamento. Tente novamente.');
     }
-  };
-
-  // ========== FUNÇÃO AVISAR CLIENTE WHATSAPP ==========
-  const avisarClienteWhatsApp = (pedido: Pedido) => {
-    let telefone = pedido.telefoneCliente;
-    
-    if (!telefone || telefone === '') {
-      alert(`Cliente ${pedido.nomeCliente} não cadastrou telefone!`);
-      return;
-    }
-    
-    let numero = telefone.replace(/\D/g, '');
-    if (!numero.startsWith('55') && (numero.length === 10 || numero.length === 11)) {
-      numero = '55' + numero;
-    }
-    
-    if (!/^55\d{10,13}$/.test(numero)) {
-      alert('Número de telefone inválido');
-      return;
-    }
-    
-    const nomeRest = pedido.restaurante?.nome || nomeRestaurante || 'Restaurante';
-    
-    let statusPagamento = '';
-    if (pedido.status === 'PAGO') {
-      statusPagamento = '✅ Pagamento confirmado';
-    } else if (pedido.status === 'AGUARDANDO') {
-      statusPagamento = '💰 Pagamento na entrega';
-    } else {
-      statusPagamento = '⏳ ' + pedido.status;
-    }
-    
-    const mensagem = 
-      `🍕 *LARICA - SEU PEDIDO* 🍕\n\n` +
-      `*Restaurante:* ${nomeRest}\n` +
-      `*Pedido:* #${pedido.id}\n` +
-      `*Status:* ${pedido.status === 'EM_PREPARO' ? '🟠 Em preparo' : pedido.status}\n` +
-      `*Pagamento:* ${statusPagamento}\n\n` +
-      `*Itens:*\n${pedido.itens.map(i => `- ${i.quantidade}x ${i.nomeProduto} - R$ ${(i.quantidade * i.precoUnitario).toFixed(2)}`).join('\n')}\n\n` +
-      `*Total:* R$ ${pedido.total.toFixed(2)}\n\n` +
-      `📞 Contato do restaurante: ${pedido.restaurante?.telefone || telefoneRestaurante}\n\n` +
-      `*Agradecemos a preferência!* ❤️`;
-    
-    window.open(`https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`, '_blank');
   };
 
   // ========== FUNÇÕES DO ENTREGADOR ==========
@@ -240,9 +236,13 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
       const restLng = data.lngRestaurante;
       const enderecoCliente = data.enderecoCliente;
       
-      let mapsUrl = enderecoCliente && enderecoCliente.trim() !== ''
-        ? `https://www.google.com/maps/dir/${restLat},${restLng}/${encodeURIComponent(enderecoCliente)}`
-        : `https://www.google.com/maps/dir/${restLat},${restLng}/-5.7945,-35.211`;
+      let mapsUrl: string;
+      if (enderecoCliente && enderecoCliente.trim() !== '') {
+        const enderecoEncoded = encodeURIComponent(enderecoCliente);
+        mapsUrl = `https://www.google.com/maps/dir/${restLat},${restLng}/${enderecoEncoded}`;
+      } else {
+        mapsUrl = `https://www.google.com/maps/dir/${restLat},${restLng}/-5.7945,-35.211`;
+      }
       
       const mensagem = 
         `🚚 *LARICA - ENTREGA DISPONÍVEL* 🚚\n\n` +
@@ -255,6 +255,7 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
         `⏰ *Prazo:* 30 minutos`;
       
       window.open(`https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`, '_blank');
+      
     } catch (err) {
       console.error('Erro ao gerar rota:', err);
       alert('Erro ao gerar rota. Tente novamente.');
@@ -275,9 +276,13 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
       const restLng = data.lngRestaurante;
       const enderecoCliente = data.enderecoCliente;
       
-      let mapsUrl = enderecoCliente && enderecoCliente.trim() !== ''
-        ? `https://www.google.com/maps/dir/${restLat},${restLng}/${encodeURIComponent(enderecoCliente)}`
-        : `https://www.google.com/maps/dir/${restLat},${restLng}/-5.7945,-35.211`;
+      let mapsUrl: string;
+      if (enderecoCliente && enderecoCliente.trim() !== '') {
+        const enderecoEncoded = encodeURIComponent(enderecoCliente);
+        mapsUrl = `https://www.google.com/maps/dir/${restLat},${restLng}/${enderecoEncoded}`;
+      } else {
+        mapsUrl = `https://www.google.com/maps/dir/${restLat},${restLng}/-5.7945,-35.211`;
+      }
       
       const mensagem =
         `🚚 *LARICA - ENTREGA DISPONÍVEL* 🚚\n\n` +
@@ -289,16 +294,55 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
         `⚠️ *QUEM PEGAR COMENTA NO GRUPO!*`;
 
       window.open(`https://web.whatsapp.com/send?text=${encodeURIComponent(mensagem)}`, '_blank');
+      
     } catch (err) {
       console.error('Erro ao postar no grupo:', err);
       alert('Erro ao gerar rota. Tente novamente.');
     }
   };
 
+  // ========== FUNÇÃO AVISAR CLIENTE ==========
+  const avisarCliente = async (pedido: Pedido) => {
+    let telefoneCliente = pedido.telefoneCliente;
+    if (!telefoneCliente || telefoneCliente === '') {
+      alert('Cliente não cadastrou telefone!');
+      return;
+    }
+    
+    let numero = telefoneCliente.replace(/\D/g, '');
+    if (!numero.startsWith('55') && (numero.length === 10 || numero.length === 11)) {
+      numero = '55' + numero;
+    }
+    
+    if (!/^55\d{10,13}$/.test(numero)) {
+      alert('Número de telefone do cliente inválido');
+      return;
+    }
+    
+    const nomeRest = pedido.restaurante?.nome || nomeRestaurante || 'Restaurante';
+    
+    const mensagem = 
+      `🍕 *LARICA - SEU PEDIDO ESTÁ SENDO PREPARADO!* 🍕\n\n` +
+      `*Restaurante:* ${nomeRest}\n` +
+      `*Pedido:* #${pedido.id}\n` +
+      `*Status:* 🟠 Em preparo\n\n` +
+      `*Itens do pedido:*\n` +
+      pedido.itens.map(item => `- ${item.quantidade}x ${item.nomeProduto} - R$ ${(item.quantidade * item.precoUnitario).toFixed(2)}`).join('\n') +
+      `\n\n*Total:* R$ ${pedido.total.toFixed(2)}\n\n` +
+      `⏰ *Previsão de entrega:* 30-45 minutos\n\n` +
+      `📞 Dúvidas? Entre em contato com o restaurante: ${pedido.restaurante?.telefone || telefoneRestaurante}\n\n` +
+      `*Agradecemos a preferência!* ❤️`;
+    
+    window.open(`https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`, '_blank');
+  };
+
   // ========== AÇÕES DO PEDIDO ==========
   const handleAceitar = async (pedido: Pedido) => {
     try {
       await atualizarStatus(pedido.id, 'EM_PREPARO');
+      if (window.confirm('Pedido aceito! Deseja avisar o cliente via WhatsApp?')) {
+        await avisarCliente(pedido);
+      }
     } catch {
       setErro('Erro ao aceitar o pedido.');
     }
@@ -314,6 +358,7 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
 
   const marcarEntregue = async (pedidoId: number) => {
     try {
+      // Marca como ENTREGUE (backend vai marcar também como PAGO)
       await atualizarStatus(pedidoId, 'ENTREGUE');
     } catch {
       setErro('Erro ao marcar como entregue.');
@@ -324,10 +369,10 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
   const getStatusClass = (status: string) => {
     const s = status?.toUpperCase?.() || '';
     if (s === 'AGUARDANDO') return 'status-aguardando';
-    if (s === 'EM_PREPARO') return 'status-preparo';
+    if (s === 'EM_PREPARO' || s === 'PREPARANDO') return 'status-preparo';
     if (s === 'PRONTO') return 'status-pronto';
     if (s === 'ENTREGUE') return 'status-entregue';
-    if (s === 'CANCELADO') return 'status-cancelado';
+    if (s === 'CANCELADO' || s === 'RECUSADO') return 'status-cancelado';
     if (s === 'PAGO') return 'status-pago';
     return '';
   };
@@ -335,10 +380,10 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
   const getStatusTexto = (status: string) => {
     const s = status?.toUpperCase?.() || '';
     if (s === 'AGUARDANDO') return '🟡 Aguardando confirmação';
-    if (s === 'EM_PREPARO') return '🟠 Em preparo';
+    if (s === 'EM_PREPARO' || s === 'PREPARANDO') return '🟠 Em preparo';
     if (s === 'PRONTO') return '🟢 Pronto para retirada';
     if (s === 'ENTREGUE') return '✅ Entregue';
-    if (s === 'CANCELADO') return '❌ Cancelado';
+    if (s === 'CANCELADO' || s === 'RECUSADO') return '❌ Cancelado';
     if (s === 'PAGO') return '💰 Pago';
     return status;
   };
@@ -407,6 +452,7 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
 
       if (imagemFile) {
         const { url, publicId } = await fazerUploadImagem(imagemFile);
+        
         await api.patch(`/produtos/${produtoId}/imagem`, {
           imagemUrl: url,
           imagemPublicId: publicId
@@ -431,6 +477,7 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
     }
   };
 
+  // ========== RENDER ==========
   if (mostrarHistorico) {
     return (
       <div className="painel-container">
@@ -453,7 +500,10 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
 
   return (
     <div className="painel-container">
-      <button onClick={() => (onVoltar ? onVoltar() : navigate(-1))} className="btn-voltar">
+      <button
+        onClick={() => (onVoltar ? onVoltar() : navigate(-1))}
+        className="btn-voltar"
+      >
         &larr; Voltar
       </button>
 
@@ -461,10 +511,18 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
         <h2 className="painel-nome-restaurante" style={{ margin: 0 }}>
           {nomeRestaurante || `Restaurante #${restauranteIdFinal}`}
         </h2>
-        <button className="btn-historico" onClick={() => setMostrarHistorico(true)}>
+        <button
+          className="btn-historico"
+          onClick={() => setMostrarHistorico(true)}
+          title="Ver histórico por restaurante"
+        >
           📜 Ver histórico
         </button>
-        <button className="btn-secundario" onClick={configurarCooperativa}>
+        <button
+          className="btn-secundario"
+          onClick={configurarCooperativa}
+          title="Definir/alterar WhatsApp da cooperativa"
+        >
           ⚙️ Configurar Whats da cooperativa
         </button>
       </div>
@@ -491,6 +549,7 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
               <label>Preço (R$)</label>
               <input
                 type="number"
+                inputMode="decimal"
                 min="0"
                 step="0.01"
                 value={precoProd}
@@ -502,24 +561,49 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
 
           <div>
             <label>Imagem do produto (opcional)</label>
-            <input type="file" accept="image/*" onChange={handleImagemChange} />
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImagemChange}
+              style={{ display: 'block', marginTop: '8px', marginBottom: '8px' }}
+            />
             {imagemPreview && (
               <div style={{ marginTop: '10px' }}>
-                <img src={imagemPreview} alt="Preview" style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '8px' }} />
-                <button type="button" onClick={() => { setImagemFile(null); setImagemPreview(null); }}>
+                <img 
+                  src={imagemPreview} 
+                  alt="Preview" 
+                  style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '8px' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setImagemFile(null);
+                    setImagemPreview(null);
+                  }}
+                  style={{ marginLeft: '10px', padding: '4px 8px', background: '#dc3545', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                >
                   Remover
                 </button>
               </div>
             )}
-            <small>Formatos: JPG, PNG, GIF. Máximo 5MB</small>
+            <small style={{ color: '#666' }}>Formatos: JPG, PNG, GIF. Máximo 5MB</small>
           </div>
 
           <div className="acoes">
-            <button type="button" className="btn-secundario" onClick={() => {
-              setNomeProd(''); setDescProd(''); setPrecoProd('');
-              setImagemFile(null); setImagemPreview(null);
-              setMsgErro(null); setMsgOk(null);
-            }} disabled={salvando}>
+            <button
+              type="button"
+              className="btn-secundario"
+              onClick={() => {
+                setNomeProd('');
+                setDescProd('');
+                setPrecoProd('');
+                setImagemFile(null);
+                setImagemPreview(null);
+                setMsgErro(null);
+                setMsgOk(null);
+              }}
+              disabled={salvando}
+            >
               Cancelar
             </button>
             <button type="submit" className="btn-primario" disabled={salvando}>
@@ -531,7 +615,9 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
 
       <div className="pedidos-lista">
         {pedidos.length === 0 ? (
-          <div className="sem-pedidos"><p>Nenhum pedido encontrado.</p></div>
+          <div className="sem-pedidos">
+            <p>Nenhum pedido encontrado.</p>
+          </div>
         ) : (
           pedidos.map((pedido) => {
             const statusUp = (pedido.status || '').toUpperCase();
@@ -559,64 +645,133 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
                       <li key={item.id}>
                         <span className="item-quantidade">{item.quantidade}x</span>
                         <span className="item-nome">{item.nomeProduto}</span>
-                        <span className="item-preco">R$ {(item.quantidade * item.precoUnitario).toFixed(2)}</span>
+                        <span className="item-preco">
+                          R$ {(item.quantidade * item.precoUnitario).toFixed(2)}
+                        </span>
                       </li>
                     ))}
                   </ul>
                 </div>
 
-                <div className="acoes-pedido">
-                  {/* AGUARDANDO - só verifica pagamento */}
-                  {statusUp === 'AGUARDANDO' && (
-                    <button onClick={() => syncPagamento(pedido.id)} className="btn-verificar">
-                      🔍 Verificar Pagamento
-                    </button>
-                  )}
+                <div className="acoes-pedido" style={{ gap: 8, flexDirection: 'column' }}>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    
+                    {/* 🔥 AGUARDANDO - Verificar Pagamento + Aceitar/Recusar */}
+                    {statusUp === 'AGUARDANDO' && (
+                      <>
+                        <button
+                          onClick={() => syncPagamento(pedido.id)}
+                          className="btn-verificar"
+                          style={{ background: '#ffc107', color: '#000' }}
+                        >
+                          🔍 Verificar Pagamento
+                        </button>
+                        <button
+                          onClick={() => handleAceitar(pedido)}
+                          className="btn-aceitar"
+                        >
+                          ✅ Aceitar Pedido (Pagar na Entrega)
+                        </button>
+                        <button
+                          onClick={() => handleRecusar(pedido.id)}
+                          className="btn-recusar"
+                        >
+                          ❌ Recusar Pedido
+                        </button>
+                      </>
+                    )}
 
-                  {/* PAGO ou AGUARDANDO - Aceitar/Recusar */}
-                  {(statusUp === 'AGUARDANDO' || statusUp === 'PAGO') && (
-                    <>
-                      <button onClick={() => handleAceitar(pedido)} className="btn-aceitar">
-                        ✅ Aceitar Pedido
-                      </button>
-                      <button onClick={() => handleRecusar(pedido.id)} className="btn-recusar">
-                        ❌ Recusar Pedido
-                      </button>
-                    </>
-                  )}
+                    {/* 🔥 PAGO - NÃO MUDA MAIS STATUS, só ações */}
+                    {statusUp === 'PAGO' && (
+                      <>
+                        {pedido.telefoneCliente && (
+                          <button
+                            onClick={() => avisarCliente(pedido)}
+                            className="btn-aviso"
+                            style={{ background: '#25D366', color: 'white' }}
+                          >
+                            📱 Avisar Cliente via WhatsApp
+                          </button>
+                        )}
+                        <button
+                          onClick={() => chamarMeuEntregador(pedido)}
+                          className="btn-primario"
+                        >
+                          📞 Chamar Meu Entregador
+                        </button>
+                        <button
+                          onClick={() => postarNoGrupoWhatsApp(pedido)}
+                          className="btn-secundario"
+                        >
+                          📢 Chamar Grupo de Entregadores
+                        </button>
+                        <button
+                          onClick={() => marcarEntregue(pedido.id)}
+                          className="btn-entregue"
+                        >
+                          ✅ Marcar como Entregue
+                        </button>
+                      </>
+                    )}
 
-                  {/* EM_PREPARO - Ações completas */}
-                  {statusUp === 'EM_PREPARO' && (
-                    <>
-                      <button onClick={() => avisarClienteWhatsApp(pedido)} className="btn-aviso">
-                        📱 Avisar Cliente via WhatsApp
-                      </button>
-                      <button onClick={() => chamarMeuEntregador(pedido)} className="btn-primario">
-                        📞 Chamar Meu Entregador
-                      </button>
-                      <button onClick={() => postarNoGrupoWhatsApp(pedido)} className="btn-secundario">
-                        📢 Chamar Grupo de Entregadores
-                      </button>
-                      <button onClick={() => marcarEntregue(pedido.id)} className="btn-entregue">
-                        ✅ Marcar como Entregue
-                      </button>
-                    </>
-                  )}
+                    {/* 🔥 EM_PREPARO - Ações completas */}
+                    {statusUp === 'EM_PREPARO' && (
+                      <>
+                        {pedido.telefoneCliente && (
+                          <button
+                            onClick={() => avisarCliente(pedido)}
+                            className="btn-aviso"
+                            style={{ background: '#25D366', color: 'white' }}
+                          >
+                            📱 Avisar Cliente via WhatsApp
+                          </button>
+                        )}
+                        <button
+                          onClick={() => chamarMeuEntregador(pedido)}
+                          className="btn-primario"
+                        >
+                          📞 Chamar Meu Entregador
+                        </button>
+                        <button
+                          onClick={() => postarNoGrupoWhatsApp(pedido)}
+                          className="btn-secundario"
+                        >
+                          📢 Chamar Grupo de Entregadores
+                        </button>
+                        <button
+                          onClick={() => marcarEntregue(pedido.id)}
+                          className="btn-entregue"
+                        >
+                          ✅ Marcar como Entregue
+                        </button>
+                      </>
+                    )}
 
-                  {/* PRONTO - Chamar entregador + marcar entregue */}
-                  {statusUp === 'PRONTO' && (
-                    <>
-                      <button onClick={() => chamarMeuEntregador(pedido)} className="btn-primario">
-                        📞 Chamar Meu Entregador
-                      </button>
-                      <button onClick={() => postarNoGrupoWhatsApp(pedido)} className="btn-secundario">
-                        📢 Chamar Grupo de Entregadores
-                      </button>
-                      <button onClick={() => marcarEntregue(pedido.id)} className="btn-entregue">
-                        ✅ Marcar como Entregue
-                      </button>
-                    </>
-                  )}
+                    {/* 🔥 PRONTO - Chamar entregador + marcar entregue */}
+                    {statusUp === 'PRONTO' && (
+                      <>
+                        <button
+                          onClick={() => chamarMeuEntregador(pedido)}
+                          className="btn-primario"
+                        >
+                          📞 Chamar Meu Entregador
+                        </button>
+                        <button
+                          onClick={() => postarNoGrupoWhatsApp(pedido)}
+                          className="btn-secundario"
+                        >
+                          📢 Chamar Grupo de Entregadores
+                        </button>
+                        <button
+                          onClick={() => marcarEntregue(pedido.id)}
+                          className="btn-entregue"
+                        >
+                          ✅ Marcar como Entregue
+                        </button>
+                      </>
+                    )}
+
+                  </div>
                 </div>
               </div>
             );
