@@ -68,8 +68,6 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
     try {
       const response = await api.get(`/pedidos/restaurante/${restauranteIdFinal}`);
       
-      console.log('✅ Dados recebidos:', response.data);
-      
       const pedidosConvertidos = (response.data || []).map((pedidoHist: any) => {
         const total = pedidoHist.itens.reduce((soma: number, item: any) => {
           const preco = typeof item.precoUnitario === 'string'
@@ -102,7 +100,6 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
         };
       });
       
-      console.log(`🎯 ${pedidosConvertidos.length} pedidos carregados`);
       setPedidos(pedidosConvertidos);
       setErro(null);
       
@@ -205,8 +202,6 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
     alert('Número salvo com sucesso!');
   };
 
-  // ========== FUNÇÕES PARA CHAMAR ENTREGADOR ==========
-
   const chamarMeuEntregador = async (pedido: Pedido) => {
     const numero = obterOuConfigurarCooperativa();
     if (!numero) return;
@@ -289,19 +284,14 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
     }
   };
 
-  // 🔥 NOVA FUNÇÃO: AVISAR CLIENTE
   const avisarCliente = async (pedido: Pedido) => {
-    // Normaliza o telefone do cliente
     let telefoneCliente = pedido.telefoneCliente;
     if (!telefoneCliente || telefoneCliente === '') {
       alert('Cliente não cadastrou telefone!');
       return;
     }
     
-    // Remove tudo que não é dígito
     let numero = telefoneCliente.replace(/\D/g, '');
-    
-    // Adiciona DDI 55 se necessário
     if (!numero.startsWith('55') && (numero.length === 10 || numero.length === 11)) {
       numero = '55' + numero;
     }
@@ -313,7 +303,6 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
     
     const nomeRest = pedido.restaurante?.nome || nomeRestaurante || 'Restaurante';
     
-    // Define status de pagamento amigável
     let statusPagamento = '⏳ Aguardando confirmação';
     let corPagamento = '#ffc107';
     
@@ -344,7 +333,6 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
   const handleAceitar = async (pedido: Pedido) => {
     try {
       await atualizarStatus(pedido.id, 'EM_PREPARO');
-      // Após aceitar, pergunta se quer avisar o cliente
       if (window.confirm('Pedido aceito! Deseja avisar o cliente via WhatsApp?')) {
         await avisarCliente(pedido);
       }
@@ -391,6 +379,36 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
     if (s === 'PAGO') return '💰 Pago';
     if (s === 'AGUARDANDO_PAGAMENTO') return '⏳ Aguardando pagamento';
     return status;
+  };
+
+  const syncPagamento = async (pedidoId: number) => {
+    try {
+      const response = await api.post(`/pagamentos/sync/pedido/${pedidoId}`);
+      const data = response.data;
+      
+      if (data.ok && data.status === 'PAGO') {
+        alert('✅ Pagamento confirmado! Pedido atualizado.');
+        await carregarPedidos();
+        return true;
+      } else if (data.status === 'PAGO') {
+        alert('✅ Pagamento confirmado!');
+        await carregarPedidos();
+        return true;
+      } else if (data.status === 'pending') {
+        alert('⏳ Pagamento pendente. Aguardando confirmação do PIX.');
+        return false;
+      } else if (data.status === 'in_process') {
+        alert('⏳ Pagamento em processamento.');
+        return false;
+      } else {
+        alert(`❌ ${data.message || 'Pagamento não encontrado'}`);
+        return false;
+      }
+    } catch (error) {
+      console.error('Erro ao verificar pagamento:', error);
+      alert('❌ Erro ao verificar pagamento. Tente novamente.');
+      return false;
+    }
   };
 
   const fazerUploadImagem = async (file: File): Promise<{ url: string; publicId: string }> => {
@@ -663,6 +681,13 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
                     {(statusUp === 'AGUARDANDO') && (
                       <>
                         <button
+                          onClick={() => syncPagamento(pedido.id)}
+                          className="btn-verificar"
+                          style={{ background: '#ffc107', color: '#000', border: 'none', padding: '9px 14px', borderRadius: '10px', cursor: 'pointer', fontWeight: 800 }}
+                        >
+                          🔍 Verificar Pagamento
+                        </button>
+                        <button
                           onClick={() => handleAceitar(pedido)}
                           className="btn-aceitar"
                         >
@@ -683,7 +708,7 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
                         className="btn-aviso"
                         style={{ background: '#25D366', color: 'white' }}
                       >
-                        📱 Avisar Cliente via WhatsApp
+                        📱 Avisar Cliente
                       </button>
                     )}
 
@@ -702,17 +727,14 @@ const PainelRestaurante: React.FC<PainelProps> = ({ restauranteId, onVoltar }) =
                       <button
                         onClick={() => chamarMeuEntregador(pedido)}
                         className="btn-primario"
-                        title="Chamar meu entregador próprio"
                       >
                         📞 Chamar Meu Entregador
                       </button>
-
                       <button
                         onClick={() => postarNoGrupoWhatsApp(pedido)}
                         className="btn-secundario"
-                        title="Postar no grupo de entregadores"
                       >
-                        📢 Chamar Grupo de Entregadores
+                        📢 Chamar Grupo
                       </button>
                     </div>
                   )}
